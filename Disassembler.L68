@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 2/17/2020 1:38:23 PM
+Created On: 2/17/2020 5:20:56 PM
 
 00000000                             1  
 00000000                             2  *-----------------------------------------------------------
@@ -17,154 +17,152 @@ Created On: 2/17/2020 1:38:23 PM
 00000000                            13  * Description: Disassembler
 00000000                            14  *-----------------------------------------------------------
 00001000                            15      ORG    $1000
-00001000  4EB9 00001012             16  START:      JSR     DISP_W          ; Display Welcome Message. 
-00001006  4EB9 0000101E             17              JSR     DISP_UI         ; Display User Instructions.
-0000100C  4EB9 0000102A             18              JSR     PROMPT_START
-00001012                            19  
-00001012                            20  
-00001012                            21  
-00001012                            22  
-00001012  103C 000E                 23  DISP_W      MOVE.B  #14,D0          ; Display Welcome Message. 
-00001016  43F9 000010DE             24              LEA     WELCOME,A1
-0000101C  4E4F                      25              TRAP    #15
-0000101E                            26  
-0000101E                            27  
-0000101E                            28  * Put program code here
-0000101E                            29  
-0000101E  103C 000E                 30  DISP_UI         MOVE.B  #14,D0             ; Display User Instructions. 
-00001022  43F9 00001114             31                  LEA     USER_INST,A1
-00001028  4E4F                      32                  TRAP    #15    
-0000102A                            33  
-0000102A                            34         
-0000102A  43F9 0000128E             35  PROMPT_START    LEA     START_IN,A1        ; Display starting address message
-00001030  103C 000E                 36                  MOVE.B  #14,D0
-00001034  4E4F                      37                  TRAP    #15            
-00001036  43F9 000012C7             38  READ_START      LEA     START_ADDRESS,A1        ; Store user's starting address input
-0000103C  103C 0002                 39                  MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
-00001040  4E4F                      40                  TRAP    #15
-00001042  6000 001E                 41  VALIDATE_START  BRA     ATOI
-00001046                            42  
-00001046                            43  
-00001046  43F9 000012AB             44  PROMPT_END      LEA     END_IN,A1        ; Display starting address message
-0000104C  103C 000E                 45                  MOVE.B  #14,D0
-00001050  4E4F                      46                  TRAP    #15            
-00001052  43F9 000012C7             47  READ_END        LEA     START_ADDRESS,A1        ; Store user's starting address input
-00001058  103C 0002                 48                  MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
-0000105C  4E4F                      49                  TRAP    #15
-0000105E  6000 0002                 50  VALIDATE_END    BRA     ATOI
-00001062                            51  
-00001062                            52  
-00001062  1019                      53  ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in D0          
-00001064  B03C 001E                 54                  CMP.B   #30,D0
-00001068  6D00 003E                 55                  BLT     INVALID
-0000106C  B03C 0027                 56                  CMP.B   #39,D0
-00001070  6E00 0016                 57                  BGT     ASCII_TO_HEX_LETTER
-00001074  0400 0030                 58                  SUB.B   #$30,D0     ; Subtract by 30 to get the numbers 0-9
-00001078  DA80                      59                  ADD.L   D0,D5
-0000107A  5341                      60                  SUBI    #1,D1       ; Decrement input's length to move to next character          
-0000107C  B23C 0000                 61                  CMP.B   #0,D1       ; Compare to see if we're at the last digit
-00001080  6700 0032                 62                  BEQ     LASTDIGITCHECKSTART 
-00001084  E98D                      63                  LSL.L   #4,D5
-00001086  60DA                      64                  BRA     ATOI
-00001088                            65  
-00001088                            66              
-00001088  B03C 0029                 67  ASCII_TO_HEX_LETTER     CMP.B   #41,D0
-0000108C  6D00 001A                 68                          BLT     INVALID
-00001090  B03C 002E                 69                          CMP.B   #46, D0
-00001094  6E00 0012                 70                          BGT     INVALID 
-00001098  0400 0031                 71                          SUB.B   #$31,D0     ; Subtract by 31 to get the numbers A-F
-0000109C  DA80                      72                          ADD.L   D0,D5
-0000109E  5341                      73                          SUBI    #1,D1
-000010A0  6700 001E                 74                          BEQ     LASTDIGITCHECKEND
-000010A4  E98D                      75                          LSL.L   #4,D5
-000010A6  60E0                      76                          BRA     ASCII_TO_HEX_LETTER     
-000010A8                            77  
-000010A8                            78                      
-000010A8  43F9 00001347             79  INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
-000010AE  103C 000E                 80              MOVE.B  #14, D0
-000010B2  4E4F                      81              TRAP    #15
-000010B4                            82   
-000010B4                            83                  
-000010B4  2E05                      84  LASTDIGITCHECKSTART MOVE.L  D5, D7  ; D7 used as temporary storage
-000010B6  E20F                      85                      LSR.B   #1, D7  ; Check for carry bit to see if last digit is odd
-000010B8  6500 0014                 86                      BCS     ODD
-000010BC  4287                      87                      CLR.L   D7
-000010BE  6086                      88                      BRA     PROMPT_END  ; When even, go to prompt for end address
-000010C0                            89  
-000010C0                            90  
-000010C0  2E05                      91  LASTDIGITCHECKEND   MOVE.L  D5, D7      
-000010C2  E20F                      92                      LSR.B   #1, D7
-000010C4  6500 0008                 93                      BCS     ODD
-000010C8  4287                      94                      CLR.L   D7
-000010CA  6000 000E                 95                      BRA     PREPARE_INSTRUCTION
-000010CE                            96  
-000010CE                            97   
-000010CE  43F9 00001347             98  ODD     LEA     ERROR_MESSAGE, A1 
-000010D4  103C 000E                 99          MOVE.B  #14, D0
-000010D8  4E4F                     100          TRAP    #15
-000010DA                           101  
-000010DA                           102                                
-000010DA                           103  PREPARE_INSTRUCTION                
-000010DA                           104            
-000010DA                           105                  
-000010DA                           106  
-000010DA  FFFF FFFF                107      SIMHALT             ; halt simulator
-000010DE                           108  
-000010DE                           109  * Put variables and constants here
-000010DE                           110     
-000010DE  =0000000D                111  CR              EQU         $0D
-000010DE  =0000000A                112  LF              EQU         $0A
-000010DE                           113  
-000010DE                           114  
-000010DE= 57 65 6C 63 6F 6D ...    115  WELCOME         DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
-00001114                           116  
-00001114                           117  
-00001114= 50 6C 65 61 73 65 ...    118  USER_INST       DC.B        'Please follow the proper input instructions below: ',CR,LF
-00001149= 2D 20 53 74 61 72 ...    119                  DC.B        '- Starting address must be lower than ending address.',CR,LF
-00001180= 2D 20 54 68 65 20 ...    120                  DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
-000011C9= 2D 20 53 74 61 72 ...    121                  DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
-0000120F= 2D 20 44 6F 20 6E ...    122                  DC.B        '- Do not put spaces in between input characters.',CR,LF
-00001241= 2D 20 56 61 6C 69 ...    123                  DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
-0000128E                           124  
-0000128E                           125        
-0000128E= 45 6E 74 65 72 20 ...    126  START_IN        DC.B        'Enter a starting address: ',CR,LF,0 
-000012AB= 45 6E 74 65 72 20 ...    127  END_IN          DC.B        'Enter an ending address: ',CR,LF,0 
-000012C7                           128  START_ADDRESS   DS.B        64     
-00001307                           129  END_ADDRESS     DS.B        64 
-00001347= 45 72 72 6F 72 2C ...    130  ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0       
-00001366                           131  
-00001366                           132  
-00001366                           133      END    START        ; last line of source
+00001000  4EB9 00001018             16  START:      JSR     DISP_W          ; Display Welcome Message. 
+00001006  4EB9 00001024             17              JSR     DISP_UI         ; Display User Instructions.
+0000100C  4EB9 00001030             18              JSR     PROMPT_START
+00001012  4EB9 000010D0             19              JSR     PREPARE_INSTRUCTION
+00001018                            20  
+00001018                            21  
+00001018  103C 000E                 22  DISP_W      MOVE.B  #14,D0          ; Display Welcome Message. 
+0000101C  43F9 000010D4             23              LEA     WELCOME,A1
+00001022  4E4F                      24              TRAP    #15
+00001024                            25  
+00001024                            26  
+00001024                            27  * Put program code here
+00001024                            28  
+00001024  103C 000E                 29  DISP_UI         MOVE.B  #14,D0             ; Display User Instructions. 
+00001028  43F9 0000110A             30                  LEA     USER_INST,A1
+0000102E  4E4F                      31                  TRAP    #15    
+00001030                            32  
+00001030                            33         
+00001030  43F9 00001284             34  PROMPT_START    LEA     START_IN,A1        ; Display starting address message
+00001036  103C 000E                 35                  MOVE.B  #14,D0
+0000103A  4E4F                      36                  TRAP    #15  
+0000103C                            37     
+0000103C  103C 0002                 38                  MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1       
+00001040  43F9 000012BD             39  READ_START      LEA     START_ADDRESS,A1        ; Store user's starting address input
+00001046  4E4F                      40                  TRAP    #15
+00001048  6000 001E                 41  VALIDATE_END    BRA     ATOI                 
+0000104C                            42  
+0000104C                            43  
+0000104C  43F9 000012A1             44  PROMPT_END      LEA     END_IN,A1        ; Display starting address message
+00001052  103C 000E                 45                  MOVE.B  #14,D0
+00001056  4E4F                      46                  TRAP    #15            
+00001058  43F9 000012FD             47  READ_END        LEA     END_ADDRESS,A1        ; Store user's starting address input
+0000105E  103C 0002                 48                  MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
+00001062  4E4F                      49                  TRAP    #15
+Line 50 ERROR: Symbol defined more than once
+00001064  6000 0002                 50  VALIDATE_END    BRA     ATOI
+00001068                            51  
+00001068                            52  
+00001068  1019                      53  ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in D0          
+0000106A  B03C 0030                 54                  CMP.B   #$30,D0
+0000106E  6D00 003E                 55                  BLT     INVALID
+00001072  B03C 0039                 56                  CMP.B   #$39,D0
+00001076  6E00 0016                 57                  BGT     ASCII_TO_HEX_LETTER
+0000107A  0400 0030                 58                  SUB.B   #$30,D0     ; Subtract by 30 to get the numbers 0-9
+0000107E  DA80                      59                  ADD.L   D0,D5
+00001080  5341                      60                  SUBI    #1,D1       ; Decrement input's length to move to next character          
+00001082  B23C 0000                 61                  CMP.B   #0,D1       ; Compare to see if we're at the last digit
+Line 62 ERROR: Undefined symbol
+00001086  6700 AC8E                 62                  BEQ     LASTDIGITCHECKSTART 
+0000108A  E98D                      63                  LSL.L   #4,D5
+0000108C  60DA                      64                  BRA     ATOI
+0000108E                            65  
+0000108E                            66              
+0000108E  B03C 0041                 67  ASCII_TO_HEX_LETTER     CMP.B   #$41,D0
+00001092  6D00 001A                 68                          BLT     INVALID
+00001096  B03C 0046                 69                          CMP.B   #$46, D0
+0000109A  6E00 0012                 70                          BGT     INVALID 
+0000109E  0400 0031                 71                          SUB.B   #$31,D0     ; Subtract by 31 to get the numbers A-F
+000010A2  DA80                      72                          ADD.L   D0,D5
+000010A4  5341                      73                          SUBI    #1,D1
+Line 74 ERROR: Undefined symbol
+000010A6  6700 AC6E                 74                          BEQ     LASTDIGITCHECKEND
+000010AA  E98D                      75                          LSL.L   #4,D5
+000010AC  60BA                      76                          BRA     ATOI 
+000010AE                            77  
+000010AE                            78  IOTA       
+000010AE                            79  
+000010AE                            80                      
+000010AE  43F9 0000133D             81  INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
+000010B4  103C 000E                 82              MOVE.B  #14, D0
+000010B8  4E4F                      83              TRAP    #15
+000010BA                            84   
+000010BA                            85                  
+000010BA  2E05                      86  LASTDIGITCHECK      MOVE.L  D5, D7  ; D7 used as temporary storage
+000010BC  E20F                      87                      LSR.B   #1, D7  ; Check for carry bit to see if last digit is odd
+000010BE  6500 0004                 88                      BCS     ODD
+000010C2  4287                      89                      CLR.L   D7
+000010C4                            90                      
+000010C4                            91  
+000010C4                            92  
+000010C4                            93   
+000010C4  43F9 0000133D             94  ODD     LEA     ERROR_MESSAGE, A1 
+000010CA  103C 000E                 95          MOVE.B  #14, D0
+000010CE  4E4F                      96          TRAP    #15
+000010D0                            97  
+000010D0                            98                                
+000010D0                            99  PREPARE_INSTRUCTION                
+000010D0                           100            
+000010D0                           101                  
+000010D0                           102  
+000010D0  FFFF FFFF                103      SIMHALT             ; halt simulator
+000010D4                           104  
+000010D4                           105  * Put variables and constants here
+000010D4                           106     
+000010D4  =0000000D                107  CR              EQU         $0D
+000010D4  =0000000A                108  LF              EQU         $0A
+000010D4                           109  
+000010D4                           110  
+000010D4= 57 65 6C 63 6F 6D ...    111  WELCOME         DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
+0000110A                           112  
+0000110A                           113  
+0000110A= 50 6C 65 61 73 65 ...    114  USER_INST       DC.B        'Please follow the proper input instructions below: ',CR,LF
+0000113F= 2D 20 53 74 61 72 ...    115                  DC.B        '- Starting address must be lower than ending address.',CR,LF
+00001176= 2D 20 54 68 65 20 ...    116                  DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
+000011BF= 2D 20 53 74 61 72 ...    117                  DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
+00001205= 2D 20 44 6F 20 6E ...    118                  DC.B        '- Do not put spaces in between input characters.',CR,LF
+00001237= 2D 20 56 61 6C 69 ...    119                  DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
+00001284                           120  
+00001284                           121        
+00001284= 45 6E 74 65 72 20 ...    122  START_IN        DC.B        'Enter a starting address: ',CR,LF,0 
+000012A1= 45 6E 74 65 72 20 ...    123  END_IN          DC.B        'Enter an ending address: ',CR,LF,0 
+000012BD                           124  START_ADDRESS   DS.B        64     
+000012FD                           125  END_ADDRESS     DS.B        64 
+0000133D= 45 72 72 6F 72 2C ...    126  ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0       
+0000135C                           127  
+0000135C                           128  
+0000135C                           129      END    START        ; last line of source
 
-No errors detected
+3 errors detected
 No warnings generated
 
 
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-ASCII_TO_HEX_LETTER  1088
-ATOI                1062
+ASCII_TO_HEX_LETTER  108E
+ATOI                1068
 CR                  D
-DISP_UI             101E
-DISP_W              1012
-END_ADDRESS         1307
-END_IN              12AB
-ERROR_MESSAGE       1347
-INVALID             10A8
-LASTDIGITCHECKEND   10C0
-LASTDIGITCHECKSTART  10B4
+DISP_UI             1024
+DISP_W              1018
+END_ADDRESS         12FD
+END_IN              12A1
+ERROR_MESSAGE       133D
+INVALID             10AE
+IOTA                10AE
+LASTDIGITCHECK      10BA
 LF                  A
-ODD                 10CE
-PREPARE_INSTRUCTION  10DA
-PROMPT_END          1046
-PROMPT_START        102A
-READ_END            1052
-READ_START          1036
+ODD                 10C4
+PREPARE_INSTRUCTION  10D0
+PROMPT_END          104C
+PROMPT_START        1030
+READ_END            1058
+READ_START          1040
 START               1000
-START_ADDRESS       12C7
-START_IN            128E
-USER_INST           1114
-VALIDATE_END        105E
-VALIDATE_START      1042
-WELCOME             10DE
+START_ADDRESS       12BD
+START_IN            1284
+USER_INST           110A
+VALIDATE_END        1048
+WELCOME             10D4
