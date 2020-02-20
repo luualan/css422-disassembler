@@ -15,7 +15,7 @@
 START:      JSR     DISP_W          ; Display Welcome Message. 
             JSR     DISP_UI         ; Display User Instructions.
             JSR     PROMPT_START    ; Prompt the user for starting address. 
-
+            
 DISP_W      MOVE.B  #14,D0	        ; Display Welcome Message. 
             LEA	    WELCOME,A1
             TRAP    #15
@@ -52,7 +52,7 @@ ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in 
                 CMP.B   #$30,D0
                 BLT     INVALID
                 CMP.B   #$39,D0
-                BGT     ASCII_TO_HEX_LETTER
+                BGT     ASCII_TO_HEX_UPPER
                 SUB.B   #$30,D0     ; Subtract by 30 to get the numbers 0-9
                 ADD.L   D0,D5
                 SUBI    #1,D1       ; Decrement input's length to move to next character          
@@ -62,17 +62,30 @@ ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in 
                 BRA	    ATOI
 
   
-ASCII_TO_HEX_LETTER     CMP.B   #$41,D0
+ASCII_TO_HEX_UPPER      CMP.B   #$41,D0
                         BLT     INVALID
                         CMP.B   #$46, D0
-                        BGT     INVALID 
+                        BGT     ASCII_TO_HEX_LOWER 
                         SUB.B   #$31,D0     ; Subtract by 31 to get the numbers A-F
                         SUB.B   #6,D0
                         ADD.L   D0,D5
                         SUBI    #1,D1
                         BEQ     LASTDIGITCHECK
                         LSL.L   #4,D5
-                        BRA     ATOI     
+                        BRA     ATOI  
+
+ASCII_TO_HEX_LOWER     CMP.B    #$61, D0
+                       BLT     INVALID
+                       CMP.B   #$66, D0
+                       BGT     INVALID 
+                       SUB.B   #$51,D0     ; Subtract by 51 to get the numbers a-f
+                       SUB.B   #6,D0
+                       ADD.L   D0,D5
+                       SUBI    #1,D1
+                       BEQ     LASTDIGITCHECK
+                       LSL.L   #4,D5
+                       BRA     ATOI  
+  
 
                     
 INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
@@ -103,6 +116,99 @@ ODD     LEA     ERROR_MESSAGE, A1
         MOVE.B  #14, D0
         TRAP    #15
 
+    
+ITOA    MOVEM.L D0-D1, -(SP)
+        CMP.B   #$00, D2
+        BEQ     ITOA_BYTE
+        CMP.B   #$01, D2
+        BEQ     ITOA_WORD
+        CMP.B   #$10, D2
+        BEQ     ITOA_LONG
+        JMP     ITOA_LONGADDRESS
+        
+ITOA_MOVE
+        MOVEM.L D0-D1, -(SP)
+        
+        CMP.B   #%01, D2
+        BEQ     ITOA_BYTE
+        CMP.B   #%11, D2
+        BEQ     ITOA_WORD
+        CMP.B   #%10,D2
+        BEQ     ITOA_LONG
+        JMP     ITOA_LONGADDRESS
+
+ITOA_BYTE
+        MOVE.W  (A5)+,D7
+        JSR     ITOA_BYTE_CONVERT
+        JMP     ITOA_DONE
+        
+ITOA_WORD
+        MOVE.W  (A5),D7
+        MOVE.B  #right8, D1
+        LSR.W   D1,D7
+        JSR     ITOA_BYTE_CONVERT
+        MOVE.W  (A5)+, D7
+        JSR     ITOA_BYTE_CONVERT
+        JMP     ITOA_DONE
+        
+ITOA_LONG
+        MOVE.W  (A5), D7
+        MOVE.B  #right8, D1
+        LSR.W   D1, D7
+        JSR     ITOA_BYTE_CONVERT
+        MOVE.W  (A5)+, D7
+        JSR     ITOA_BYTE_CONVERT
+        
+        MOVE.W  (A5), D7
+        MOVE.B  #right8, D1
+        LSR.W   D1, D7
+        JSR     ITOA_BYTE_CONVERT
+        MOVE.W  (A5)+, D7
+        JSR     ITOA_BYTE_CONVERT
+        JMP     ITOA_DONE
+
+ITOA_LONGADDRESS
+        MOVE.W  A5, A7
+        MOVE.B  #right24, D1
+        LSR.W   D1,D7
+        JSR     ITOA_BYTE_CONVERT
+        MOVE.W  A5,A7
+        MOVE.B  #right16,D1
+        LSR.W   D1,D7
+        JSR     ITOA_BYTE_CONVERT
+        MOVE.W  A5,D7
+        MOVE.B  #right8, D1
+        LSR.W   D1,D7
+        JSR     ITOA_BYTE_CONVERT
+        MOVE.W  A5,D7
+        JSR     ITOA_BYTE_CONVERT   
+        JMP     ITOA_DONE   
+
+ITOA_BYTE_CONVERT
+        MOVE.W  D7, D0 
+        ANDI.W  #$F0, D0
+        MOVE.B  #right4, D1
+        LSR.W   D1, D0
+        JSR     ITOA_NIBBLE_CONVERT
+        
+ITOA_NIBBLE_CONVERT
+        CMP.B   #9, D0
+        BGT     ITOA_CONVERT_A_TO_F
+        ADD.B   #$30, D0
+        MOVE.B  D0, (A2)+
+        RTS
+        
+ITOA_CONVERT_A_TO_F
+        SUBI.B  #10, D0
+        ADDI.B  #$41, D0
+        MOVE.B  D0, (A2)+
+        RTS
+
+ITOA_DONE
+        MOVEM.L (SP)+, D0-D1
+        RTS
+         
+        
                               
 DECODE_MEMORY                
           
@@ -114,7 +220,10 @@ DECODE_MEMORY
    
 CR              EQU         $0D
 LF              EQU         $0A
-
+right4          EQU         4
+right8          EQU         8
+right16         EQU         16
+right24         EQU         24
 
 WELCOME         DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 
@@ -135,3 +244,8 @@ ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0
 
 
     END    START        ; last line of source
+
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
