@@ -1,4 +1,3 @@
-
 *-----------------------------------------------------------
 * Title      :  Disassembler for the Motorola MC68000 Microprocessor
 * Written by :  Avery Mortenson & Alan Luu
@@ -15,13 +14,11 @@
     ORG    $1000
 START:      JSR     DISP_W          ; Display Welcome Message. 
             JSR     DISP_UI         ; Display User Instructions.
-            JSR     PROMPT_START
-
+            JSR     PROMPT_START    ; Prompt the user for starting address. 
 
 DISP_W      MOVE.B  #14,D0	        ; Display Welcome Message. 
             LEA	    WELCOME,A1
             TRAP    #15
-
 
 * Put program code here
 
@@ -32,73 +29,82 @@ DISP_UI         MOVE.B  #14,D0             ; Display User Instructions.
        
 PROMPT_START    LEA     START_IN,A1        ; Display starting address message
                 MOVE.B  #14,D0
-                TRAP    #15            
+                TRAP    #15       
+     
 READ_START      LEA     START_ADDRESS,A1        ; Store user's starting address input
                 MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
                 TRAP    #15
-VALIDATE_START  BRA     ATOI
+                MOVE.B  #0,D6
 
+VALIDATE_START  BRA     ATOI
 
 PROMPT_END      LEA     END_IN,A1        ; Display starting address message
                 MOVE.B  #14,D0
                 TRAP    #15            
-READ_END        LEA     START_ADDRESS,A1        ; Store user's starting address input
+READ_END        LEA     END_ADDRESS,A1        ; Store user's starting address input
                 MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
                 TRAP    #15
+                MOVE.B  #1,D6
+
 VALIDATE_END    BRA     ATOI
 
-
 ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in D0			
-                CMP.B   #30,D0
+                CMP.B   #$30,D0
                 BLT     INVALID
-                CMP.B   #39,D0
+                CMP.B   #$39,D0
                 BGT     ASCII_TO_HEX_LETTER
                 SUB.B   #$30,D0     ; Subtract by 30 to get the numbers 0-9
                 ADD.L   D0,D5
                 SUBI    #1,D1       ; Decrement input's length to move to next character          
                 CMP.B   #0,D1       ; Compare to see if we're at the last digit
-                BEQ     LASTDIGITCHECKSTART 
+                BEQ     LASTDIGITCHECK
                 LSL.L   #4,D5
                 BRA	    ATOI
 
-            
-ASCII_TO_HEX_LETTER     CMP.B   #41,D0
+  
+ASCII_TO_HEX_LETTER     CMP.B   #$41,D0
                         BLT     INVALID
-                        CMP.B   #46, D0
+                        CMP.B   #$46, D0
                         BGT     INVALID 
                         SUB.B   #$31,D0     ; Subtract by 31 to get the numbers A-F
+                        SUB.B   #6,D0
                         ADD.L   D0,D5
                         SUBI    #1,D1
-                        BEQ     LASTDIGITCHECKEND
+                        BEQ     LASTDIGITCHECK
                         LSL.L   #4,D5
-                        BRA     ASCII_TO_HEX_LETTER     
+                        BRA     ATOI     
 
                     
 INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
             MOVE.B  #14, D0
             TRAP    #15
+            CLR.B   D6
  
                 
-LASTDIGITCHECKSTART MOVE.L  D5, D7  ; D7 used as temporary storage
+LASTDIGITCHECK      MOVE.L  D5, D7  ; D7 used as temporary storage
                     LSR.B   #1, D7  ; Check for carry bit to see if last digit is odd
                     BCS     ODD
                     CLR.L   D7
-                    BRA     PROMPT_END  ; When even, go to prompt for end address
+                    CMP.B   #0,D6
+                    BEQ     COMPLETE_STARTA  ; When even, go to prompt for end address
+                    CMP.B   #1,D6
+                    BEQ     COMPLETE_ENDA
+
+COMPLETE_STARTA     MOVEA.L D5, A4  ; A4 holds the starting address.
+                    CLR.L   D5 
+                    BRA PROMPT_END
 
 
-LASTDIGITCHECKEND   MOVE.L  D5, D7      
-                    LSR.B   #1, D7
-                    BCS     ODD
-                    CLR.L   D7
-                    BRA     PREPARE_INSTRUCTION
+COMPLETE_ENDA       MOVEA.L D5, A6  ; A6 holds the ending address. 
+                    BRA DECODE_MEMORY
 
- 
+
 ODD     LEA     ERROR_MESSAGE, A1 
         MOVE.B  #14, D0
         TRAP    #15
 
                               
-PREPARE_INSTRUCTION                
+DECODE_MEMORY                
           
                 
 
@@ -129,8 +135,3 @@ ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0
 
 
     END    START        ; last line of source
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
