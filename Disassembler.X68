@@ -346,22 +346,103 @@ OP_TABLE
         JMP     code1110    ; ASL.bwl / ASR.bwl / LSL.bwl / LSR.bwl / ROR.bwl / ROL.bwl
         JMP     code1111    ;   [unassigned]
         
-code0000
-code0001
-code0010    
-code0011    
-code0100    
-code0101    
-code0110    
-code0111    
-code1000    
-code1001    
-code1010    
-code1011    
-code1100    
-code1101    
-code1110    
-code1111    
+code0000:                       ; Opcodes ADDI and SUBI
+    MOVE.L  A5,D1               ; A5 is current instruction word
+    ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
+    MOVE.B  #right8,D2          ; Used to shift 8 times to right
+    LSR.W   D2,D1               ; Shift nibble into LSB position
+    MULU    #6, D1              ; Set displacement 
+    LEA     OP_0000_TABLE,A0    ; Load table into A0
+    JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
+
+code0001:                       ; Opcode MOVE.B
+    BRA     OP_MOVE             ; Go to opcode MOVE
+
+code0010:                       ; Opcodes MOVE.L and MOVEA.L 
+    MOVE.L  A5,D1               ; A5 is current instruction word
+    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
+    MOVE.B  #right6,D2          ; Used to shift 6 times to right
+    LSR.W   D2,D1               ; Shift dst mode into LSB position
+    CMP.B   #1, D1              ; When 001 in destination mode
+    BEQ     OP_MOVEA            ; Go to opcode MOVEA
+    BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
+
+code0011:                       ; Opcodes MOVE.W and MOVEA.W 
+    MOVE.L  A5,D1               ; A5 is current instruction word
+    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
+    MOVE.B  #right6,D2          ; Used to shift 6 times to right
+    LSR.W   D2,D1               ; Shift dst mode into LSB position
+    CMP.B   #1, D1              ; When 001 in destination mode
+    BEQ     OP_MOVEA            ; Go to opcode MOVEA
+    BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
+
+code0100:                       ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
+; fill
+
+
+code0101:                       ; Opcode ADDQ.B/W/L
+    BRA     OP_ADDQ             ; Go to opcode ADDQ
+
+code0110:                       ; Opcodes BRA and BSR
+    MOVE.L  A5,D1               ; A5 is current instruction word
+    ANDI.W  #second_nibble,D1   ; Extract 2nd 4 bits from instruction word
+    MOVE.B  #right8,D2          ; Used to shift 8 times to right
+    LSR.W   D2,D1               ; Shift nibble into LSB position
+    CMP.B   #0, D1              ; When 0000 in destination mode
+    BEQ     OP_BRA              ; Go to opcode BRA
+    BRA     OP_BSR              ; Otherwise, go to opcode BSR
+
+code0111:                       ; Opcode MOVEQ
+    BRA     OP_MOVEQ            ; Go to opcode MOVEQ
+
+code1000:                       ; Opcodes DIVU word and OR.B/W/L
+    MOVE.L  A5,D1               ; A5 is current instruction word
+    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
+    MOVE.B  #right6,D2          ; Used to shift 6 times to right
+    LSR.W   D2,D1               ; Shift dst mode into LSB position
+    CMP.B   #3, D1              ; When 011 in destination mode
+    BEQ     OP_DIVU             ; Go to opcode DIVU word
+    BRA     OP_OR               ; Otherwise, go to opcode OR
+
+code1001:                       ; Opcode SUB.B/W/L
+    BRA     OP_SUB              ; Go to opcode SUB   
+
+code1010:                       ; Opcode not supported 
+    BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
+     
+code1011:                       ; Opcode CMP.B/W/L
+    BRA     OP_CMP              ; Go to opcode CMP
+
+code1100:                       ; Opcodes MULS, MULU, AND.B/W/L
+
+code1101:                       ; Opcodes ADD.B/W/L, ADDA.B/W/L
+
+code1110:                       ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, LSR.B/W/L, ROL.B/W/L, ROR.B/W/L                       
+
+code1111:                       ; Opcode not supported 
+    BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
+    
+    
+        
+OP_0000_TABLE:
+    JMP     OP_UNSUPPORTED  ; 0 
+    JMP     OP_UNSUPPORTED  ; 1
+    JMP     OP_UNSUPPORTED  ; 2
+    JMP     OP_UNSUPPORTED  ; 3
+    JMP     OP_SUBI         ; 4 Go to opcode SUBI
+    JMP     OP_UNSUPPORTED  ; 5
+    JMP     OP_ADDI         ; 6 Go to opcode ADDI
+    JMP     OP_UNSUPPORTED  ; 7
+    JMP     OP_UNSUPPORTED  ; 8
+    JMP     OP_UNSUPPORTED  ; 9
+    JMP     OP_UNSUPPORTED  ; 10 
+    JMP     OP_UNSUPPORTED  ; A
+    JMP     OP_UNSUPPORTED  ; B
+    JMP     OP_UNSUPPORTED  ; C
+    JMP     OP_UNSUPPORTED  ; D
+    JMP     OP_UNSUPPORTED  ; E
+    JMP     OP_UNSUPPORTED  ; F
+   
 
 
     SIMHALT             ; halt simulator
@@ -389,6 +470,15 @@ task5           EQU         $05
 task9           EQU         $09
 task13          EQU         $0D
 task14          EQU         $0E
+first_nibble    EQU         $F000
+second_nibble   EQU         $0F00   
+third_nibble    EQU         $00F0
+fourth_nibble   EQU         $000F
+dst_mode        EQU         $00C0
+dst_reg         EQU         $0E00
+src_mode        EQU         $0018
+src_reg         EQU         $0007
+bit8            EQU         $0100
 
 
 WELCOME         DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
@@ -415,3 +505,8 @@ ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0
     END    START        ; last line of source
 
 
+
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
