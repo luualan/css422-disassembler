@@ -6,16 +6,22 @@
 * convert a memory image of instructions and data back 
 * to the MC68000 assembly code and that will output the 
 * disassembled code to the display.
-* Title      : CSS 422
-* Written by : Alan Luu and Avery Mortenson
-* Date       : 2/16/2020
-* Description: Disassembler
 *-----------------------------------------------------------
     ORG    $1000
 START:      JSR     DISP_W          ; Display Welcome Message. 
             JSR     DISP_UI         ; Display User Instructions.
             JSR     PROMPT_START    ; Prompt the user for starting address. 
             
+*------------------------------------------------------------*
+* D0: used for the tasks
+* D1: used to hold the size of the input obtained. 
+* D5: used to store the starting and ending address 
+* temporarily before moving them to A4 and A6 correspondingly. 
+* D6: used to check the last digit to see if the input 
+* for the starting and ending address causes a bus error. 
+* A1: a pointer to the message to print out. 
+*------------------------------------------------------------*
+
 DISP_W      MOVE.B  #14,D0	        ; Display Welcome Message. 
             LEA	    WELCOME,A1
             TRAP    #15
@@ -48,11 +54,13 @@ READ_END        LEA     END_ADDRESS,A1        ; Store user's starting address in
 
 VALIDATE_END    BRA     ATOI
 
+* D0 stores the value to pushed from A1.
+
 ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in D0			
                 CMP.B   #$30,D0
                 BLT     INVALID
                 CMP.B   #$39,D0
-                BGT     ASCII_TO_HEX_UPPER
+                BGT     ASCII_TO_HEX_LETTER
                 SUB.B   #$30,D0     ; Subtract by 30 to get the numbers 0-9
                 ADD.L   D0,D5
                 SUBI    #1,D1       ; Decrement input's length to move to next character          
@@ -62,30 +70,17 @@ ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in 
                 BRA	    ATOI
 
   
-ASCII_TO_HEX_UPPER      CMP.B   #$41,D0
+ASCII_TO_HEX_LETTER     CMP.B   #$41,D0
                         BLT     INVALID
                         CMP.B   #$46, D0
-                        BGT     ASCII_TO_HEX_LOWER 
+                        BGT     INVALID 
                         SUB.B   #$31,D0     ; Subtract by 31 to get the numbers A-F
                         SUB.B   #6,D0
                         ADD.L   D0,D5
                         SUBI    #1,D1
                         BEQ     LASTDIGITCHECK
                         LSL.L   #4,D5
-                        BRA     ATOI  
-
-ASCII_TO_HEX_LOWER     CMP.B    #$61, D0
-                       BLT     INVALID
-                       CMP.B   #$66, D0
-                       BGT     INVALID 
-                       SUB.B   #$51,D0     ; Subtract by 51 to get the numbers a-f
-                       SUB.B   #6,D0
-                       ADD.L   D0,D5
-                       SUBI    #1,D1
-                       BEQ     LASTDIGITCHECK
-                       LSL.L   #4,D5
-                       BRA     ATOI  
-  
+                        BRA     ATOI     
 
                     
 INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
@@ -115,8 +110,7 @@ COMPLETE_ENDA       MOVEA.L D5, A6  ; A6 holds the ending address.
 ODD     LEA     ERROR_MESSAGE, A1 
         MOVE.B  #14, D0
         TRAP    #15
-
-    
+        
 ITOA    MOVEM.L D0-D1, -(SP)
         CMP.B   #$00, D2
         BEQ     ITOA_BYTE
@@ -207,12 +201,168 @@ ITOA_CONVERT_A_TO_F
 ITOA_DONE
         MOVEM.L (SP)+, D0-D1
         RTS
-         
+
+*-------------------------------------------------------------------------------*
+
+START_DECODING
+        CLR.L   D2
         
+DECODING_ITERATION
+        ;decoding the current address
+        JSR     DECODE_MEMORY
+        MOVE.B  #task13, D0
+        LEA     decoded_buffer, A1
+        TRAP    #15
+        
+        ;check if decoding has finished or if the screen is filled. 
+        CMP.L   A5, A6
+        BLE     CONTINUE_OR_END
+        ;have yet to reach the ending address
+        ADDQ.B  #1, D2
+        CMP.B   lines_p_screen, D2
+        BGE     DECODE_PAUSE
+        ;not yet reached the maximum lines per screen. 
+        BRA     DECODING_ITERATION
+
+DECODE_PAUSE
+        MOVE.B  #task14, D0
+        LEA     ENTER_PROMPT, A1
+        TRAP    #15
+        MOVE.B  #task5, D0
+        TRAP    #15
+        BRA     START_DECODING
+
+CONTINUE_OR_END
+        MOVE.B  #task14, D0
+        LEA     PROMPT_AGAIN, A1
+        TRAP    #15
+        
+        MOVE.B  #task2, D0
+        LEA     ascii_y_n, A1
+        TRAP    #15
+        
+        MOVE.B  ascii_y_n, D3
+        CMPI.B  #y_uppercase, D3
+        BEQ     PROMPT_START
+        CMPI.B  #y_lowercase, D3
+        BEQ     PROMPT_START
+        CMPI.B  #n_uppercase, D3
+        BEQ     EXIT
+        CMPI.B  #n_lowercase, D3
+        BEQ     EXIT
+
+        BRA     CONTINUE_OR_END 
+        
+EXIT
+        MOVE.B  #task14, D0
+        LEA     EXIT_PROMPT, A1
+        TRAP    #15
+        
+        MOVE.B  #task9, D0
+        TRAP    #15
+
+        
+        
+*---------------------------------------------------------------------------------*
+* D0: the current instruction. 
+* D1: 
+* D2: data size / shift count
+* D3: loop counter for the amount of lines per screen. 
+* D4: 
+* D5: 
+* D6: 
+* D7: 
+* A0: 
+* A1: A pointer to the message to print out. 
+* A2: A pointer to the decode_buffer. 
+* A3: 
+* A4: Store the starting address and increment to the ending address. 
+* A5: The current address. 
+* A6: Store the ending address. 
+* A7: Stack pointer. 
+*---------------------------------------------------------------------------------*
                               
-DECODE_MEMORY                
-          
+DECODE_MEMORY     
+
+*Clear the data and address registers used to obtain the starting and ending address. 
+        CLR.L   D0
+        CLR.L   D5
+        CLR.L   D6
+        MOVEA   #0, A1
+        
+        MOVEM.L D2/A6, -(SP)
                 
+        ;zero clear the decode_buffer
+        JSR     OP_CLEAR_DATA
+        LEA     decoded_buffer, A2
+                
+        ;print out the current address
+        MOVE.L  #$0003, D2
+        JSR     ITOA
+        MOVE.B  #$9, (A2)+
+                
+        ;load the next instruction and jump to the opcode table entry
+        LEA     OP_TABLE, A0
+        CLR.L   D0
+        MOVE.W  (A5)+, D0
+        MOVE.L  D0, D1
+        MOVE.B  #right12, D2
+        LSR.W   D2, D1
+        MULU    #6, D1
+        JMP     0(A0, D1)
+OP_FINISH
+        MOVEM.L (SP)+, D2/A6
+        RTS
+
+*------------------------------------------------------------------------------------*
+        ;clear the 32 bits within the decoded_buffer       
+OP_CLEAR_DATA
+        CLR.L   D3
+        MOVE.B  #buffer_size, D3
+        LEA     decoded_buffer, A2
+OP_CLEAR_DATA_LOOP
+        MOVE.B  #0, (A2)+
+        SUBI    #1, D3
+        BGT     OP_CLEAR_DATA_LOOP
+        RTS
+
+*------------------------------------------------------------------------------------*
+
+OP_TABLE
+        JMP     code0000    ; ADDI.bwl/ ANDI.bwl / CMPI.bwl / EORI.bwl / ORI.bwl / SUBI.bwl 
+        JMP     code0001    ; MOVE.b
+        JMP     code0010    ; MOVE.l / MOVEA.l
+        JMP     code0011    ; MOVE.w / MOVEA.w
+        JMP     code0100    ; CLR.bwl / JMP / JSR / LEA / MOVEM.wl / NOP / NOT.bwl / RTS / STOP / TRAP
+        JMP     code0101    ; ADDQ.bwl / SUBQ.bwl / Scc / Dbcc
+        JMP     code0110    ; BRA.bw / BSR.bw / Bcc.bw
+        JMP     code0111    ; MOVEQ
+        JMP     code1000    ; DIVS / DIVU / CR.bwl
+        JMP     code1001    ; SUB.bwl / SUBA.wl
+        JMP     code1010    ;   [unassigned]
+        JMP     code1011    ; CMP.bwl / CMPA.wl / EOR.bwl
+        JMP     code1100    ; MULS / MULU / AND.bwl
+        JMP     code1101    ; ADD.bwl / ADDA.wl / ADDX.bwl
+        JMP     code1110    ; ASL.bwl / ASR.bwl / LSL.bwl / LSR.bwl / ROR.bwl / ROL.bwl
+        JMP     code1111    ;   [unassigned]
+        
+code0000
+code0001
+code0010    
+code0011    
+code0100    
+code0101    
+code0110    
+code0111    
+code1000    
+code1001    
+code1010    
+code1011    
+code1100    
+code1101    
+code1110    
+code1111    
+
 
     SIMHALT             ; halt simulator
 
@@ -220,13 +370,28 @@ DECODE_MEMORY
    
 CR              EQU         $0D
 LF              EQU         $0A
+stack           EQU         $000A0000
+buffer_size     EQU         64 
+decoded_buffer  EQU         32
+lines_p_screen  EQU         20
 right4          EQU         4
 right8          EQU         8
+right12         EQU         12
 right16         EQU         16
 right24         EQU         24
+ascii_y_n       DC.B        32
+y_uppercase     EQU         $59         
+y_lowercase     EQU         $79
+n_uppercase     EQU         $4E
+n_lowercase     EQU         $6E
+task2           EQU         $02
+task5           EQU         $05
+task9           EQU         $09
+task13          EQU         $0D
+task14          EQU         $0E
+
 
 WELCOME         DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
-
 
 USER_INST       DC.B        'Please follow the proper input instructions below: ',CR,LF
                 DC.B        '- Starting address must be lower than ending address.',CR,LF
@@ -234,6 +399,10 @@ USER_INST       DC.B        'Please follow the proper input instructions below: 
                 DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
                 DC.B        '- Do not put spaces in between input characters.',CR,LF
                 DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
+                
+ENTER_PROMPT    DC.B        'Press enter to continue...',CR,LF,0
+PROMPT_AGAIN    DC.B        'Press Y to continue / N to exit.',CR,LF,0
+EXIT_PROMPT     DC.B        'Program has execution has stopped.',CR,LF,0
 
       
 START_IN        DC.B        'Enter a starting address: ',CR,LF,0 
@@ -245,7 +414,4 @@ ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0
 
     END    START        ; last line of source
 
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
+
