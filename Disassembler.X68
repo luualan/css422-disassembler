@@ -435,14 +435,31 @@ OP_0000_TABLE:
     JMP     OP_UNSUPPORTED  ; 7
     JMP     OP_UNSUPPORTED  ; 8
     JMP     OP_UNSUPPORTED  ; 9
-    JMP     OP_UNSUPPORTED  ; 10 
     JMP     OP_UNSUPPORTED  ; A
     JMP     OP_UNSUPPORTED  ; B
     JMP     OP_UNSUPPORTED  ; C
     JMP     OP_UNSUPPORTED  ; D
     JMP     OP_UNSUPPORTED  ; E
     JMP     OP_UNSUPPORTED  ; F
-   
+    
+
+ OP_0100_TABLE:
+    JMP     OP_UNSUPPORTED      ; 0 
+    JMP     OP_LEA              ; 1
+    JMP     OP_CLR              ; 2
+    JMP     OP_LEA              ; 3
+    JMP     OP_UNSUPPORTED      ; 4 Go to opcode SUBI
+    JMP     OP_LEA              ; 5
+    JMP     OP_ADDI             ; 6 Go to opcode ADDI
+    JMP     OP_LEA              ; 7
+    JMP     OP_MOVEM            ; 8
+    JMP     OP_LEA              ; 9 
+    JMP     OP_UNSUPPORTED      ; A
+    JMP     OP_LEA              ; B
+    JMP     OP_MOVEM            ; C
+    JMP     OP_LEA              ; D
+    JMP     CHECK_NIBBLE_TWO    ; E JSR, NOP, or RTS
+    JMP     OP_UNSUPPORTED      ; F  
 
 
     SIMHALT             ; halt simulator
@@ -503,6 +520,7 @@ ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0
 
 
     END    START        ; last line of source
+
 
 
 
