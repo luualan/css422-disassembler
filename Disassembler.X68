@@ -33,7 +33,8 @@ DISP_UI         MOVE.B  #14,D0             ; Display User Instructions.
                 TRAP    #15	   
 
        
-PROMPT_START    LEA     START_IN,A1        ; Display starting address message
+PROMPT_START    LEA     stack, SP          ; SP = stack ($A0000)
+                LEA     START_IN,A1        ; Display starting address message
                 MOVE.B  #14,D0
                 TRAP    #15       
      
@@ -355,75 +356,22 @@ code0000:                       ; Opcodes ADDI and SUBI
     LEA     OP_0000_TABLE,A0    ; Load table into A0
     JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
 
-code0001:                       ; Opcode MOVE.B
-    BRA     OP_MOVE             ; Go to opcode MOVE
+code0001
+code0010    
+code0011    
+code0100    
+code0101    
+code0110    
+code0111    
+code1000    
+code1001    
+code1010    
+code1011    
+code1100    
+code1101    
+code1110    
+code1111    
 
-code0010:                       ; Opcodes MOVE.L and MOVEA.L 
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-    MOVE.B  #right6,D2          ; Used to shift 6 times to right
-    LSR.W   D2,D1               ; Shift dst mode into LSB position
-    CMP.B   #1, D1              ; When 001 in destination mode
-    BEQ     OP_MOVEA            ; Go to opcode MOVEA
-    BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
-
-code0011:                       ; Opcodes MOVE.W and MOVEA.W 
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-    MOVE.B  #right6,D2          ; Used to shift 6 times to right
-    LSR.W   D2,D1               ; Shift dst mode into LSB position
-    CMP.B   #1, D1              ; When 001 in destination mode
-    BEQ     OP_MOVEA            ; Go to opcode MOVEA
-    BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
-
-code0100:                       ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
-; fill
-
-
-code0101:                       ; Opcode ADDQ.B/W/L
-    BRA     OP_ADDQ             ; Go to opcode ADDQ
-
-code0110:                       ; Opcodes BRA and BSR
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #second_nibble,D1   ; Extract 2nd 4 bits from instruction word
-    MOVE.B  #right8,D2          ; Used to shift 8 times to right
-    LSR.W   D2,D1               ; Shift nibble into LSB position
-    CMP.B   #0, D1              ; When 0000 in destination mode
-    BEQ     OP_BRA              ; Go to opcode BRA
-    BRA     OP_BSR              ; Otherwise, go to opcode BSR
-
-code0111:                       ; Opcode MOVEQ
-    BRA     OP_MOVEQ            ; Go to opcode MOVEQ
-
-code1000:                       ; Opcodes DIVU word and OR.B/W/L
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-    MOVE.B  #right6,D2          ; Used to shift 6 times to right
-    LSR.W   D2,D1               ; Shift dst mode into LSB position
-    CMP.B   #3, D1              ; When 011 in destination mode
-    BEQ     OP_DIVU             ; Go to opcode DIVU word
-    BRA     OP_OR               ; Otherwise, go to opcode OR
-
-code1001:                       ; Opcode SUB.B/W/L
-    BRA     OP_SUB              ; Go to opcode SUB   
-
-code1010:                       ; Opcode not supported 
-    BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
-     
-code1011:                       ; Opcode CMP.B/W/L
-    BRA     OP_CMP              ; Go to opcode CMP
-
-code1100:                       ; Opcodes MULS, MULU, AND.B/W/L
-
-code1101:                       ; Opcodes ADD.B/W/L, ADDA.B/W/L
-
-code1110:                       ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, LSR.B/W/L, ROL.B/W/L, ROR.B/W/L                       
-
-code1111:                       ; Opcode not supported 
-    BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
-    
-    
-        
 OP_0000_TABLE:
     JMP     OP_UNSUPPORTED  ; 0 
     JMP     OP_UNSUPPORTED  ; 1
@@ -441,27 +389,377 @@ OP_0000_TABLE:
     JMP     OP_UNSUPPORTED  ; D
     JMP     OP_UNSUPPORTED  ; E
     JMP     OP_UNSUPPORTED  ; F
-    
 
- OP_0100_TABLE:
-    JMP     OP_UNSUPPORTED      ; 0 
-    JMP     OP_LEA              ; 1
-    JMP     OP_CLR              ; 2
-    JMP     OP_LEA              ; 3
-    JMP     OP_UNSUPPORTED      ; 4 Go to opcode SUBI
-    JMP     OP_LEA              ; 5
-    JMP     OP_ADDI             ; 6 Go to opcode ADDI
-    JMP     OP_LEA              ; 7
-    JMP     OP_MOVEM            ; 8
-    JMP     OP_LEA              ; 9 
-    JMP     OP_UNSUPPORTED      ; A
-    JMP     OP_LEA              ; B
-    JMP     OP_MOVEM            ; C
-    JMP     OP_LEA              ; D
-    JMP     CHECK_NIBBLE_TWO    ; E JSR, NOP, or RTS
-    JMP     OP_UNSUPPORTED      ; F  
+OP_UNSUPPORTED
+    LEA     ERROR_MESSAGE, A1 
+    MOVE.B  #14, D0
+    TRAP    #15
+        
+*----------------------------------------------------------------------------------------------*
+* param D0 the current instruction in word
+* param D1 the EA type
+* param A2 a pointer to the decode_buffer
+* param A5 current address
+* ea_start(D0, D1, A2, A5){
+* D2: size
+* D3: src moe, dst mode
+* D4: src regs, dst regs
+* D5: #shifts
+* D7: immediate data
+* A0: EA_TYPE_TABLE
+*       0 = ea_immediate
+* }
+
+*----------------------------------------------------------------------------------------------*
+* First 4 bits: 0000
+
+OP_SUBI
+        MOVE.B  #'S', (A2)+
+        MOVE.B  #'U', (A2)+
+        MOVE.B  #'B', (A2)+
+        MOVE.B  #'I', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_ADDI
+        MOVE.B  #'A', (A2)+
+        MOVE.B  #'D', (A2)+
+        MOVE.B  #'D', (A2)+
+        MOVE.B  #'I', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+*-----------------------------------------------------------------------------------------------*
+* First 4 bits: 0001
+OP_MOVEA
+        MOVE.B  #'M', (A2)+
+        MOVE.B  #'O', (A2)+
+        MOVE.B  #'V', (A2)+
+        MOVE.B  #'A', (A2)+
+        MOVE.B  #'A', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 0011
+OP_MOVE
+        MOVE.B  #'M', (A2)+
+        MOVE.B  #'O', (A2)+
+        MOVE.B  #'V', (A2)+
+        MOVE.B  #'E', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 0100
+OP_CLR
+        MOVE.B  #'C', (A2)+
+        MOVE.B  #'L', (A2)+
+        MOVE.B  #'R', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_NOP
+        MOVE.B  #'N', (A2)+
+        MOVE.B  #'O', (A2)+
+        MOVE.B  #'P', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_RTS
+        MOVE.B  #'R', (A2)+
+        MOVE.B  #'T', (A2)+
+        MOVE.B  #'S', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_JSR
+        MOVE.B  #'J', (A2)+
+        MOVE.B  #'S', (A2)+
+        MOVE.B  #'R', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_MOVEM
+        MOVE.B  #'M', (A2)+
+        MOVE.B  #'O', (A2)+
+        MOVE.B  #'V', (A2)+
+        MOVE.B  #'E', (A2)+
+        MOVE.B  #'M', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_LEA
+        MOVE.B  #'L', (A2)+
+        MOVE.B  #'E', (A2)+
+        MOVE.B  #'A', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 0101
+OP_ADDQ
+        MOVE.B  #'A', (A2)+
+        MOVE.B  #'D', (A2)+
+        MOVE.B  #'D', (A2)+
+        MOVE.B  #'Q', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 0110
+OP_BCC
+        MOVE.B  #'B', (A2)+
+        MOVE.B  #'C', (A2)+
+        MOVE.B  #'C', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_BGT
+        MOVE.B  #'B', (A2)+
+        MOVE.B  #'G', (A2)+
+        MOVE.B  #'T', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BLE
+        MOVE.B  #'B', (A2)+
+        MOVE.B  #'L', (A2)+
+        MOVE.B  #'E', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 0111
+OP_MOVEQ
+        MOVE.B  #'M', (A2)+
+        MOVE.B  #'O', (A2)+
+        MOVE.B  #'V', (A2)+
+        MOVE.B  #'V', (A2)+
+        MOVE.B  #'E', (A2)+
+        MOVE.B  #'Q', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 1000
+OP_DIVU
+        MOVE.B  #'D', (A2)+
+        MOVE.B  #'I', (A2)+
+        MOVE.B  #'V', (A2)+
+        MOVE.B  #'U', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+  
+OP_OR
+        MOVE.B  #'O', (A2)+
+        MOVE.B  #'R', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 1001
+OP_SUB
+        MOVE.B  #'S', (A2)+
+        MOVE.B  #'U', (A2)+
+        MOVE.B  #'B', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 1011
+OP_CMP
+        MOVE.B  #'C', (A2)+
+        MOVE.B  #'M', (A2)+
+        MOVE.B  #'P', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 1100
+OP_MULU
+        MOVE.B  #'M', (A2)+
+        MOVE.B  #'U', (A2)+
+        MOVE.B  #'L', (A2)+
+        MOVE.B  #'U', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_MULS
+        MOVE.B  #'M', (A2)+
+        MOVE.B  #'U', (A2)+
+        MOVE.B  #'L', (A2)+
+        MOVE.B  #'S', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_AND
+        MOVE.B  #'A', (A2)+
+        MOVE.B  #'N', (A2)+
+        MOVE.B  #'D', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 1101
+OP_ADD
+        MOVE.B  #'A', (A2)+
+        MOVE.B  #'D', (A2)+
+        MOVE.B  #'D', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_ADDA
+        MOVE.B  #'A', (A2)+
+        MOVE.B  #'D', (A2)+
+        MOVE.B  #'D', (A2)+
+        MOVE.B  #'A', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+*------------------------------------------------------------------------------------------------*
+* First 4 bits: 1110
+OP_ASR
+        MOVE.B  #'A', (A2)+
+        MOVE.B  #'S', (A2)+
+        MOVE.B  #'R', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+OP_ASL
+        MOVE.B  #'A', (A2)+
+        MOVE.B  #'S', (A2)+
+        MOVE.B  #'L', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_LSR
+        MOVE.B  #'L', (A2)+
+        MOVE.B  #'S', (A2)+
+        MOVE.B  #'R', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+       
+OP_LSL
+        MOVE.B  #'L', (A2)+
+        MOVE.B  #'S', (A2)+
+        MOVE.B  #'L', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_ROR
+        MOVE.B  #'R', (A2)+
+        MOVE.B  #'O', (A2)+
+        MOVE.B  #'R', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_ROL
+        MOVE.B  #'R', (A2)+
+        MOVE.B  #'O', (A2)+
+        MOVE.B  #'L', (A2)+
+        MOVE.L  #ea_type_immediate, D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+*-----------------------------------------------------------------------*
+        
+EA_START
+        MOVEM.L D2-D4/A0-A1, -(SP)
+        
+        LEA     EA_TYPE_TABLE, A0
+        MULU    #6, D1
+        JMP     0(A0, D1)
+        
+EA_FINISH
+        MOVEM.L (SP)+, D2-D4/A0-A1
+        RTS
+        
+EA_TYPE_TABLE
+        JMP     EA_IMMEDIATE    ; 0: ea_immediate
+        JMP     EA_MOVE         ; 1: ea_move
+        JMP     EA_MOVEA        ; 2: ea_movea
+        JMP     EA_LEA          ; 3: ea_lea
+        JMP     EA_DSTONLY      ; 4: ea_dstonly
+        JMP     EA_EXT          ; 5: ea_ext
+        JMP     EA_MOVEM        ; 6: ea_movem
+        JMP     EA_TRAP         ; 7: ea_trap
+        JMP     EA_QUICK        ; 8: ea_quick
+        JMP     EA_branch       ; 9: ea_branch
+        JMP     EA_FINISH
+        
+EA_SIZE
+        CMP.B   #%00, D2        ; .b
+        BEQ     EA_SIZE_B       
+        CMP.B   #%01, D2        ; .w
+        BEQ     EA_SIZE_W       
+        CMP.B   #%10, D2        ; .l
+        BEQ     EA_SIZE_L
+        JMP     EA_WRONGSIZE    ; wrong size
+EA_SIZE_B
+        MOVE.B  #'.', (A2)+
+        MOVE.B  #'B', (A2)+
+        RTS
+EA_SIZE_W
+        MOVE.B  #'.', (A2)+
+        MOVE.B  #'W', (A2)+
+        RTS
+EA_SIZE_L
+        MOVE.B  #'.', (A2)+
+        MOVE.B  #'L', (A2)+
+        RTS
+EA_SIZE_DONE
+        RTS
+        
+EA_IMMEDIATE
+        MOVE.L  A5, D1
+        ANDI.W  #dst_mode, D1
+        MOVE.B  #right6, D2
+        LSR.W   D2, D1
+        ADDI.B  #3, D1
+        MOVE.B  D1, D2
+        BRA     EA_SIZE
+        
+EA_MOVE         ; 1: ea_move
+EA_MOVEA        ; 2: ea_movea
+EA_LEA          ; 3: ea_lea
+EA_DSTONLY      ; 4: ea_dstonly
+EA_EXT          ; 5: ea_ext
+EA_MOVEM        ; 6: ea_movem
+EA_TRAP         ; 7: ea_trap
+EA_QUICK        ; 8: ea_quick
+EA_branch       ; 9: ea_branch
 
 
+        
+        
     SIMHALT             ; halt simulator
 
 * Put variables and constants here
@@ -470,9 +768,10 @@ CR              EQU         $0D
 LF              EQU         $0A
 stack           EQU         $000A0000
 buffer_size     EQU         64 
-decoded_buffer  EQU         32
+decoded_buffer  EQU         64
 lines_p_screen  EQU         20
 right4          EQU         4
+right6          EQU         6
 right8          EQU         8
 right12         EQU         12
 right16         EQU         16
@@ -497,6 +796,23 @@ src_mode        EQU         $0018
 src_reg         EQU         $0007
 bit8            EQU         $0100
 
+ea_type_immediate   EQU     0       ; EA Type = immediate
+ea_type_move        EQU     1       ; EA Type = move
+ea_type_movea       EQU     2       ; EA Type = movea
+ea_type_movea6      EQU     12      ; EA Type = movea * 6
+ea_type_lea         EQU     3       ; EA Type = lea
+ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
+ea_type_ext         EQU     5       ; EA Type = ext
+ea_type_movem       EQU     6       ; EA Type = movem
+ea_type_trap        EQU     7       ; EA Type = trap
+ea_type_quick       EQU     8       ; EA Type = addq, subq
+ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
+ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
+ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
+ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
+EA_WRONGSIZE
+
+
 
 WELCOME         DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 
@@ -510,7 +826,6 @@ USER_INST       DC.B        'Please follow the proper input instructions below: 
 ENTER_PROMPT    DC.B        'Press enter to continue...',CR,LF,0
 PROMPT_AGAIN    DC.B        'Press Y to continue / N to exit.',CR,LF,0
 EXIT_PROMPT     DC.B        'Program has execution has stopped.',CR,LF,0
-
       
 START_IN        DC.B        'Enter a starting address: ',CR,LF,0 
 END_IN          DC.B        'Enter an ending address: ',CR,LF,0 
@@ -521,10 +836,3 @@ ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0
 
     END    START        ; last line of source
 
-
-
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
