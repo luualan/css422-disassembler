@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 2/19/2020 9:07:50 PM
+Created On: 3/3/2020 2:39:01 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  Disassembler for the Motorola MC68000 Microprocessor
@@ -10,295 +10,998 @@ Created On: 2/19/2020 9:07:50 PM
 00000000                             6  * convert a memory image of instructions and data back 
 00000000                             7  * to the MC68000 assembly code and that will output the 
 00000000                             8  * disassembled code to the display.
-00000000                             9  * Title      : CSS 422
-00000000                            10  * Written by : Alan Luu and Avery Mortenson
-00000000                            11  * Date       : 2/16/2020
-00000000                            12  * Description: Disassembler
-00000000                            13  *-----------------------------------------------------------
-00001000                            14      ORG    $1000
-00001000  4EB9 00001018             15  START:      JSR     DISP_W          ; Display Welcome Message. 
-00001006  4EB9 00001024             16              JSR     DISP_UI         ; Display User Instructions.
-0000100C  4EB9 00001030             17              JSR     PROMPT_START    ; Prompt the user for starting address. 
-00001012                            18              
-Line 19 ERROR: Invalid addressing mode
-00001012                            19              LEA     A4, A1
-00001012  103C 000E                 20              MOVE.B #14, D0
-00001016  4E4F                      21              TRAP #15
-00001018                            22  
-00001018  103C 000E                 23  DISP_W      MOVE.B  #14,D0          ; Display Welcome Message. 
-0000101C  43F9 0000122C             24              LEA     WELCOME,A1
-00001022  4E4F                      25              TRAP    #15
-00001024                            26  
-00001024                            27  * Put program code here
-00001024                            28  
-00001024  103C 000E                 29  DISP_UI         MOVE.B  #14,D0             ; Display User Instructions. 
-00001028  43F9 00001262             30                  LEA     USER_INST,A1
-0000102E  4E4F                      31                  TRAP    #15    
-00001030                            32  
-00001030                            33         
-00001030  43F9 000013DC             34  PROMPT_START    LEA     START_IN,A1        ; Display starting address message
-00001036  103C 000E                 35                  MOVE.B  #14,D0
-0000103A  4E4F                      36                  TRAP    #15       
-0000103C                            37       
-0000103C  43F9 00001415             38  READ_START      LEA     START_ADDRESS,A1        ; Store user's starting address input
-00001042  103C 0002                 39                  MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
-00001046  4E4F                      40                  TRAP    #15
-00001048  1C3C 0000                 41                  MOVE.B  #0,D6
-0000104C                            42  
-0000104C  6000 0022                 43  VALIDATE_START  BRA     ATOI
-00001050                            44  
-00001050  43F9 000013F9             45  PROMPT_END      LEA     END_IN,A1        ; Display starting address message
-00001056  103C 000E                 46                  MOVE.B  #14,D0
-0000105A  4E4F                      47                  TRAP    #15            
-0000105C  43F9 00001455             48  READ_END        LEA     END_ADDRESS,A1        ; Store user's starting address input
-00001062  103C 0002                 49                  MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
-00001066  4E4F                      50                  TRAP    #15
-00001068  1C3C 0001                 51                  MOVE.B  #1,D6
-0000106C                            52  
-0000106C  6000 0002                 53  VALIDATE_END    BRA     ATOI
-00001070                            54  
-00001070  1019                      55  ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in D0          
-00001072  B03C 0030                 56                  CMP.B   #$30,D0
-00001076  6D00 0062                 57                  BLT     INVALID
-0000107A  B03C 0039                 58                  CMP.B   #$39,D0
-0000107E  6E00 0016                 59                  BGT     ASCII_TO_HEX_UPPER
-00001082  0400 0030                 60                  SUB.B   #$30,D0     ; Subtract by 30 to get the numbers 0-9
-00001086  DA80                      61                  ADD.L   D0,D5
-00001088  5341                      62                  SUBI    #1,D1       ; Decrement input's length to move to next character          
-0000108A  B23C 0000                 63                  CMP.B   #0,D1       ; Compare to see if we're at the last digit
-0000108E  6700 0058                 64                  BEQ     LASTDIGITCHECK
-00001092  E98D                      65                  LSL.L   #4,D5
-00001094  60DA                      66                  BRA     ATOI
-00001096                            67  
-00001096                            68    
-00001096  B03C 0041                 69  ASCII_TO_HEX_UPPER      CMP.B   #$41,D0
-0000109A  6D00 003E                 70                          BLT     INVALID
-0000109E  B03C 0046                 71                          CMP.B   #$46, D0
-000010A2  6E00 0014                 72                          BGT     ASCII_TO_HEX_LOWER 
-000010A6  0400 0031                 73                          SUB.B   #$31,D0     ; Subtract by 31 to get the numbers A-F
-000010AA  5D00                      74                          SUB.B   #6,D0
-000010AC  DA80                      75                          ADD.L   D0,D5
-000010AE  5341                      76                          SUBI    #1,D1
-000010B0  6700 0036                 77                          BEQ     LASTDIGITCHECK
-000010B4  E98D                      78                          LSL.L   #4,D5
-000010B6  60B8                      79                          BRA     ATOI  
-000010B8                            80  
-000010B8  B03C 0061                 81  ASCII_TO_HEX_LOWER     CMP.B    #$61, D0
-000010BC  6D00 001C                 82                         BLT     INVALID
-000010C0  B03C 0066                 83                         CMP.B   #$66, D0
-000010C4  6E00 0014                 84                         BGT     INVALID 
-000010C8  0400 0051                 85                         SUB.B   #$51,D0     ; Subtract by 51 to get the numbers a-f
-000010CC  5D00                      86                         SUB.B   #6,D0
-000010CE  DA80                      87                         ADD.L   D0,D5
-000010D0  5341                      88                         SUBI    #1,D1
-000010D2  6700 0014                 89                         BEQ     LASTDIGITCHECK
-000010D6  E98D                      90                         LSL.L   #4,D5
-000010D8  6096                      91                         BRA     ATOI  
-000010DA                            92    
-000010DA                            93  
-000010DA                            94                      
-000010DA  43F9 00001495             95  INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
-000010E0  103C 000E                 96              MOVE.B  #14, D0
-000010E4  4E4F                      97              TRAP    #15
-000010E6  4206                      98              CLR.B   D6
-000010E8                            99   
-000010E8                           100                  
-000010E8  2E05                     101  LASTDIGITCHECK      MOVE.L  D5, D7  ; D7 used as temporary storage
-000010EA  E20F                     102                      LSR.B   #1, D7  ; Check for carry bit to see if last digit is odd
-000010EC  6500 0022                103                      BCS     ODD
-000010F0  4287                     104                      CLR.L   D7
-000010F2  BC3C 0000                105                      CMP.B   #0,D6
-000010F6  6700 000A                106                      BEQ     COMPLETE_STARTA  ; When even, go to prompt for end address
-000010FA  BC3C 0001                107                      CMP.B   #1,D6
-000010FE  6700 000A                108                      BEQ     COMPLETE_ENDA
-00001102                           109  
-00001102  2845                     110  COMPLETE_STARTA     MOVEA.L D5, A4  ; A4 holds the starting address.
-00001104  4285                     111                      CLR.L   D5 
-00001106  6000 FF48                112                      BRA PROMPT_END
-0000110A                           113  
-0000110A                           114  
-0000110A  2C45                     115  COMPLETE_ENDA       MOVEA.L D5, A6  ; A6 holds the ending address. 
-0000110C  6000 011A                116                      BRA DECODE_MEMORY
-00001110                           117  
-00001110                           118  
-00001110  43F9 00001495            119  ODD     LEA     ERROR_MESSAGE, A1 
-00001116  103C 000E                120          MOVE.B  #14, D0
-0000111A  4E4F                     121          TRAP    #15
-0000111C                           122  
-0000111C                           123      
-0000111C  48E7 C000                124  ITOA    MOVEM.L D0-D1, -(SP)
-00001120  B43C 0000                125          CMP.B   #$00, D2
-00001124  6700 003A                126          BEQ ITOA_BYTE
-00001128  B43C 0001                127          CMP.B   #$01, D2
-0000112C  6700 0040                128          BEQ ITOA_WORD
-00001130  B43C 0010                129          CMP.B   #$10, D2
-00001134  6700 0054                130          BEQ ITOA_LONG
-00001138  4EF9 000011BC            131          JMP ITOA_LONGADDRESS
-0000113E                           132          
-0000113E                           133  ITOA_MOVE
-0000113E  48E7 C000                134          MOVEM.L D0-D1, -(SP)
-00001142                           135          
-00001142  B43C 0001                136          CMP.B   #%01, D2
-00001146  6700 0018                137          BEQ     ITOA_BYTE
-0000114A  B43C 0003                138          CMP.B   #%11, D2
-0000114E  6700 001E                139          BEQ     ITOA_WORD
-00001152  B43C 0002                140          CMP.B   #%10,D2
-00001156  6700 0032                141          BEQ     ITOA_LONG
-0000115A  4EF9 000011BC            142          JMP     ITOA_LONGADDRESS
-00001160                           143  
-00001160                           144  ITOA_BYTE
-00001160  3E1D                     145          MOVE.W  (A5)+,D7
-00001162  4EB9 000011F4            146          JSR     ITOA_BYTE_CONVERT
-00001168  4EF9 00001222            147          JMP     ITOA_DONE
-0000116E                           148          
-0000116E                           149  ITOA_WORD
-0000116E  3E15                     150          MOVE.W  (A5),D7
-00001170  123C 0008                151          MOVE.B  #right8, D1
-00001174  E26F                     152          LSR.W   D1,D7
-00001176  4EB9 000011F4            153          JSR     ITOA_BYTE_CONVERT
-0000117C  3E1D                     154          MOVE.W  (A5)+, D7
-0000117E  4EB9 000011F4            155          JSR     ITOA_BYTE_CONVERT
-00001184  4EF9 00001222            156          JMP     ITOA_DONE
-0000118A                           157          
-0000118A                           158  ITOA_LONG
-0000118A  3E15                     159          MOVE.W  (A5), D7
-0000118C  123C 0008                160          MOVE.B  #right8, D1
-00001190  E26F                     161          LSR.W   D1, D7
-00001192  4EB9 000011F4            162          JSR     ITOA_BYTE_CONVERT
-00001198  3E1D                     163          MOVE.W  (A5)+, D7
-0000119A  4EB9 000011F4            164          JSR     ITOA_BYTE_CONVERT
-000011A0                           165          
-000011A0  3E15                     166          MOVE.W  (A5), D7
-000011A2  123C 0008                167          MOVE.B  #right8, D1
-000011A6  E26F                     168          LSR.W   D1, D7
-000011A8  4EB9 000011F4            169          JSR     ITOA_BYTE_CONVERT
-000011AE  3E1D                     170          MOVE.W  (A5)+, D7
-000011B0  4EB9 000011F4            171          JSR     ITOA_BYTE_CONVERT
-000011B6  4EF9 00001222            172          JMP     ITOA_DONE
-000011BC                           173  
-000011BC                           174  ITOA_LONGADDRESS
-000011BC  3E4D                     175          MOVE.W  A5, A7
-000011BE  123C 0018                176          MOVE.B  #right24, D1
-000011C2  E26F                     177          LSR.W   D1,D7
-000011C4  4EB9 000011F4            178          JSR     ITOA_BYTE_CONVERT
-000011CA  3E4D                     179          MOVE.W  A5,A7
-000011CC  123C 0010                180          MOVE.B  #right16,D1
-000011D0  E26F                     181          LSR.W   D1,D7
-000011D2  4EB9 000011F4            182          JSR     ITOA_BYTE_CONVERT
-000011D8  3E0D                     183          MOVE.W  A5,D7
-000011DA  123C 0008                184          MOVE.B  #right8, D1
-000011DE  E26F                     185          LSR.W   D1,D7
-000011E0  4EB9 000011F4            186          JSR     ITOA_BYTE_CONVERT
-000011E6  3E0D                     187          MOVE.W  A5,D7
-000011E8  4EB9 000011F4            188          JSR     ITOA_BYTE_CONVERT   
-000011EE  4EF9 00001222            189          JMP     ITOA_DONE   
-000011F4                           190  
-000011F4                           191  ITOA_BYTE_CONVERT
-000011F4  3007                     192          MOVE.W  D7, D0 
-000011F6  0240 00F0                193          ANDI.W  #$F0, D0
-000011FA  123C 0004                194          MOVE.B  #right4, D1
-000011FE  E268                     195          LSR.W   D1, D0
-00001200  4EB9 00001206            196          JSR     ITOA_NIBBLE_CONVERT
-00001206                           197          
-00001206                           198  ITOA_NIBBLE_CONVERT
-00001206  B03C 0009                199          CMP.B   #9, D0
-0000120A  6E00 000A                200          BGT     ITOA_CONVERT_A_TO_F
-0000120E  0600 0030                201          ADD.B   #$30, D0
-00001212  14C0                     202          MOVE.B  D0, (A2)+
-00001214  4E75                     203          RTS
-00001216                           204          
-00001216                           205  ITOA_CONVERT_A_TO_F
-00001216  0400 000A                206          SUBI.B  #10, D0
-0000121A  0600 0041                207          ADDI.B  #$41, D0
-0000121E  14C0                     208          MOVE.B  D0, (A2)+
-00001220  4E75                     209          RTS
-00001222                           210  
-00001222                           211  ITOA_DONE
-00001222  4CDF 0003                212          MOVEM.L (SP)+, D0-D1
-00001226  4E75                     213          RTS
-00001228                           214           
-00001228                           215          
-00001228                           216                                
-00001228                           217  DECODE_MEMORY                
-00001228                           218            
-00001228                           219                  
-00001228                           220  
-00001228  FFFF FFFF                221      SIMHALT             ; halt simulator
-0000122C                           222  
-0000122C                           223  * Put variables and constants here
-0000122C                           224     
-0000122C  =0000000D                225  CR              EQU         $0D
-0000122C  =0000000A                226  LF              EQU         $0A
-0000122C  =00000004                227  right4          EQU         4
-0000122C  =00000008                228  right8          EQU         8
-0000122C  =00000010                229  right16         EQU         16
-0000122C  =00000018                230  right24         EQU         24
-0000122C                           231  
-0000122C= 57 65 6C 63 6F 6D ...    232  WELCOME         DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
-00001262                           233  
-00001262                           234  
-00001262= 50 6C 65 61 73 65 ...    235  USER_INST       DC.B        'Please follow the proper input instructions below: ',CR,LF
-00001297= 2D 20 53 74 61 72 ...    236                  DC.B        '- Starting address must be lower than ending address.',CR,LF
-000012CE= 2D 20 54 68 65 20 ...    237                  DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
-00001317= 2D 20 53 74 61 72 ...    238                  DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
-0000135D= 2D 20 44 6F 20 6E ...    239                  DC.B        '- Do not put spaces in between input characters.',CR,LF
-0000138F= 2D 20 56 61 6C 69 ...    240                  DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
-000013DC                           241  
-000013DC                           242        
-000013DC= 45 6E 74 65 72 20 ...    243  START_IN        DC.B        'Enter a starting address: ',CR,LF,0 
-000013F9= 45 6E 74 65 72 20 ...    244  END_IN          DC.B        'Enter an ending address: ',CR,LF,0 
-00001415                           245  START_ADDRESS   DS.B        64     
-00001455                           246  END_ADDRESS     DS.B        64 
-00001495= 45 72 72 6F 72 2C ...    247  ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0       
-000014B4                           248  
-000014B4                           249  
-000014B4                           250      END    START        ; last line of source
+00000000                             9  *-----------------------------------------------------------
+00001000                            10      ORG    $1000
+00001000  4EB9 00001012             11  START:      JSR     DISP_W          ; Display Welcome Message. 
+00001006  4EB9 0000101E             12              JSR     DISP_UI         ; Display User Instructions.
+0000100C  4EB9 0000102A             13              JSR     PROMPT_START    ; Prompt the user for starting address. 
+00001012                            14              
+00001012                            15  *------------------------------------------------------------*
+00001012                            16  * D0: used for the tasks
+00001012                            17  * D1: used to hold the size of the input obtained. 
+00001012                            18  * D5: used to store the starting and ending address 
+00001012                            19  * temporarily before moving them to A4 and A6 correspondingly. 
+00001012                            20  * D6: used to check the last digit to see if the input 
+00001012                            21  * for the starting and ending address causes a bus error. 
+00001012                            22  * A1: a pointer to the message to print out. 
+00001012                            23  *------------------------------------------------------------*
+00001012                            24  
+00001012  103C 000E                 25  DISP_W      MOVE.B  #14,D0          ; Display Welcome Message. 
+00001016  43F9 00001801             26              LEA     WELCOME,A1
+0000101C  4E4F                      27              TRAP    #15
+0000101E                            28  
+0000101E                            29  * Put program code here
+0000101E                            30  
+0000101E  103C 000E                 31  DISP_UI         MOVE.B  #14,D0             ; Display User Instructions. 
+00001022  43F9 00001837             32                  LEA     USER_INST,A1
+00001028  4E4F                      33                  TRAP    #15    
+0000102A                            34  
+0000102A                            35         
+0000102A  4FF9 000A0000             36  PROMPT_START    LEA     stack, SP          ; SP = stack ($A0000)
+00001030  43F9 00001A16             37                  LEA     START_IN,A1        ; Display starting address message
+00001036  103C 000E                 38                  MOVE.B  #14,D0
+0000103A  4E4F                      39                  TRAP    #15       
+0000103C                            40       
+0000103C  43F9 00001A4F             41  READ_START      LEA     START_ADDRESS,A1        ; Store user's starting address input
+00001042  103C 0002                 42                  MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
+00001046  4E4F                      43                  TRAP    #15
+00001048  1C3C 0000                 44                  MOVE.B  #0,D6
+0000104C                            45  
+0000104C  6000 0022                 46  VALIDATE_START  BRA     ATOI
+00001050                            47  
+00001050  43F9 00001A33             48  PROMPT_END      LEA     END_IN,A1        ; Display starting address message
+00001056  103C 000E                 49                  MOVE.B  #14,D0
+0000105A  4E4F                      50                  TRAP    #15            
+0000105C  43F9 00001A8F             51  READ_END        LEA     END_ADDRESS,A1        ; Store user's starting address input
+00001062  103C 0002                 52                  MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
+00001066  4E4F                      53                  TRAP    #15
+00001068  1C3C 0001                 54                  MOVE.B  #1,D6
+0000106C                            55  
+0000106C  6000 0002                 56  VALIDATE_END    BRA     ATOI
+00001070                            57  
+00001070                            58  * D0 stores the value to pushed from A1.
+00001070                            59  
+00001070  1019                      60  ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in D0          
+00001072  B03C 0030                 61                  CMP.B   #$30,D0
+00001076  6D00 0040                 62                  BLT     INVALID
+0000107A  B03C 0039                 63                  CMP.B   #$39,D0
+0000107E  6E00 0016                 64                  BGT     ASCII_TO_HEX_LETTER
+00001082  0400 0030                 65                  SUB.B   #$30,D0     ; Subtract by 30 to get the numbers 0-9
+00001086  DA80                      66                  ADD.L   D0,D5
+00001088  5341                      67                  SUBI    #1,D1       ; Decrement input's length to move to next character          
+0000108A  B23C 0000                 68                  CMP.B   #0,D1       ; Compare to see if we're at the last digit
+0000108E  6700 0036                 69                  BEQ     LASTDIGITCHECK
+00001092  E98D                      70                  LSL.L   #4,D5
+00001094  60DA                      71                  BRA     ATOI
+00001096                            72  
+00001096                            73    
+00001096  B03C 0041                 74  ASCII_TO_HEX_LETTER     CMP.B   #$41,D0
+0000109A  6D00 001C                 75                          BLT     INVALID
+0000109E  B03C 0046                 76                          CMP.B   #$46, D0
+000010A2  6E00 0014                 77                          BGT     INVALID 
+000010A6  0400 0031                 78                          SUB.B   #$31,D0     ; Subtract by 31 to get the numbers A-F
+000010AA  5D00                      79                          SUB.B   #6,D0
+000010AC  DA80                      80                          ADD.L   D0,D5
+000010AE  5341                      81                          SUBI    #1,D1
+000010B0  6700 0014                 82                          BEQ     LASTDIGITCHECK
+000010B4  E98D                      83                          LSL.L   #4,D5
+000010B6  60B8                      84                          BRA     ATOI     
+000010B8                            85  
+000010B8                            86                      
+000010B8  43F9 00001ACF             87  INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
+000010BE  103C 000E                 88              MOVE.B  #14, D0
+000010C2  4E4F                      89              TRAP    #15
+000010C4  4206                      90              CLR.B   D6
+000010C6                            91   
+000010C6                            92                  
+000010C6  2E05                      93  LASTDIGITCHECK      MOVE.L  D5, D7  ; D7 used as temporary storage
+000010C8  E20F                      94                      LSR.B   #1, D7  ; Check for carry bit to see if last digit is odd
+000010CA  6500 0022                 95                      BCS     ODD
+000010CE  4287                      96                      CLR.L   D7
+000010D0  BC3C 0000                 97                      CMP.B   #0,D6
+000010D4  6700 000A                 98                      BEQ     COMPLETE_STARTA  ; When even, go to prompt for end address
+000010D8  BC3C 0001                 99                      CMP.B   #1,D6
+000010DC  6700 000A                100                      BEQ     COMPLETE_ENDA
+000010E0                           101  
+000010E0  2845                     102  COMPLETE_STARTA     MOVEA.L D5, A4  ; A4 holds the starting address.
+000010E2  4285                     103                      CLR.L   D5 
+000010E4  6000 FF6A                104                      BRA PROMPT_END
+000010E8                           105  
+000010E8                           106  
+000010E8  2C45                     107  COMPLETE_ENDA       MOVEA.L D5, A6  ; A6 holds the ending address. 
+000010EA  6000 01A8                108                      BRA DECODE_MEMORY
+000010EE                           109  
+000010EE                           110  
+000010EE  43F9 00001ACF            111  ODD     LEA     ERROR_MESSAGE, A1 
+000010F4  103C 000E                112          MOVE.B  #14, D0
+000010F8  4E4F                     113          TRAP    #15
+000010FA                           114          
+000010FA  48E7 C000                115  ITOA    MOVEM.L D0-D1, -(SP)
+000010FE  B43C 0000                116          CMP.B   #$00, D2
+00001102  6700 003A                117          BEQ     ITOA_BYTE
+00001106  B43C 0001                118          CMP.B   #$01, D2
+0000110A  6700 0040                119          BEQ     ITOA_WORD
+0000110E  B43C 0010                120          CMP.B   #$10, D2
+00001112  6700 0054                121          BEQ     ITOA_LONG
+00001116  4EF9 0000119A            122          JMP     ITOA_LONGADDRESS
+0000111C                           123          
+0000111C                           124  ITOA_MOVE
+0000111C  48E7 C000                125          MOVEM.L D0-D1, -(SP)
+00001120                           126          
+00001120  B43C 0001                127          CMP.B   #%01, D2
+00001124  6700 0018                128          BEQ     ITOA_BYTE
+00001128  B43C 0003                129          CMP.B   #%11, D2
+0000112C  6700 001E                130          BEQ     ITOA_WORD
+00001130  B43C 0002                131          CMP.B   #%10,D2
+00001134  6700 0032                132          BEQ     ITOA_LONG
+00001138  4EF9 0000119A            133          JMP     ITOA_LONGADDRESS
+0000113E                           134  
+0000113E                           135  ITOA_BYTE
+0000113E  3E1D                     136          MOVE.W  (A5)+,D7
+00001140  4EB9 000011D2            137          JSR     ITOA_BYTE_CONVERT
+00001146  4EF9 00001200            138          JMP     ITOA_DONE
+0000114C                           139          
+0000114C                           140  ITOA_WORD
+0000114C  3E15                     141          MOVE.W  (A5),D7
+0000114E  123C 0008                142          MOVE.B  #right8, D1
+00001152  E26F                     143          LSR.W   D1,D7
+00001154  4EB9 000011D2            144          JSR     ITOA_BYTE_CONVERT
+0000115A  3E1D                     145          MOVE.W  (A5)+, D7
+0000115C  4EB9 000011D2            146          JSR     ITOA_BYTE_CONVERT
+00001162  4EF9 00001200            147          JMP     ITOA_DONE
+00001168                           148          
+00001168                           149  ITOA_LONG
+00001168  3E15                     150          MOVE.W  (A5), D7
+0000116A  123C 0008                151          MOVE.B  #right8, D1
+0000116E  E26F                     152          LSR.W   D1, D7
+00001170  4EB9 000011D2            153          JSR     ITOA_BYTE_CONVERT
+00001176  3E1D                     154          MOVE.W  (A5)+, D7
+00001178  4EB9 000011D2            155          JSR     ITOA_BYTE_CONVERT
+0000117E                           156          
+0000117E  3E15                     157          MOVE.W  (A5), D7
+00001180  123C 0008                158          MOVE.B  #right8, D1
+00001184  E26F                     159          LSR.W   D1, D7
+00001186  4EB9 000011D2            160          JSR     ITOA_BYTE_CONVERT
+0000118C  3E1D                     161          MOVE.W  (A5)+, D7
+0000118E  4EB9 000011D2            162          JSR     ITOA_BYTE_CONVERT
+00001194  4EF9 00001200            163          JMP     ITOA_DONE
+0000119A                           164  
+0000119A                           165  ITOA_LONGADDRESS
+0000119A  3E4D                     166          MOVE.W  A5, A7
+0000119C  123C 0018                167          MOVE.B  #right24, D1
+000011A0  E26F                     168          LSR.W   D1,D7
+000011A2  4EB9 000011D2            169          JSR     ITOA_BYTE_CONVERT
+000011A8  3E4D                     170          MOVE.W  A5,A7
+000011AA  123C 0010                171          MOVE.B  #right16,D1
+000011AE  E26F                     172          LSR.W   D1,D7
+000011B0  4EB9 000011D2            173          JSR     ITOA_BYTE_CONVERT
+000011B6  3E0D                     174          MOVE.W  A5,D7
+000011B8  123C 0008                175          MOVE.B  #right8, D1
+000011BC  E26F                     176          LSR.W   D1,D7
+000011BE  4EB9 000011D2            177          JSR     ITOA_BYTE_CONVERT
+000011C4  3E0D                     178          MOVE.W  A5,D7
+000011C6  4EB9 000011D2            179          JSR     ITOA_BYTE_CONVERT   
+000011CC  4EF9 00001200            180          JMP     ITOA_DONE   
+000011D2                           181  
+000011D2                           182  ITOA_BYTE_CONVERT
+000011D2  3007                     183          MOVE.W  D7, D0 
+000011D4  0240 00F0                184          ANDI.W  #$F0, D0
+000011D8  123C 0004                185          MOVE.B  #right4, D1
+000011DC  E268                     186          LSR.W   D1, D0
+000011DE  4EB9 000011E4            187          JSR     ITOA_NIBBLE_CONVERT
+000011E4                           188          
+000011E4                           189  ITOA_NIBBLE_CONVERT
+000011E4  B03C 0009                190          CMP.B   #9, D0
+000011E8  6E00 000A                191          BGT     ITOA_CONVERT_A_TO_F
+000011EC  0600 0030                192          ADD.B   #$30, D0
+000011F0  14C0                     193          MOVE.B  D0, (A2)+
+000011F2  4E75                     194          RTS
+000011F4                           195          
+000011F4                           196  ITOA_CONVERT_A_TO_F
+000011F4  0400 000A                197          SUBI.B  #10, D0
+000011F8  0600 0041                198          ADDI.B  #$41, D0
+000011FC  14C0                     199          MOVE.B  D0, (A2)+
+000011FE  4E75                     200          RTS
+00001200                           201  
+00001200                           202  ITOA_DONE
+00001200  4CDF 0003                203          MOVEM.L (SP)+, D0-D1
+00001204  4E75                     204          RTS
+00001206                           205  
+00001206                           206  *-------------------------------------------------------------------------------*
+00001206                           207  
+00001206                           208  START_DECODING
+00001206  4282                     209          CLR.L   D2
+00001208                           210          
+00001208                           211  DECODING_ITERATION
+00001208                           212          ;decoding the current address
+00001208  4EB9 00001294            213          JSR     DECODE_MEMORY
+0000120E  103C 000D                214          MOVE.B  #task13, D0
+00001212  43F9 00000040            215          LEA     decoded_buffer, A1
+00001218  4E4F                     216          TRAP    #15
+0000121A                           217          
+0000121A                           218          ;check if decoding has finished or if the screen is filled. 
+0000121A  BDCD                     219          CMP.L   A5, A6
+0000121C  6F00 0024                220          BLE     CONTINUE_OR_END
+00001220                           221          ;have yet to reach the ending address
+00001220  5202                     222          ADDQ.B  #1, D2
+00001222  B439 00000014            223          CMP.B   lines_p_screen, D2
+00001228  6C00 0004                224          BGE     DECODE_PAUSE
+0000122C                           225          ;not yet reached the maximum lines per screen. 
+0000122C  60DA                     226          BRA     DECODING_ITERATION
+0000122E                           227  
+0000122E                           228  DECODE_PAUSE
+0000122E  103C 000E                229          MOVE.B  #task14, D0
+00001232  43F9 000019B1            230          LEA     ENTER_PROMPT, A1
+00001238  4E4F                     231          TRAP    #15
+0000123A  103C 0005                232          MOVE.B  #task5, D0
+0000123E  4E4F                     233          TRAP    #15
+00001240  60C4                     234          BRA     START_DECODING
+00001242                           235  
+00001242                           236  CONTINUE_OR_END
+00001242  103C 000E                237          MOVE.B  #task14, D0
+00001246  43F9 000019CE            238          LEA     PROMPT_AGAIN, A1
+0000124C  4E4F                     239          TRAP    #15
+0000124E                           240          
+0000124E  103C 0002                241          MOVE.B  #task2, D0
+00001252  43F9 00001800            242          LEA     ascii_y_n, A1
+00001258  4E4F                     243          TRAP    #15
+0000125A                           244          
+0000125A  1639 00001800            245          MOVE.B  ascii_y_n, D3
+00001260  0C03 0059                246          CMPI.B  #y_uppercase, D3
+00001264  6700 FDC4                247          BEQ     PROMPT_START
+00001268  0C03 0079                248          CMPI.B  #y_lowercase, D3
+0000126C  6700 FDBC                249          BEQ     PROMPT_START
+00001270  0C03 004E                250          CMPI.B  #n_uppercase, D3
+00001274  6700 000C                251          BEQ     EXIT
+00001278  0C03 006E                252          CMPI.B  #n_lowercase, D3
+0000127C  6700 0004                253          BEQ     EXIT
+00001280                           254  
+00001280  60C0                     255          BRA     CONTINUE_OR_END 
+00001282                           256          
+00001282                           257  EXIT
+00001282  103C 000E                258          MOVE.B  #task14, D0
+00001286  43F9 000019F1            259          LEA     EXIT_PROMPT, A1
+0000128C  4E4F                     260          TRAP    #15
+0000128E                           261          
+0000128E  103C 0009                262          MOVE.B  #task9, D0
+00001292  4E4F                     263          TRAP    #15
+00001294                           264  
+00001294                           265          
+00001294                           266          
+00001294                           267  *---------------------------------------------------------------------------------*
+00001294                           268  * D0: the current instruction. 
+00001294                           269  * D1: 
+00001294                           270  * D2: data size / shift count
+00001294                           271  * D3: loop counter for the amount of lines per screen. 
+00001294                           272  * D4: 
+00001294                           273  * D5: 
+00001294                           274  * D6: 
+00001294                           275  * D7: 
+00001294                           276  * A0: 
+00001294                           277  * A1: A pointer to the message to print out. 
+00001294                           278  * A2: A pointer to the decode_buffer. 
+00001294                           279  * A3: 
+00001294                           280  * A4: Store the starting address and increment to the ending address. 
+00001294                           281  * A5: The current address. 
+00001294                           282  * A6: Store the ending address. 
+00001294                           283  * A7: Stack pointer. 
+00001294                           284  *---------------------------------------------------------------------------------*
+00001294                           285                                
+00001294                           286  DECODE_MEMORY     
+00001294                           287  
+00001294                           288  *Clear the data and address registers used to obtain the starting and ending address. 
+00001294  4280                     289          CLR.L   D0
+00001296  4285                     290          CLR.L   D5
+00001298  4286                     291          CLR.L   D6
+0000129A  327C 0000                292          MOVEA   #0, A1
+0000129E                           293          
+0000129E  48E7 2002                294          MOVEM.L D2/A6, -(SP)
+000012A2                           295                  
+000012A2                           296          ;zero clear the decode_buffer
+000012A2  4EB9 000012D8            297          JSR     OP_CLEAR_DATA
+000012A8  45F9 00000040            298          LEA     decoded_buffer, A2
+000012AE                           299                  
+000012AE                           300          ;print out the current address
+000012AE  7403                     301          MOVE.L  #$0003, D2
+000012B0  4EB8 10FA                302          JSR     ITOA
+000012B4  14FC 0009                303          MOVE.B  #$9, (A2)+
+000012B8                           304                  
+000012B8                           305          ;load the next instruction and jump to the opcode table entry
+000012B8  41F9 000012EE            306          LEA     OP_TABLE, A0
+000012BE  4280                     307          CLR.L   D0
+000012C0  301D                     308          MOVE.W  (A5)+, D0
+000012C2  2200                     309          MOVE.L  D0, D1
+000012C4  143C 000C                310          MOVE.B  #right12, D2
+000012C8  E469                     311          LSR.W   D2, D1
+000012CA  C2FC 0006                312          MULU    #6, D1
+000012CE  4EF0 1000                313          JMP     0(A0, D1)
+000012D2                           314  OP_FINISH
+000012D2  4CDF 4004                315          MOVEM.L (SP)+, D2/A6
+000012D6  4E75                     316          RTS
+000012D8                           317  
+000012D8                           318  *------------------------------------------------------------------------------------*
+000012D8                           319          ;clear the 32 bits within the decoded_buffer       
+000012D8                           320  OP_CLEAR_DATA
+000012D8  4283                     321          CLR.L   D3
+000012DA  163C 0040                322          MOVE.B  #buffer_size, D3
+000012DE  45F9 00000040            323          LEA     decoded_buffer, A2
+000012E4                           324  OP_CLEAR_DATA_LOOP
+000012E4  14FC 0000                325          MOVE.B  #0, (A2)+
+000012E8  5343                     326          SUBI    #1, D3
+000012EA  6EF8                     327          BGT     OP_CLEAR_DATA_LOOP
+000012EC  4E75                     328          RTS
+000012EE                           329  
+000012EE                           330  *------------------------------------------------------------------------------------*
+000012EE                           331  
+000012EE                           332  OP_TABLE
+000012EE  4EF9 0000134E            333          JMP     code0000    ; ADDI.bwl/ ANDI.bwl / CMPI.bwl / EORI.bwl / ORI.bwl / SUBI.bwl 
+000012F4  4EF9 00001368            334          JMP     code0001    ; MOVE.b
+000012FA  4EF9 00001368            335          JMP     code0010    ; MOVE.l / MOVEA.l
+00001300  4EF9 00001368            336          JMP     code0011    ; MOVE.w / MOVEA.w
+00001306  4EF9 00001368            337          JMP     code0100    ; CLR.bwl / JMP / JSR / LEA / MOVEM.wl / NOP / NOT.bwl / RTS / STOP / TRAP
+0000130C  4EF9 00001368            338          JMP     code0101    ; ADDQ.bwl / SUBQ.bwl / Scc / Dbcc
+00001312  4EF9 00001368            339          JMP     code0110    ; BRA.bw / BSR.bw / Bcc.bw
+00001318  4EF9 00001368            340          JMP     code0111    ; MOVEQ
+0000131E  4EF9 00001368            341          JMP     code1000    ; DIVS / DIVU / CR.bwl
+00001324  4EF9 00001368            342          JMP     code1001    ; SUB.bwl / SUBA.wl
+0000132A  4EF9 00001368            343          JMP     code1010    ;   [unassigned]
+00001330  4EF9 00001368            344          JMP     code1011    ; CMP.bwl / CMPA.wl / EOR.bwl
+00001336  4EF9 00001368            345          JMP     code1100    ; MULS / MULU / AND.bwl
+0000133C  4EF9 00001368            346          JMP     code1101    ; ADD.bwl / ADDA.wl / ADDX.bwl
+00001342  4EF9 00001368            347          JMP     code1110    ; ASL.bwl / ASR.bwl / LSL.bwl / LSR.bwl / ROR.bwl / ROL.bwl
+00001348  4EF9 00001368            348          JMP     code1111    ;   [unassigned]
+0000134E                           349          
+0000134E                           350  code0000:                       ; Opcodes ADDI and SUBI
+0000134E  220D                     351      MOVE.L  A5,D1               ; A5 is current instruction word
+00001350  0241 0F00                352      ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
+00001354  143C 0008                353      MOVE.B  #right8,D2          ; Used to shift 8 times to right
+00001358  E469                     354      LSR.W   D2,D1               ; Shift nibble into LSB position
+0000135A  C2FC 0006                355      MULU    #6, D1              ; Set displacement 
+0000135E  41F9 00001368            356      LEA     OP_0000_TABLE,A0    ; Load table into A0
+00001364  4EF0 1000                357      JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
+00001368                           358  
+00001368                           359  code0001
+00001368                           360  code0010    
+00001368                           361  code0011    
+00001368                           362  code0100    
+00001368                           363  code0101    
+00001368                           364  code0110    
+00001368                           365  code0111    
+00001368                           366  code1000    
+00001368                           367  code1001    
+00001368                           368  code1010    
+00001368                           369  code1011    
+00001368                           370  code1100    
+00001368                           371  code1101    
+00001368                           372  code1110    
+00001368                           373  code1111    
+00001368                           374  
+00001368                           375  OP_0000_TABLE:
+00001368  4EF9 000013C8            376      JMP     OP_UNSUPPORTED  ; 0 
+0000136E  4EF9 000013C8            377      JMP     OP_UNSUPPORTED  ; 1
+00001374  4EF9 000013C8            378      JMP     OP_UNSUPPORTED  ; 2
+0000137A  4EF9 000013C8            379      JMP     OP_UNSUPPORTED  ; 3
+00001380  4EF9 000013D4            380      JMP     OP_SUBI         ; 4 Go to opcode SUBI
+00001386  4EF9 000013C8            381      JMP     OP_UNSUPPORTED  ; 5
+0000138C  4EF9 000013F4            382      JMP     OP_ADDI         ; 6 Go to opcode ADDI
+00001392  4EF9 000013C8            383      JMP     OP_UNSUPPORTED  ; 7
+00001398  4EF9 000013C8            384      JMP     OP_UNSUPPORTED  ; 8
+0000139E  4EF9 000013C8            385      JMP     OP_UNSUPPORTED  ; 9
+000013A4  4EF9 000013C8            386      JMP     OP_UNSUPPORTED  ; A
+000013AA  4EF9 000013C8            387      JMP     OP_UNSUPPORTED  ; B
+000013B0  4EF9 000013C8            388      JMP     OP_UNSUPPORTED  ; C
+000013B6  4EF9 000013C8            389      JMP     OP_UNSUPPORTED  ; D
+000013BC  4EF9 000013C8            390      JMP     OP_UNSUPPORTED  ; E
+000013C2  4EF9 000013C8            391      JMP     OP_UNSUPPORTED  ; F
+000013C8                           392  
+000013C8                           393  OP_UNSUPPORTED
+000013C8  43F9 00001ACF            394      LEA     ERROR_MESSAGE, A1 
+000013CE  103C 000E                395      MOVE.B  #14, D0
+000013D2  4E4F                     396      TRAP    #15
+000013D4                           397          
+000013D4                           398  *----------------------------------------------------------------------------------------------*
+000013D4                           399  * param D0 the current instruction in word
+000013D4                           400  * param D1 the EA type
+000013D4                           401  * param A2 a pointer to the decode_buffer
+000013D4                           402  * param A5 current address
+000013D4                           403  * ea_start(D0, D1, A2, A5){
+000013D4                           404  * D2: size
+000013D4                           405  * D3: src moe, dst mode
+000013D4                           406  * D4: src regs, dst regs
+000013D4                           407  * D5: #shifts
+000013D4                           408  * D7: immediate data
+000013D4                           409  * A0: EA_TYPE_TABLE
+000013D4                           410  *       0 = ea_immediate
+000013D4                           411  * }
+000013D4                           412  
+000013D4                           413  *----------------------------------------------------------------------------------------------*
+000013D4                           414  * First 4 bits: 0000
+000013D4                           415  
+000013D4                           416  OP_SUBI
+000013D4  14FC 0053                417          MOVE.B  #'S', (A2)+
+000013D8  14FC 0055                418          MOVE.B  #'U', (A2)+
+000013DC  14FC 0042                419          MOVE.B  #'B', (A2)+
+000013E0  14FC 0049                420          MOVE.B  #'I', (A2)+
+000013E4  223C 00000000            421          MOVE.L  #ea_type_immediate, D1
+000013EA  4EB9 00001754            422          JSR     EA_START
+000013F0  4EF8 12D2                423          JMP     OP_FINISH
+000013F4                           424          
+000013F4                           425  OP_ADDI
+000013F4  14FC 0041                426          MOVE.B  #'A', (A2)+
+000013F8  14FC 0044                427          MOVE.B  #'D', (A2)+
+000013FC  14FC 0044                428          MOVE.B  #'D', (A2)+
+00001400  14FC 0049                429          MOVE.B  #'I', (A2)+
+00001404  223C 00000000            430          MOVE.L  #ea_type_immediate, D1
+0000140A  4EB9 00001754            431          JSR     EA_START
+00001410  4EF8 12D2                432          JMP     OP_FINISH
+00001414                           433  
+00001414                           434  *-----------------------------------------------------------------------------------------------*
+00001414                           435  * First 4 bits: 0001
+00001414                           436  OP_MOVEA
+00001414  14FC 004D                437          MOVE.B  #'M', (A2)+
+00001418  14FC 004F                438          MOVE.B  #'O', (A2)+
+0000141C  14FC 0056                439          MOVE.B  #'V', (A2)+
+00001420  14FC 0041                440          MOVE.B  #'A', (A2)+
+00001424  14FC 0041                441          MOVE.B  #'A', (A2)+
+00001428  223C 00000000            442          MOVE.L  #ea_type_immediate, D1
+0000142E  4EB9 00001754            443          JSR     EA_START
+00001434  4EF8 12D2                444          JMP     OP_FINISH
+00001438                           445  
+00001438                           446  *------------------------------------------------------------------------------------------------*
+00001438                           447  * First 4 bits: 0011
+00001438                           448  OP_MOVE
+00001438  14FC 004D                449          MOVE.B  #'M', (A2)+
+0000143C  14FC 004F                450          MOVE.B  #'O', (A2)+
+00001440  14FC 0056                451          MOVE.B  #'V', (A2)+
+00001444  14FC 0045                452          MOVE.B  #'E', (A2)+
+00001448  223C 00000000            453          MOVE.L  #ea_type_immediate, D1
+0000144E  4EB9 00001754            454          JSR     EA_START
+00001454  4EF8 12D2                455          JMP     OP_FINISH
+00001458                           456  
+00001458                           457  *------------------------------------------------------------------------------------------------*
+00001458                           458  * First 4 bits: 0100
+00001458                           459  OP_CLR
+00001458  14FC 0043                460          MOVE.B  #'C', (A2)+
+0000145C  14FC 004C                461          MOVE.B  #'L', (A2)+
+00001460  14FC 0052                462          MOVE.B  #'R', (A2)+
+00001464  223C 00000000            463          MOVE.L  #ea_type_immediate, D1
+0000146A  4EB9 00001754            464          JSR     EA_START
+00001470  4EF8 12D2                465          JMP     OP_FINISH
+00001474                           466          
+00001474                           467  OP_NOP
+00001474  14FC 004E                468          MOVE.B  #'N', (A2)+
+00001478  14FC 004F                469          MOVE.B  #'O', (A2)+
+0000147C  14FC 0050                470          MOVE.B  #'P', (A2)+
+00001480  223C 00000000            471          MOVE.L  #ea_type_immediate, D1
+00001486  4EB9 00001754            472          JSR     EA_START
+0000148C  4EF8 12D2                473          JMP     OP_FINISH
+00001490                           474          
+00001490                           475  OP_RTS
+00001490  14FC 0052                476          MOVE.B  #'R', (A2)+
+00001494  14FC 0054                477          MOVE.B  #'T', (A2)+
+00001498  14FC 0053                478          MOVE.B  #'S', (A2)+
+0000149C  223C 00000000            479          MOVE.L  #ea_type_immediate, D1
+000014A2  4EB9 00001754            480          JSR     EA_START
+000014A8  4EF8 12D2                481          JMP     OP_FINISH
+000014AC                           482          
+000014AC                           483  OP_JSR
+000014AC  14FC 004A                484          MOVE.B  #'J', (A2)+
+000014B0  14FC 0053                485          MOVE.B  #'S', (A2)+
+000014B4  14FC 0052                486          MOVE.B  #'R', (A2)+
+000014B8  223C 00000000            487          MOVE.L  #ea_type_immediate, D1
+000014BE  4EB9 00001754            488          JSR     EA_START
+000014C4  4EF8 12D2                489          JMP     OP_FINISH
+000014C8                           490  
+000014C8                           491  OP_MOVEM
+000014C8  14FC 004D                492          MOVE.B  #'M', (A2)+
+000014CC  14FC 004F                493          MOVE.B  #'O', (A2)+
+000014D0  14FC 0056                494          MOVE.B  #'V', (A2)+
+000014D4  14FC 0045                495          MOVE.B  #'E', (A2)+
+000014D8  14FC 004D                496          MOVE.B  #'M', (A2)+
+000014DC  223C 00000000            497          MOVE.L  #ea_type_immediate, D1
+000014E2  4EB9 00001754            498          JSR     EA_START
+000014E8  4EF8 12D2                499          JMP     OP_FINISH
+000014EC                           500          
+000014EC                           501  OP_LEA
+000014EC  14FC 004C                502          MOVE.B  #'L', (A2)+
+000014F0  14FC 0045                503          MOVE.B  #'E', (A2)+
+000014F4  14FC 0041                504          MOVE.B  #'A', (A2)+
+000014F8  223C 00000000            505          MOVE.L  #ea_type_immediate, D1
+000014FE  4EB9 00001754            506          JSR     EA_START
+00001504  4EF8 12D2                507          JMP     OP_FINISH
+00001508                           508  
+00001508                           509  *------------------------------------------------------------------------------------------------*
+00001508                           510  * First 4 bits: 0101
+00001508                           511  OP_ADDQ
+00001508  14FC 0041                512          MOVE.B  #'A', (A2)+
+0000150C  14FC 0044                513          MOVE.B  #'D', (A2)+
+00001510  14FC 0044                514          MOVE.B  #'D', (A2)+
+00001514  14FC 0051                515          MOVE.B  #'Q', (A2)+
+00001518  223C 00000000            516          MOVE.L  #ea_type_immediate, D1
+0000151E  4EB9 00001754            517          JSR     EA_START
+00001524  4EF8 12D2                518          JMP     OP_FINISH
+00001528                           519          
+00001528                           520  *------------------------------------------------------------------------------------------------*
+00001528                           521  * First 4 bits: 0110
+00001528                           522  OP_BCC
+00001528  14FC 0042                523          MOVE.B  #'B', (A2)+
+0000152C  14FC 0043                524          MOVE.B  #'C', (A2)+
+00001530  14FC 0043                525          MOVE.B  #'C', (A2)+
+00001534  223C 00000000            526          MOVE.L  #ea_type_immediate, D1
+0000153A  4EB9 00001754            527          JSR     EA_START
+00001540  4EF8 12D2                528          JMP     OP_FINISH
+00001544                           529          
+00001544                           530  OP_BGT
+00001544  14FC 0042                531          MOVE.B  #'B', (A2)+
+00001548  14FC 0047                532          MOVE.B  #'G', (A2)+
+0000154C  14FC 0054                533          MOVE.B  #'T', (A2)+
+00001550  223C 00000000            534          MOVE.L  #ea_type_immediate, D1
+00001556  4EB9 00001754            535          JSR     EA_START
+0000155C  4EF8 12D2                536          JMP     OP_FINISH
+00001560                           537  
+00001560                           538  OP_BLE
+00001560  14FC 0042                539          MOVE.B  #'B', (A2)+
+00001564  14FC 004C                540          MOVE.B  #'L', (A2)+
+00001568  14FC 0045                541          MOVE.B  #'E', (A2)+
+0000156C  223C 00000000            542          MOVE.L  #ea_type_immediate, D1
+00001572  4EB9 00001754            543          JSR     EA_START
+00001578  4EF8 12D2                544          JMP     OP_FINISH
+0000157C                           545  *------------------------------------------------------------------------------------------------*
+0000157C                           546  * First 4 bits: 0111
+0000157C                           547  OP_MOVEQ
+0000157C  14FC 004D                548          MOVE.B  #'M', (A2)+
+00001580  14FC 004F                549          MOVE.B  #'O', (A2)+
+00001584  14FC 0056                550          MOVE.B  #'V', (A2)+
+00001588  14FC 0056                551          MOVE.B  #'V', (A2)+
+0000158C  14FC 0045                552          MOVE.B  #'E', (A2)+
+00001590  14FC 0051                553          MOVE.B  #'Q', (A2)+
+00001594  223C 00000000            554          MOVE.L  #ea_type_immediate, D1
+0000159A  4EB9 00001754            555          JSR     EA_START
+000015A0  4EF8 12D2                556          JMP     OP_FINISH
+000015A4                           557          
+000015A4                           558  *------------------------------------------------------------------------------------------------*
+000015A4                           559  * First 4 bits: 1000
+000015A4                           560  OP_DIVU
+000015A4  14FC 0044                561          MOVE.B  #'D', (A2)+
+000015A8  14FC 0049                562          MOVE.B  #'I', (A2)+
+000015AC  14FC 0056                563          MOVE.B  #'V', (A2)+
+000015B0  14FC 0055                564          MOVE.B  #'U', (A2)+
+000015B4  223C 00000000            565          MOVE.L  #ea_type_immediate, D1
+000015BA  4EB9 00001754            566          JSR     EA_START
+000015C0  4EF8 12D2                567          JMP     OP_FINISH
+000015C4                           568    
+000015C4                           569  OP_OR
+000015C4  14FC 004F                570          MOVE.B  #'O', (A2)+
+000015C8  14FC 0052                571          MOVE.B  #'R', (A2)+
+000015CC  223C 00000000            572          MOVE.L  #ea_type_immediate, D1
+000015D2  4EB9 00001754            573          JSR     EA_START
+000015D8  4EF8 12D2                574          JMP     OP_FINISH
+000015DC                           575  
+000015DC                           576  *------------------------------------------------------------------------------------------------*
+000015DC                           577  * First 4 bits: 1001
+000015DC                           578  OP_SUB
+000015DC  14FC 0053                579          MOVE.B  #'S', (A2)+
+000015E0  14FC 0055                580          MOVE.B  #'U', (A2)+
+000015E4  14FC 0042                581          MOVE.B  #'B', (A2)+
+000015E8  223C 00000000            582          MOVE.L  #ea_type_immediate, D1
+000015EE  4EB9 00001754            583          JSR     EA_START
+000015F4  4EF8 12D2                584          JMP     OP_FINISH
+000015F8                           585          
+000015F8                           586  *------------------------------------------------------------------------------------------------*
+000015F8                           587  * First 4 bits: 1011
+000015F8                           588  OP_CMP
+000015F8  14FC 0043                589          MOVE.B  #'C', (A2)+
+000015FC  14FC 004D                590          MOVE.B  #'M', (A2)+
+00001600  14FC 0050                591          MOVE.B  #'P', (A2)+
+00001604  223C 00000000            592          MOVE.L  #ea_type_immediate, D1
+0000160A  4EB9 00001754            593          JSR     EA_START
+00001610  4EF8 12D2                594          JMP     OP_FINISH
+00001614                           595          
+00001614                           596  *------------------------------------------------------------------------------------------------*
+00001614                           597  * First 4 bits: 1100
+00001614                           598  OP_MULU
+00001614  14FC 004D                599          MOVE.B  #'M', (A2)+
+00001618  14FC 0055                600          MOVE.B  #'U', (A2)+
+0000161C  14FC 004C                601          MOVE.B  #'L', (A2)+
+00001620  14FC 0055                602          MOVE.B  #'U', (A2)+
+00001624  223C 00000000            603          MOVE.L  #ea_type_immediate, D1
+0000162A  4EB9 00001754            604          JSR     EA_START
+00001630  4EF8 12D2                605          JMP     OP_FINISH
+00001634                           606          
+00001634                           607  OP_MULS
+00001634  14FC 004D                608          MOVE.B  #'M', (A2)+
+00001638  14FC 0055                609          MOVE.B  #'U', (A2)+
+0000163C  14FC 004C                610          MOVE.B  #'L', (A2)+
+00001640  14FC 0053                611          MOVE.B  #'S', (A2)+
+00001644  223C 00000000            612          MOVE.L  #ea_type_immediate, D1
+0000164A  4EB9 00001754            613          JSR     EA_START
+00001650  4EF8 12D2                614          JMP     OP_FINISH
+00001654                           615          
+00001654                           616  OP_AND
+00001654  14FC 0041                617          MOVE.B  #'A', (A2)+
+00001658  14FC 004E                618          MOVE.B  #'N', (A2)+
+0000165C  14FC 0044                619          MOVE.B  #'D', (A2)+
+00001660  223C 00000000            620          MOVE.L  #ea_type_immediate, D1
+00001666  4EB9 00001754            621          JSR     EA_START
+0000166C  4EF8 12D2                622          JMP     OP_FINISH
+00001670                           623          
+00001670                           624  *------------------------------------------------------------------------------------------------*
+00001670                           625  * First 4 bits: 1101
+00001670                           626  OP_ADD
+00001670  14FC 0041                627          MOVE.B  #'A', (A2)+
+00001674  14FC 0044                628          MOVE.B  #'D', (A2)+
+00001678  14FC 0044                629          MOVE.B  #'D', (A2)+
+0000167C  223C 00000000            630          MOVE.L  #ea_type_immediate, D1
+00001682  4EB9 00001754            631          JSR     EA_START
+00001688  4EF8 12D2                632          JMP     OP_FINISH
+0000168C                           633  
+0000168C                           634  OP_ADDA
+0000168C  14FC 0041                635          MOVE.B  #'A', (A2)+
+00001690  14FC 0044                636          MOVE.B  #'D', (A2)+
+00001694  14FC 0044                637          MOVE.B  #'D', (A2)+
+00001698  14FC 0041                638          MOVE.B  #'A', (A2)+
+0000169C  223C 00000000            639          MOVE.L  #ea_type_immediate, D1
+000016A2  4EB9 00001754            640          JSR     EA_START
+000016A8  4EF8 12D2                641          JMP     OP_FINISH
+000016AC                           642          
+000016AC                           643  *------------------------------------------------------------------------------------------------*
+000016AC                           644  * First 4 bits: 1110
+000016AC                           645  OP_ASR
+000016AC  14FC 0041                646          MOVE.B  #'A', (A2)+
+000016B0  14FC 0053                647          MOVE.B  #'S', (A2)+
+000016B4  14FC 0052                648          MOVE.B  #'R', (A2)+
+000016B8  223C 00000000            649          MOVE.L  #ea_type_immediate, D1
+000016BE  4EB9 00001754            650          JSR     EA_START
+000016C4  4EF8 12D2                651          JMP     OP_FINISH
+000016C8                           652  OP_ASL
+000016C8  14FC 0041                653          MOVE.B  #'A', (A2)+
+000016CC  14FC 0053                654          MOVE.B  #'S', (A2)+
+000016D0  14FC 004C                655          MOVE.B  #'L', (A2)+
+000016D4  223C 00000000            656          MOVE.L  #ea_type_immediate, D1
+000016DA  4EB9 00001754            657          JSR     EA_START
+000016E0  4EF8 12D2                658          JMP     OP_FINISH
+000016E4                           659          
+000016E4                           660  OP_LSR
+000016E4  14FC 004C                661          MOVE.B  #'L', (A2)+
+000016E8  14FC 0053                662          MOVE.B  #'S', (A2)+
+000016EC  14FC 0052                663          MOVE.B  #'R', (A2)+
+000016F0  223C 00000000            664          MOVE.L  #ea_type_immediate, D1
+000016F6  4EB9 00001754            665          JSR     EA_START
+000016FC  4EF8 12D2                666          JMP     OP_FINISH
+00001700                           667         
+00001700                           668  OP_LSL
+00001700  14FC 004C                669          MOVE.B  #'L', (A2)+
+00001704  14FC 0053                670          MOVE.B  #'S', (A2)+
+00001708  14FC 004C                671          MOVE.B  #'L', (A2)+
+0000170C  223C 00000000            672          MOVE.L  #ea_type_immediate, D1
+00001712  4EB9 00001754            673          JSR     EA_START
+00001718  4EF8 12D2                674          JMP     OP_FINISH
+0000171C                           675          
+0000171C                           676  OP_ROR
+0000171C  14FC 0052                677          MOVE.B  #'R', (A2)+
+00001720  14FC 004F                678          MOVE.B  #'O', (A2)+
+00001724  14FC 0052                679          MOVE.B  #'R', (A2)+
+00001728  223C 00000000            680          MOVE.L  #ea_type_immediate, D1
+0000172E  4EB9 00001754            681          JSR     EA_START
+00001734  4EF8 12D2                682          JMP     OP_FINISH
+00001738                           683          
+00001738                           684  OP_ROL
+00001738  14FC 0052                685          MOVE.B  #'R', (A2)+
+0000173C  14FC 004F                686          MOVE.B  #'O', (A2)+
+00001740  14FC 004C                687          MOVE.B  #'L', (A2)+
+00001744  223C 00000000            688          MOVE.L  #ea_type_immediate, D1
+0000174A  4EB9 00001754            689          JSR     EA_START
+00001750  4EF8 12D2                690          JMP     OP_FINISH
+00001754                           691          
+00001754                           692  *-----------------------------------------------------------------------*
+00001754                           693          
+00001754                           694  EA_START
+00001754  48E7 38C0                695          MOVEM.L D2-D4/A0-A1, -(SP)
+00001758                           696          
+00001758  41F9 0000176C            697          LEA     EA_TYPE_TABLE, A0
+0000175E  C2FC 0006                698          MULU    #6, D1
+00001762  4EF0 1000                699          JMP     0(A0, D1)
+00001766                           700          
+00001766                           701  EA_FINISH
+00001766  4CDF 031C                702          MOVEM.L (SP)+, D2-D4/A0-A1
+0000176A  4E75                     703          RTS
+0000176C                           704          
+0000176C                           705  EA_TYPE_TABLE
+0000176C  4EF9 000017EA            706          JMP     EA_IMMEDIATE    ; 0: ea_immediate
+00001772  4EF9 000017FC            707          JMP     EA_MOVE         ; 1: ea_move
+00001778  4EF9 000017FC            708          JMP     EA_MOVEA        ; 2: ea_movea
+0000177E  4EF9 000017FC            709          JMP     EA_LEA          ; 3: ea_lea
+00001784  4EF9 000017FC            710          JMP     EA_DSTONLY      ; 4: ea_dstonly
+0000178A  4EF9 000017FC            711          JMP     EA_EXT          ; 5: ea_ext
+00001790  4EF9 000017FC            712          JMP     EA_MOVEM        ; 6: ea_movem
+00001796  4EF9 000017FC            713          JMP     EA_TRAP         ; 7: ea_trap
+0000179C  4EF9 000017FC            714          JMP     EA_QUICK        ; 8: ea_quick
+000017A2  4EF9 000017FC            715          JMP     EA_branch       ; 9: ea_branch
+000017A8  4EF8 1766                716          JMP     EA_FINISH
+000017AC                           717          
+000017AC                           718  EA_SIZE
+000017AC  B43C 0000                719          CMP.B   #%00, D2        ; .b
+000017B0  6700 0018                720          BEQ     EA_SIZE_B       
+000017B4  B43C 0001                721          CMP.B   #%01, D2        ; .w
+000017B8  6700 001A                722          BEQ     EA_SIZE_W       
+000017BC  B43C 0002                723          CMP.B   #%10, D2        ; .l
+000017C0  6700 001C                724          BEQ     EA_SIZE_L
+000017C4  4EF9 00001801            725          JMP     EA_WRONGSIZE    ; wrong size
+000017CA                           726  EA_SIZE_B
+000017CA  14FC 002E                727          MOVE.B  #'.', (A2)+
+000017CE  14FC 0042                728          MOVE.B  #'B', (A2)+
+000017D2  4E75                     729          RTS
+000017D4                           730  EA_SIZE_W
+000017D4  14FC 002E                731          MOVE.B  #'.', (A2)+
+000017D8  14FC 0057                732          MOVE.B  #'W', (A2)+
+000017DC  4E75                     733          RTS
+000017DE                           734  EA_SIZE_L
+000017DE  14FC 002E                735          MOVE.B  #'.', (A2)+
+000017E2  14FC 004C                736          MOVE.B  #'L', (A2)+
+000017E6  4E75                     737          RTS
+000017E8                           738  EA_SIZE_DONE
+000017E8  4E75                     739          RTS
+000017EA                           740          
+000017EA                           741  EA_IMMEDIATE
+000017EA  220D                     742          MOVE.L  A5, D1
+000017EC  0241 00C0                743          ANDI.W  #dst_mode, D1
+000017F0  143C 0006                744          MOVE.B  #right6, D2
+000017F4  E469                     745          LSR.W   D2, D1
+000017F6  5601                     746          ADDI.B  #3, D1
+000017F8  1401                     747          MOVE.B  D1, D2
+000017FA  60B0                     748          BRA     EA_SIZE
+000017FC                           749          
+000017FC                           750  EA_MOVE         ; 1: ea_move
+000017FC                           751  EA_MOVEA        ; 2: ea_movea
+000017FC                           752  EA_LEA          ; 3: ea_lea
+000017FC                           753  EA_DSTONLY      ; 4: ea_dstonly
+000017FC                           754  EA_EXT          ; 5: ea_ext
+000017FC                           755  EA_MOVEM        ; 6: ea_movem
+000017FC                           756  EA_TRAP         ; 7: ea_trap
+000017FC                           757  EA_QUICK        ; 8: ea_quick
+000017FC                           758  EA_branch       ; 9: ea_branch
+000017FC                           759  
+000017FC                           760  
+000017FC                           761          
+000017FC                           762          
+000017FC  FFFF FFFF                763      SIMHALT             ; halt simulator
+00001800                           764  
+00001800                           765  * Put variables and constants here
+00001800                           766     
+00001800  =0000000D                767  CR              EQU         $0D
+00001800  =0000000A                768  LF              EQU         $0A
+00001800  =000A0000                769  stack           EQU         $000A0000
+00001800  =00000040                770  buffer_size     EQU         64 
+00001800  =00000040                771  decoded_buffer  EQU         64
+00001800  =00000014                772  lines_p_screen  EQU         20
+00001800  =00000004                773  right4          EQU         4
+00001800  =00000006                774  right6          EQU         6
+00001800  =00000008                775  right8          EQU         8
+00001800  =0000000C                776  right12         EQU         12
+00001800  =00000010                777  right16         EQU         16
+00001800  =00000018                778  right24         EQU         24
+00001800= 20                       779  ascii_y_n       DC.B        32
+00001801  =00000059                780  y_uppercase     EQU         $59         
+00001801  =00000079                781  y_lowercase     EQU         $79
+00001801  =0000004E                782  n_uppercase     EQU         $4E
+00001801  =0000006E                783  n_lowercase     EQU         $6E
+00001801  =00000002                784  task2           EQU         $02
+00001801  =00000005                785  task5           EQU         $05
+00001801  =00000009                786  task9           EQU         $09
+00001801  =0000000D                787  task13          EQU         $0D
+00001801  =0000000E                788  task14          EQU         $0E
+00001801  =0000F000                789  first_nibble    EQU         $F000
+00001801  =00000F00                790  second_nibble   EQU         $0F00   
+00001801  =000000F0                791  third_nibble    EQU         $00F0
+00001801  =0000000F                792  fourth_nibble   EQU         $000F
+00001801  =000000C0                793  dst_mode        EQU         $00C0
+00001801  =00000E00                794  dst_reg         EQU         $0E00
+00001801  =00000018                795  src_mode        EQU         $0018
+00001801  =00000007                796  src_reg         EQU         $0007
+00001801  =00000100                797  bit8            EQU         $0100
+00001801                           798  
+00001801  =00000000                799  ea_type_immediate   EQU     0       ; EA Type = immediate
+00001801  =00000001                800  ea_type_move        EQU     1       ; EA Type = move
+00001801  =00000002                801  ea_type_movea       EQU     2       ; EA Type = movea
+00001801  =0000000C                802  ea_type_movea6      EQU     12      ; EA Type = movea * 6
+00001801  =00000003                803  ea_type_lea         EQU     3       ; EA Type = lea
+00001801  =00000004                804  ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
+00001801  =00000005                805  ea_type_ext         EQU     5       ; EA Type = ext
+00001801  =00000006                806  ea_type_movem       EQU     6       ; EA Type = movem
+00001801  =00000007                807  ea_type_trap        EQU     7       ; EA Type = trap
+00001801  =00000008                808  ea_type_quick       EQU     8       ; EA Type = addq, subq
+00001801  =00000009                809  ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
+00001801  =00000000                810  ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
+00001801  =00000001                811  ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
+00001801  =00000002                812  ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
+00001801                           813  EA_WRONGSIZE
+00001801                           814  
+00001801                           815  
+00001801                           816  
+00001801= 57 65 6C 63 6F 6D ...    817  WELCOME         DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
+00001837                           818  
+00001837= 50 6C 65 61 73 65 ...    819  USER_INST       DC.B        'Please follow the proper input instructions below: ',CR,LF
+0000186C= 2D 20 53 74 61 72 ...    820                  DC.B        '- Starting address must be lower than ending address.',CR,LF
+000018A3= 2D 20 54 68 65 20 ...    821                  DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
+000018EC= 2D 20 53 74 61 72 ...    822                  DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
+00001932= 2D 20 44 6F 20 6E ...    823                  DC.B        '- Do not put spaces in between input characters.',CR,LF
+00001964= 2D 20 56 61 6C 69 ...    824                  DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
+000019B1                           825                  
+000019B1= 50 72 65 73 73 20 ...    826  ENTER_PROMPT    DC.B        'Press enter to continue...',CR,LF,0
+000019CE= 50 72 65 73 73 20 ...    827  PROMPT_AGAIN    DC.B        'Press Y to continue / N to exit.',CR,LF,0
+000019F1= 50 72 6F 67 72 61 ...    828  EXIT_PROMPT     DC.B        'Program has execution has stopped.',CR,LF,0
+00001A16                           829        
+00001A16= 45 6E 74 65 72 20 ...    830  START_IN        DC.B        'Enter a starting address: ',CR,LF,0 
+00001A33= 45 6E 74 65 72 20 ...    831  END_IN          DC.B        'Enter an ending address: ',CR,LF,0 
+00001A4F                           832  START_ADDRESS   DS.B        64     
+00001A8F                           833  END_ADDRESS     DS.B        64 
+00001ACF= 45 72 72 6F 72 2C ...    834  ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0       
+00001AEE                           835  
+00001AEE                           836  
+00001AEE                           837      END    START        ; last line of source
 
-1 error detected
+No errors detected
 No warnings generated
 
 
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-ASCII_TO_HEX_LOWER  10B8
-ASCII_TO_HEX_UPPER  1096
+ASCII_TO_HEX_LETTER  1096
+ASCII_Y_N           1800
 ATOI                1070
-COMPLETE_ENDA       110A
-COMPLETE_STARTA     1102
+BIT8                100
+BUFFER_SIZE         40
+CODE0000            134E
+CODE0001            1368
+CODE0010            1368
+CODE0011            1368
+CODE0100            1368
+CODE0101            1368
+CODE0110            1368
+CODE0111            1368
+CODE1000            1368
+CODE1001            1368
+CODE1010            1368
+CODE1011            1368
+CODE1100            1368
+CODE1101            1368
+CODE1110            1368
+CODE1111            1368
+COMPLETE_ENDA       10E8
+COMPLETE_STARTA     10E0
+CONTINUE_OR_END     1242
 CR                  D
-DECODE_MEMORY       1228
-DISP_UI             1024
-DISP_W              1018
-END_ADDRESS         1455
-END_IN              13F9
-ERROR_MESSAGE       1495
-INVALID             10DA
-ITOA                111C
-ITOA_BYTE           1160
-ITOA_BYTE_CONVERT   11F4
-ITOA_CONVERT_A_TO_F  1216
-ITOA_DONE           1222
-ITOA_LONG           118A
-ITOA_LONGADDRESS    11BC
-ITOA_MOVE           113E
-ITOA_NIBBLE_CONVERT  1206
-ITOA_WORD           116E
-LASTDIGITCHECK      10E8
+DECODED_BUFFER      40
+DECODE_MEMORY       1294
+DECODE_PAUSE        122E
+DECODING_ITERATION  1208
+DISP_UI             101E
+DISP_W              1012
+DST_MODE            C0
+DST_REG             E00
+EA_BCC_FLAG         0
+EA_BRANCH           17FC
+EA_DBCC_FLAG        1
+EA_DSTONLY          17FC
+EA_EXT              17FC
+EA_FINISH           1766
+EA_IMMEDIATE        17EA
+EA_LEA              17FC
+EA_MOVE             17FC
+EA_MOVEA            17FC
+EA_MOVEM            17FC
+EA_QUICK            17FC
+EA_SCC_FLAG         2
+EA_SIZE             17AC
+EA_SIZE_B           17CA
+EA_SIZE_DONE        17E8
+EA_SIZE_L           17DE
+EA_SIZE_W           17D4
+EA_START            1754
+EA_TRAP             17FC
+EA_TYPE_BRANCH      9
+EA_TYPE_DSTONLY     4
+EA_TYPE_EXT         5
+EA_TYPE_IMMEDIATE   0
+EA_TYPE_LEA         3
+EA_TYPE_MOVE        1
+EA_TYPE_MOVEA       2
+EA_TYPE_MOVEA6      C
+EA_TYPE_MOVEM       6
+EA_TYPE_QUICK       8
+EA_TYPE_TABLE       176C
+EA_TYPE_TRAP        7
+EA_WRONGSIZE        1801
+END_ADDRESS         1A8F
+END_IN              1A33
+ENTER_PROMPT        19B1
+ERROR_MESSAGE       1ACF
+EXIT                1282
+EXIT_PROMPT         19F1
+FIRST_NIBBLE        F000
+FOURTH_NIBBLE       F
+INVALID             10B8
+ITOA                10FA
+ITOA_BYTE           113E
+ITOA_BYTE_CONVERT   11D2
+ITOA_CONVERT_A_TO_F  11F4
+ITOA_DONE           1200
+ITOA_LONG           1168
+ITOA_LONGADDRESS    119A
+ITOA_MOVE           111C
+ITOA_NIBBLE_CONVERT  11E4
+ITOA_WORD           114C
+LASTDIGITCHECK      10C6
 LF                  A
-ODD                 1110
+LINES_P_SCREEN      14
+N_LOWERCASE         6E
+N_UPPERCASE         4E
+ODD                 10EE
+OP_0000_TABLE       1368
+OP_ADD              1670
+OP_ADDA             168C
+OP_ADDI             13F4
+OP_ADDQ             1508
+OP_AND              1654
+OP_ASL              16C8
+OP_ASR              16AC
+OP_BCC              1528
+OP_BGT              1544
+OP_BLE              1560
+OP_CLEAR_DATA       12D8
+OP_CLEAR_DATA_LOOP  12E4
+OP_CLR              1458
+OP_CMP              15F8
+OP_DIVU             15A4
+OP_FINISH           12D2
+OP_JSR              14AC
+OP_LEA              14EC
+OP_LSL              1700
+OP_LSR              16E4
+OP_MOVE             1438
+OP_MOVEA            1414
+OP_MOVEM            14C8
+OP_MOVEQ            157C
+OP_MULS             1634
+OP_MULU             1614
+OP_NOP              1474
+OP_OR               15C4
+OP_ROL              1738
+OP_ROR              171C
+OP_RTS              1490
+OP_SUB              15DC
+OP_SUBI             13D4
+OP_TABLE            12EE
+OP_UNSUPPORTED      13C8
+PROMPT_AGAIN        19CE
 PROMPT_END          1050
-PROMPT_START        1030
+PROMPT_START        102A
 READ_END            105C
 READ_START          103C
+RIGHT12             C
 RIGHT16             10
 RIGHT24             18
 RIGHT4              4
+RIGHT6              6
 RIGHT8              8
+SECOND_NIBBLE       F00
+SRC_MODE            18
+SRC_REG             7
+STACK               A0000
 START               1000
-START_ADDRESS       1415
-START_IN            13DC
-USER_INST           1262
+START_ADDRESS       1A4F
+START_DECODING      1206
+START_IN            1A16
+TASK13              D
+TASK14              E
+TASK2               2
+TASK5               5
+TASK9               9
+THIRD_NIBBLE        F0
+USER_INST           1837
 VALIDATE_END        106C
 VALIDATE_START      104C
-WELCOME             122C
+WELCOME             1801
+Y_LOWERCASE         79
+Y_UPPERCASE         59

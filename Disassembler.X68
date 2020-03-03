@@ -105,6 +105,7 @@ COMPLETE_STARTA     MOVEA.L D5, A4  ; A4 holds the starting address.
 
 
 COMPLETE_ENDA       MOVEA.L D5, A6  ; A6 holds the ending address. 
+                     MOVEA.L A4, A5  ; Store starting address into current address
                     BRA DECODE_MEMORY
 
 
@@ -112,7 +113,7 @@ ODD     LEA     ERROR_MESSAGE, A1
         MOVE.B  #14, D0
         TRAP    #15
         
-ITOA    MOVEM.L D0-D1, -(SP)
+ITOA    MOVEM.L D0-D1, -(SP) ; convert integer to ASCII
         CMP.B   #$00, D2
         BEQ     ITOA_BYTE
         CMP.B   #$01, D2
@@ -147,14 +148,14 @@ ITOA_WORD
         JMP     ITOA_DONE
         
 ITOA_LONG
-        MOVE.W  (A5), D7
+        MOVE.W  (A5),D7
         MOVE.B  #right8, D1
         LSR.W   D1, D7
         JSR     ITOA_BYTE_CONVERT
         MOVE.W  (A5)+, D7
         JSR     ITOA_BYTE_CONVERT
         
-        MOVE.W  (A5), D7
+        MOVE.W  (A5),D7
         MOVE.B  #right8, D1
         LSR.W   D1, D7
         JSR     ITOA_BYTE_CONVERT
@@ -163,8 +164,8 @@ ITOA_LONG
         JMP     ITOA_DONE
 
 ITOA_LONGADDRESS
-        MOVE.W  A5, A7
-        MOVE.B  #right24, D1
+        MOVE.W  A5,D7
+        MOVE.B  #right24,D1
         LSR.W   D1,D7
         JSR     ITOA_BYTE_CONVERT
         MOVE.W  A5,A7
@@ -172,7 +173,7 @@ ITOA_LONGADDRESS
         LSR.W   D1,D7
         JSR     ITOA_BYTE_CONVERT
         MOVE.W  A5,D7
-        MOVE.B  #right8, D1
+        MOVE.B  #right8,D1
         LSR.W   D1,D7
         JSR     ITOA_BYTE_CONVERT
         MOVE.W  A5,D7
@@ -186,17 +187,22 @@ ITOA_BYTE_CONVERT
         LSR.W   D1, D0
         JSR     ITOA_NIBBLE_CONVERT
         
+        MOVE.W  D7, D0
+        ANDI.W  #$F0, D0
+        JSR     ITOA_NIBBLE_CONVERT
+        RTS
+        
 ITOA_NIBBLE_CONVERT
         CMP.B   #9, D0
         BGT     ITOA_CONVERT_A_TO_F
         ADD.B   #$30, D0
-        MOVE.B  D0, (A2)+
+        MOVE.B  D0, (A2)+   ; store D0 into decode buffer
         RTS
         
 ITOA_CONVERT_A_TO_F
         SUBI.B  #10, D0
         ADDI.B  #$41, D0
-        MOVE.B  D0, (A2)+
+        MOVE.B  D0, (A2)+   ; store D0 into decode buffer
         RTS
 
 ITOA_DONE
@@ -836,3 +842,8 @@ ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0
 
     END    START        ; last line of source
 
+
+*~Font name~Courier New~
+*~Font size~10~
+*~Tab type~1~
+*~Tab size~4~
