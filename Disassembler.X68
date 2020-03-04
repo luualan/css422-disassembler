@@ -951,7 +951,7 @@ EA_TYPE_TABLE
         JMP     EA_branch       ; 9: ea_branch
         JMP     EA_FINISH
         
-EA_SIZE
+EA_SIZE_IMMEDIATE
         CMP.B   #%00, D2        ; .b
         BEQ     EA_SIZE_B       
         CMP.B   #%01, D2        ; .w
@@ -959,6 +959,16 @@ EA_SIZE
         CMP.B   #%10, D2        ; .l
         BEQ     EA_SIZE_L
         JMP     EA_WRONGSIZE    ; wrong size
+
+EA_SIZE_MOVE
+        CMP.B   #%01, D2        ; .b
+        BEQ     EA_SIZE_B       
+        CMP.B   #%11, D2        ; .w
+        BEQ     EA_SIZE_W       
+        CMP.B   #%10, D2        ; .l
+        BEQ     EA_SIZE_L
+        JMP     EA_WRONGSIZE    ; wrong size
+
 EA_SIZE_B
         MOVE.B  #'.', (A2)+
         MOVE.B  #'B', (A2)+
@@ -974,16 +984,44 @@ EA_SIZE_L
 EA_SIZE_DONE
         RTS
         
-EA_IMMEDIATE
+EA_IMMEDIATE    ; 0 ea_immediate
         MOVE.L  D0, D1
         ANDI.W  #dst_mode, D1
         MOVE.B  #right6, D2
         LSR.W   D2, D1
         ANDI.B  #3, D1
         MOVE.B  D1, D2
-        BRA     EA_SIZE
-        
+        BRA     EA_SIZE_IMMEDIATE
+ 
 EA_MOVE         ; 1: ea_move
+        MOVE.L  D0, D1
+        ANDI.W  first_nibble, D1
+        MOVE.B  right12, D2 
+        LSR.W   D2, D1
+        ANDI.B  #3, D1
+        MOVE.B  D1, D2
+        BRA     EA_SIZE_MOVE
+        
+        MOVE.L  D0, D3          ; Store the src mode in D3
+        ANDI.W  src_mode, D3    ; get bits 5-3
+        MOVE.B  right3, D2      ; shift the bits 5-3 to the LSB
+        LSR.W   D2, D3          ; do the actual shift 
+        BRA     EA_GEN_SRC
+        
+        
+        
+        MOVE.L  D0, D4          ;   
+        
+        MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode. 
+        ANDI.W  dst_mode, D3    ; get bits 11-9
+        MOVE.B  right9, D2      ; shift the bits 11-9 to the LSB
+        LSR.W   D2, D3          ; do the actual shift 
+        BRA     EA_GEN_SRC
+        
+        
+        
+        
+
 EA_MOVEA        ; 2: ea_movea
 EA_LEA          ; 3: ea_lea
 EA_DSTONLY      ; 4: ea_dstonly
@@ -995,7 +1033,7 @@ EA_branch       ; 9: ea_branch
 
 EA_GEN_SRC
         LEA     EA_GEN_TABLE_SRC, A0
-        MULU    #6, D3
+        MULU    #6, D3              ; use D3 to jump to the proper src mode and dst mode. 
         JMP     0(A0,D3)            ; jump to each ea src generation table entry 
 
 EA_GEN_TABLE_SRC
@@ -1009,8 +1047,17 @@ EA_GEN_TABLE_SRC
         JMP     EA_Absolute         ; 111: (xxx).W,(xxx).L, or #<data>
 
 EA_Dn               ; 000: Dn
+        MOVE.B  #'D', (A2)+
+
 EA_An               ; 001: An
+        MOVE.B  #'A', (A2)+
+
 EA_An_Indirect      ; 010: (An)
+        MOVE.B  #'(', (A2)+
+        MOVE.B  #'A', (A2)+
+        BRA     
+        MOVE.B  #')', (A2)+
+        
 EA_An_Indirect_Inc  ; 011: (An)+
 EA_An_Indirect_Dec  ; 100: -(An)
 EA_d16_An_Indirect  ; 101: (D16, An)
