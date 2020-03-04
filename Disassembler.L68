@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 3/3/2020 10:43:32 PM
+Created On: 3/4/2020 1:26:04 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  Disassembler for the Motorola MC68000 Microprocessor
@@ -37,7 +37,7 @@ Created On: 3/3/2020 10:43:32 PM
 00001028  4E4F                      33                  TRAP    #15    
 0000102A                            34  
 0000102A                            35         
-0000102A  4FF9 00002000             36  PROMPT_START    LEA     stack, SP          ; SP = stack ($A0000)
+0000102A  4FF9 0000A000             36  PROMPT_START    LEA     stack, SP          ; SP = stack ($A0000)
 00001030  43F9 00001D5A             37                  LEA     START_IN,A1        ; Display starting address message
 00001036  103C 000E                 38                  MOVE.B  #14,D0
 0000103A  4E4F                      39                  TRAP    #15       
@@ -52,7 +52,7 @@ Created On: 3/3/2020 10:43:32 PM
 00001050  43F9 00001D77             48  PROMPT_END      LEA     END_IN,A1        ; Display starting address message
 00001056  103C 000E                 49                  MOVE.B  #14,D0
 0000105A  4E4F                      50                  TRAP    #15            
-0000105C  43F9 00001DD3             51  READ_END        LEA     END_ADDRESS,A1        ; Store user's starting address input
+0000105C  43F9 00001DB3             51  READ_END        LEA     END_ADDRESS,A1        ; Store user's starting address input
 00001062  103C 0002                 52                  MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
 00001066  4E4F                      53                  TRAP    #15
 00001068  1C3C 0001                 54                  MOVE.B  #1,D6
@@ -88,7 +88,7 @@ Created On: 3/3/2020 10:43:32 PM
 000010B6  60B8                      84                          BRA     ATOI     
 000010B8                            85  
 000010B8                            86                      
-000010B8  43F9 00001E13             87  INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
+000010B8  43F9 00001DD3             87  INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
 000010BE  103C 000E                 88              MOVE.B  #14, D0
 000010C2  4E4F                      89              TRAP    #15
 000010C4  4206                      90              CLR.B   D6
@@ -113,7 +113,7 @@ Created On: 3/3/2020 10:43:32 PM
 000010EC  6000 01B8                109                      BRA DECODE_MEMORY
 000010F0                           110  
 000010F0                           111  
-000010F0  43F9 00001E13            112  ODD     LEA     ERROR_MESSAGE, A1 
+000010F0  43F9 00001DD3            112  ODD     LEA     ERROR_MESSAGE, A1 
 000010F6  103C 000E                113          MOVE.B  #14, D0
 000010FA  4E4F                     114          TRAP    #15
 000010FC                           115  
@@ -184,7 +184,7 @@ Created On: 3/3/2020 10:43:32 PM
 0000119E  123C 0018                180          MOVE.B  #right24,D1
 000011A2  E26F                     181          LSR.W   D1,D7
 000011A4  4EB9 000011D4            182          JSR     ITOA_BYTE_CONVERT
-000011AA  3E4D                     183          MOVE.W  A5,A7
+000011AA  3E0D                     183          MOVE.W  A5,D7
 000011AC  123C 0010                184          MOVE.B  #right16,D1
 000011B0  E26F                     185          LSR.W   D1,D7
 000011B2  4EB9 000011D4            186          JSR     ITOA_BYTE_CONVERT
@@ -204,7 +204,7 @@ Created On: 3/3/2020 10:43:32 PM
 000011E0  4EB9 000011F4            200          JSR     ITOA_NIBBLE_CONVERT
 000011E6                           201          
 000011E6  3007                     202          MOVE.W  D7, D0
-000011E8  0240 00F0                203          ANDI.W  #$F0, D0
+000011E8  0240 000F                203          ANDI.W  #$0F, D0
 000011EC  4EB9 000011F4            204          JSR     ITOA_NIBBLE_CONVERT
 000011F2  4E75                     205          RTS
 000011F4                           206          
@@ -234,7 +234,7 @@ Created On: 3/3/2020 10:43:32 PM
 0000121A                           230          ;decoding the current address
 0000121A  4EB9 000012A6            231          JSR     DECODE_MEMORY
 00001220  103C 000D                232          MOVE.B  #task13, D0
-00001224  43F9 00000040            233          LEA     decoded_buffer, A1
+00001224  43F9 00002000            233          LEA     decoded_buffer, A1
 0000122A  4E4F                     234          TRAP    #15
 0000122C                           235          
 0000122C                           236          ;check if decoding has finished or if the screen is filled. 
@@ -317,13 +317,13 @@ Created On: 3/3/2020 10:43:32 PM
 000012B4                           313                  
 000012B4                           314          ;zero clear the decode_buffer
 000012B4  4EB9 000012EA            315          JSR     OP_CLEAR_DATA
-000012BA  45F9 00000040            316          LEA     decoded_buffer, A2
+000012BA  45F9 00002000            316          LEA     decoded_buffer, A2  Load decode buffer into A2
 000012C0                           317                  
 000012C0                           318          ;print out the current address
 000012C0  7403                     319          MOVE.L  #$0003, D2
 000012C2  6000 FE38                320          BRA      ITOA
 000012C6                           321          
-000012C6  14FC 0009                322  DO      MOVE.B  #$9, (A2)+
+000012C6  14FC 0009                322  DO      MOVE.B  #$9, (A2)+  ; Add space after long address
 000012CA                           323                  
 000012CA                           324          ;load the next instruction and jump to the opcode table entry
 000012CA  41F9 00001300            325          LEA     OP_TABLE, A0
@@ -343,7 +343,7 @@ Created On: 3/3/2020 10:43:32 PM
 000012EA                           339  OP_CLEAR_DATA
 000012EA  4283                     340          CLR.L   D3
 000012EC  163C 0040                341          MOVE.B  #buffer_size, D3
-000012F0  45F9 00000040            342          LEA     decoded_buffer, A2
+000012F0  45F9 00002000            342          LEA     decoded_buffer, A2
 000012F6                           343  OP_CLEAR_DATA_LOOP
 000012F6  14FC 0000                344          MOVE.B  #0, (A2)+
 000012FA  5343                     345          SUBI    #1, D3
@@ -370,7 +370,7 @@ Created On: 3/3/2020 10:43:32 PM
 0000135A  4EF9 000014BE            366          JMP     code1111    ;   [unassigned]
 00001360                           367          
 00001360                           368  code0000:                           ; Opcodes ADDI and SUBI
-00001360  220D                     369          MOVE.L  A5,D1               ; A5 is current instruction word
+00001360  2200                     369          MOVE.L  D0,D1               ; D0 is current instruction word
 00001362  0241 0F00                370          ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
 00001366  143C 0008                371          MOVE.B  #right8,D2          ; Used to shift 8 times to right
 0000136A  E469                     372          LSR.W   D2,D1               ; Shift nibble into LSB position
@@ -382,7 +382,7 @@ Created On: 3/3/2020 10:43:32 PM
 0000137A  6000 03C8                378          BRA     OP_MOVE             ; Go to opcode MOVE
 0000137E                           379  
 0000137E                           380  code0010:                           ; Opcodes MOVE.L and MOVEA.L 
-0000137E  220D                     381          MOVE.L  A5,D1               ; A5 is current instruction word
+0000137E  2200                     381          MOVE.L  D0,D1               ; D0 is current instruction word
 00001380  0241 00C0                382          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
 00001384  143C 0006                383          MOVE.B  #right6,D2          ; Used to shift 6 times to right
 00001388  E469                     384          LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -391,7 +391,7 @@ Created On: 3/3/2020 10:43:32 PM
 00001392  6000 03B0                387          BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 00001396                           388  
 00001396                           389  code0011:                           ; Opcodes MOVE.W and MOVEA.W 
-00001396  220D                     390          MOVE.L  A5,D1               ; A5 is current instruction word
+00001396  2200                     390          MOVE.L  D0,D1               ; D0 is current instruction word
 00001398  0241 00C0                391          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
 0000139C  143C 0006                392          MOVE.B  #right6,D2          ; Used to shift 6 times to right
 000013A0  E469                     393          LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -400,7 +400,7 @@ Created On: 3/3/2020 10:43:32 PM
 000013AA  6000 0398                396          BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 000013AE                           397  
 000013AE                           398  code0100:                           ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
-000013AE  220D                     399          MOVE.L  A5,D1               ; A5 is current instruction word
+000013AE  2200                     399          MOVE.L  D0,D1               ; D0 is current instruction word
 000013B0  0241 0F00                400          ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
 000013B4  143C 0008                401          MOVE.B  #right8,D2          ; Used to shift 8 times to right
 000013B8  E469                     402          LSR.W   D2,D1               ; Shift nibble into LSB position
@@ -412,7 +412,7 @@ Created On: 3/3/2020 10:43:32 PM
 000013C8  6000 044A                408          BRA     OP_ADDQ             ; Go to opcode ADDQ
 000013CC                           409  
 000013CC                           410  code0110:                           ; Opcodes BRA and BSR
-000013CC  220D                     411          MOVE.L  A5,D1               ; A5 is current instruction word
+000013CC  2200                     411          MOVE.L  D0,D1               ; D0 is current instruction word
 000013CE  0241 0F00                412          ANDI.W  #second_nibble,D1   ; Extract 2nd 4 bits from instruction word
 000013D2  143C 0008                413          MOVE.B  #right8,D2          ; Used to shift 8 times to right
 000013D6  E469                     414          LSR.W   D2,D1               ; Shift nibble into LSB position
@@ -424,7 +424,7 @@ Created On: 3/3/2020 10:43:32 PM
 000013E4  6000 04DA                420          BRA     OP_MOVEQ            ; Go to opcode MOVEQ
 000013E8                           421  
 000013E8                           422  code1000:                           ; Opcodes DIVU word and OR.B/W/L
-000013E8  220D                     423          MOVE.L  A5,D1               ; A5 is current instruction word
+000013E8  2200                     423          MOVE.L  D0,D1               ; D0 is current instruction word
 000013EA  0241 00C0                424          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
 000013EE  143C 0006                425          MOVE.B  #right6,D2          ; Used to shift 6 times to right
 000013F2  E469                     426          LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -442,7 +442,7 @@ Created On: 3/3/2020 10:43:32 PM
 00001408  6000 0532                438          BRA     OP_CMP              ; Go to opcode CMP
 0000140C                           439  
 0000140C                           440  code1100:                           ; Opcodes MULS, MULU, AND.B/W/L
-0000140C  220D                     441          MOVE.L  A5,D1               ; A5 is current instruction word
+0000140C  2200                     441          MOVE.L  D0,D1               ; D0 is current instruction word
 0000140E  0241 00C0                442          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
 00001412  143C 0006                443          MOVE.B  #right6,D2          ; Used to shift 6 times to right
 00001416  E469                     444          LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -451,7 +451,7 @@ Created On: 3/3/2020 10:43:32 PM
 00001422  4EF0 1000                447          JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
 00001426                           448  
 00001426                           449  code1101:                           ; Opcodes ADD.B/W/L, ADDA.B/W/L
-00001426  220D                     450          MOVE.L  A5,D1               ; A5 is current instruction word
+00001426  2200                     450          MOVE.L  D0,D1               ; D0 is current instruction word
 00001428  0241 00C0                451          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
 0000142C  143C 0006                452          MOVE.B  #right6,D2          ; Used to shift 6 times to right
 00001430  E469                     453          LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -460,7 +460,7 @@ Created On: 3/3/2020 10:43:32 PM
 0000143C  4EF0 1000                456          JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
 00001440                           457  
 00001440                           458  code1110:                           ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, LSR.B/W/L, ROL.B/W/L, ROR.B/W/L   
-00001440  220D                     459          MOVE.L  A5,D1               ; A5 is current instruction word
+00001440  2200                     459          MOVE.L  D0,D1               ; D0 is current instruction word
 00001442  0241 00C0                460          ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
 00001446  143C 0006                461          MOVE.B  #right6,D2          ; Used to shift 6 times to right
 0000144A  E469                     462          LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -473,7 +473,7 @@ Created On: 3/3/2020 10:43:32 PM
 00001458  6700 0040                469          BEQ     MEMORY_1110_RIGHT   ; Go Memory Shift Right Side
 0000145C                           470      
 0000145C                           471          ; Check Register Shifts
-0000145C  220D                     472          MOVE.L  A5,D1                       ; A5 is current instruction word
+0000145C  2200                     472          MOVE.L  D0,D1                       ; D0 is current instruction word
 0000145E  0241 0018                473          ANDI.W  #src_mode,D1                ; Extract 5-3 bits from instruction word
 00001462  143C 0003                474          MOVE.B  #right3,D2                  ; Used to shift 3 times to right
 00001466  E469                     475          LSR.W   D2,D1                       ; Shift 5-3 bits into LSB position
@@ -482,7 +482,7 @@ Created On: 3/3/2020 10:43:32 PM
 00001472  4EF0 1000                478          JMP     0(A0,D1)                    ; go to displacement (A0 + xxxx * 6)
 00001476                           479  
 00001476                           480  MEMORY_1110_LEFT:    
-00001476  220D                     481          MOVE.L  A5,D1               ; A5 is current instruction word
+00001476  2200                     481          MOVE.L  D0,D1               ; D0 is current instruction word
 00001478  0241 0E00                482          ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
 0000147C  143C 0009                483          MOVE.B  #right9,D2          ; Used to shift 9 times to right
 00001480  E469                     484          LSR.W   D2,D1               ; Shift dst reg into LSB position
@@ -494,7 +494,7 @@ Created On: 3/3/2020 10:43:32 PM
 00001496  6700 05E4                490          BEQ     OP_ROL              ; Go to opcode ROL
 0000149A                           491  
 0000149A                           492  MEMORY_1110_RIGHT:
-0000149A  220D                     493          MOVE.L  A5,D1               ; A5 is current instruction word
+0000149A  2200                     493          MOVE.L  D0,D1               ; D0 is current instruction word
 0000149C  0241 0E00                494          ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
 000014A0  143C 0009                495          MOVE.B  #right9,D2          ; Used to shift 9 times to right
 000014A4  E469                     496          LSR.W   D2,D1               ; Shift dst reg into LSB position
@@ -599,13 +599,13 @@ Created On: 3/3/2020 10:43:32 PM
 0000169C  4EF9 000016D0            595          JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
 000016A2                           596  
 000016A2                           597  JSR_NOP_RTS:
-000016A2  220D                     598          MOVE.L  A5,D1               ; A5 is current instruction word
+000016A2  2200                     598          MOVE.L  D0,D1               ; D0 is current instruction word
 000016A4  0241 00C0                599          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
 000016A8  143C 0006                600          MOVE.B  #right6,D2          ; Used to shift 6 times to right
 000016AC  E469                     601          LSR.W   D2,D1               ; Shift dst mode into LSB position
 000016AE  B23C 0002                602          CMP.B   #2, D1              ; When 010 in destination mode
 000016B2  6700 0104                603          BEQ     OP_JSR              ; Go to opcode JSR
-000016B6  220D                     604          MOVE.L  A5,D1               ; A5 is current instruction word
+000016B6  2200                     604          MOVE.L  D0,D1               ; D0 is current instruction word
 000016B8  0241 0007                605          ANDI.W  #src_reg ,D1        ; Extract src reg position from instruction word
 000016BC  B23C 0001                606          CMP.B   #1, D1              ; When 001 in src register
 000016C0  6700 00BE                607          BEQ     OP_NOP              ; Go to opcode NOP
@@ -614,7 +614,7 @@ Created On: 3/3/2020 10:43:32 PM
 000016CC  6000 0002                610          BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported 
 000016D0                           611  
 000016D0                           612  OP_UNSUPPORTED
-000016D0  43F9 00001E13            613          LEA     ERROR_MESSAGE, A1 
+000016D0  43F9 00001DD3            613          LEA     ERROR_MESSAGE, A1 
 000016D6  103C 000E                614          MOVE.B  #14, D0
 000016DA  4E4F                     615          TRAP    #15
 000016DC  6000 0462                616          BRA     DONE
@@ -979,7 +979,7 @@ Created On: 3/3/2020 10:43:32 PM
 00001B2C  4E75                     975          RTS
 00001B2E                           976          
 00001B2E                           977  EA_IMMEDIATE
-00001B2E  220D                     978          MOVE.L  A5, D1
+00001B2E  2200                     978          MOVE.L  D0, D1
 00001B30  0241 00C0                979          ANDI.W  #dst_mode, D1
 00001B34  143C 0006                980          MOVE.B  #right6, D2
 00001B38  E469                     981          LSR.W   D2, D1
@@ -1004,58 +1004,58 @@ Created On: 3/3/2020 10:43:32 PM
 00001B44                          1000  
 00001B44                          1001  * Put variables and constants here
 00001B44                          1002     
-00001B44  =0000000D               1003  CR                  EQU         $0D
-00001B44  =0000000A               1004  LF                  EQU         $0A
-00001B44  =00002000               1005  stack               EQU         $2000
-00001B44  =00000040               1006  buffer_size         EQU         64 
-00001B44  =00000040               1007  decoded_buffer      EQU         64
-00001B44  =00000014               1008  lines_p_screen      EQU         20
-00001B44  =00000003               1009  right3              EQU         3
-00001B44  =00000004               1010  right4              EQU         4
-00001B44  =00000006               1011  right6              EQU         6
-00001B44  =00000008               1012  right8              EQU         8
-00001B44  =00000009               1013  right9              EQU         9
-00001B44  =0000000C               1014  right12             EQU         12
-00001B44  =00000010               1015  right16             EQU         16
-00001B44  =00000018               1016  right24             EQU         24
-00001B44= 20                      1017  ascii_y_n           DC.B        32
-00001B45  =00000059               1018  y_uppercase         EQU         $59         
-00001B45  =00000079               1019  y_lowercase         EQU         $79
-00001B45  =0000004E               1020  n_uppercase         EQU         $4E
-00001B45  =0000006E               1021  n_lowercase         EQU         $6E
-00001B45  =00000002               1022  task2               EQU         $02
-00001B45  =00000005               1023  task5               EQU         $05
-00001B45  =00000009               1024  task9               EQU         $09
-00001B45  =0000000D               1025  task13              EQU         $0D
-00001B45  =0000000E               1026  task14              EQU         $0E
-00001B45  =0000F000               1027  first_nibble        EQU         $F000
-00001B45  =00000F00               1028  second_nibble       EQU         $0F00   
-00001B45  =000000F0               1029  third_nibble        EQU         $00F0
-00001B45  =0000000F               1030  fourth_nibble       EQU         $000F
-00001B45  =000000C0               1031  dst_mode            EQU         $00C0
-00001B45  =00000E00               1032  dst_reg             EQU         $0E00
-00001B45  =00000018               1033  src_mode            EQU         $0018
-00001B45  =00000007               1034  src_reg             EQU         $0007
-00001B45  =00000100               1035  bit8                EQU         $0100
-00001B45                          1036  
-00001B45  =00000000               1037  ea_type_immediate   EQU     0       ; EA Type = immediate
-00001B45  =00000001               1038  ea_type_move        EQU     1       ; EA Type = move
-00001B45  =00000002               1039  ea_type_movea       EQU     2       ; EA Type = movea
-00001B45  =0000000C               1040  ea_type_movea6      EQU     12      ; EA Type = movea * 6
-00001B45  =00000003               1041  ea_type_lea         EQU     3       ; EA Type = lea
-00001B45  =00000004               1042  ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
-00001B45  =00000005               1043  ea_type_ext         EQU     5       ; EA Type = ext
-00001B45  =00000006               1044  ea_type_movem       EQU     6       ; EA Type = movem
-00001B45  =00000007               1045  ea_type_trap        EQU     7       ; EA Type = trap
-00001B45  =00000008               1046  ea_type_quick       EQU     8       ; EA Type = addq, subq
-00001B45  =00000009               1047  ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
-00001B45  =00000000               1048  ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
-00001B45  =00000001               1049  ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
-00001B45  =00000002               1050  ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
-00001B45                          1051  EA_WRONGSIZE
-00001B45                          1052  
-00001B45                          1053  
-00001B45                          1054  
+00001B44                          1003         
+00001B44  =00000040               1004  buffer_size         EQU         64 
+00001B44  =00002000               1005  decoded_buffer      EQU         $2000
+00001B44                          1006     
+00001B44  =0000000D               1007  CR                  EQU         $0D
+00001B44  =0000000A               1008  LF                  EQU         $0A
+00001B44  =0000A000               1009  stack               EQU         $0000A000
+00001B44  =00000014               1010  lines_p_screen      EQU         20
+00001B44  =00000003               1011  right3              EQU         3
+00001B44  =00000004               1012  right4              EQU         4
+00001B44  =00000006               1013  right6              EQU         6
+00001B44  =00000008               1014  right8              EQU         8
+00001B44  =00000009               1015  right9              EQU         9
+00001B44  =0000000C               1016  right12             EQU         12
+00001B44  =00000010               1017  right16             EQU         16
+00001B44  =00000018               1018  right24             EQU         24
+00001B44= 20                      1019  ascii_y_n           DC.B        32
+00001B45  =00000059               1020  y_uppercase         EQU         $59         
+00001B45  =00000079               1021  y_lowercase         EQU         $79
+00001B45  =0000004E               1022  n_uppercase         EQU         $4E
+00001B45  =0000006E               1023  n_lowercase         EQU         $6E
+00001B45  =00000002               1024  task2               EQU         $02
+00001B45  =00000005               1025  task5               EQU         $05
+00001B45  =00000009               1026  task9               EQU         $09
+00001B45  =0000000D               1027  task13              EQU         $0D
+00001B45  =0000000E               1028  task14              EQU         $0E
+00001B45  =0000F000               1029  first_nibble        EQU         $F000
+00001B45  =00000F00               1030  second_nibble       EQU         $0F00   
+00001B45  =000000F0               1031  third_nibble        EQU         $00F0
+00001B45  =0000000F               1032  fourth_nibble       EQU         $000F
+00001B45  =000000C0               1033  dst_mode            EQU         $00C0
+00001B45  =00000E00               1034  dst_reg             EQU         $0E00
+00001B45  =00000018               1035  src_mode            EQU         $0018
+00001B45  =00000007               1036  src_reg             EQU         $0007
+00001B45  =00000100               1037  bit8                EQU         $0100
+00001B45                          1038  
+00001B45  =00000000               1039  ea_type_immediate   EQU     0       ; EA Type = immediate
+00001B45  =00000001               1040  ea_type_move        EQU     1       ; EA Type = move
+00001B45  =00000002               1041  ea_type_movea       EQU     2       ; EA Type = movea
+00001B45  =0000000C               1042  ea_type_movea6      EQU     12      ; EA Type = movea * 6
+00001B45  =00000003               1043  ea_type_lea         EQU     3       ; EA Type = lea
+00001B45  =00000004               1044  ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
+00001B45  =00000005               1045  ea_type_ext         EQU     5       ; EA Type = ext
+00001B45  =00000006               1046  ea_type_movem       EQU     6       ; EA Type = movem
+00001B45  =00000007               1047  ea_type_trap        EQU     7       ; EA Type = trap
+00001B45  =00000008               1048  ea_type_quick       EQU     8       ; EA Type = addq, subq
+00001B45  =00000009               1049  ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
+00001B45  =00000000               1050  ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
+00001B45  =00000001               1051  ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
+00001B45  =00000002               1052  ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
+00001B45                          1053  EA_WRONGSIZE
+00001B45                          1054                   
 00001B45= 57 65 6C 63 6F 6D ...   1055  WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 00001B7B                          1056  
 00001B7B= 50 6C 65 61 73 65 ...   1057  USER_INST           DC.B        'Please follow the proper input instructions below: ',CR,LF
@@ -1071,12 +1071,12 @@ Created On: 3/3/2020 10:43:32 PM
 00001D5A                          1067        
 00001D5A= 45 6E 74 65 72 20 ...   1068  START_IN            DC.B        'Enter a starting address: ',CR,LF,0 
 00001D77= 45 6E 74 65 72 20 ...   1069  END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
-00001D93                          1070  START_ADDRESS       DS.B        64     
-00001DD3                          1071  END_ADDRESS         DS.B        64 
-00001E13= 45 72 72 6F 72 2C ...   1072  ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0       
-00001E32                          1073  
-00001E32                          1074  
-00001E32                          1075      END    START        ; last line of source
+00001D93                          1070  START_ADDRESS       DS.B        32     
+00001DB3                          1071  END_ADDRESS         DS.B        32 
+00001DD3= 45 72 72 6F 72 2C ...   1072  ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0       
+00001DF2                          1073  
+00001DF2                          1074  
+00001DF2                          1075      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -1110,7 +1110,7 @@ COMPLETE_ENDA       10E8
 COMPLETE_STARTA     10E0
 CONTINUE_OR_END     1254
 CR                  D
-DECODED_BUFFER      40
+DECODED_BUFFER      2000
 DECODE_MEMORY       12A6
 DECODE_PAUSE        1240
 DECODING_ITERATION  121A
@@ -1153,10 +1153,10 @@ EA_TYPE_QUICK       8
 EA_TYPE_TABLE       1AB0
 EA_TYPE_TRAP        7
 EA_WRONGSIZE        1B45
-END_ADDRESS         1DD3
+END_ADDRESS         1DB3
 END_IN              1D77
 ENTER_PROMPT        1CF5
-ERROR_MESSAGE       1E13
+ERROR_MESSAGE       1DD3
 EXIT                1294
 EXIT_PROMPT         1D35
 FIRST_NIBBLE        F000
@@ -1239,7 +1239,7 @@ RIGHT9              9
 SECOND_NIBBLE       F00
 SRC_MODE            18
 SRC_REG             7
-STACK               2000
+STACK               A000
 START               1000
 START_ADDRESS       1D93
 START_DECODING      1218

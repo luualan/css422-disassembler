@@ -180,7 +180,7 @@ ITOA_LONGADDRESS
         MOVE.B  #right24,D1
         LSR.W   D1,D7
         JSR     ITOA_BYTE_CONVERT
-        MOVE.W  A5,A7
+        MOVE.W  A5,D7
         MOVE.B  #right16,D1
         LSR.W   D1,D7
         JSR     ITOA_BYTE_CONVERT
@@ -200,7 +200,7 @@ ITOA_BYTE_CONVERT
         JSR     ITOA_NIBBLE_CONVERT
         
         MOVE.W  D7, D0
-        ANDI.W  #$F0, D0
+        ANDI.W  #$0F, D0
         JSR     ITOA_NIBBLE_CONVERT
         RTS
         
@@ -313,13 +313,13 @@ DECODE_MEMORY
                 
         ;zero clear the decode_buffer
         JSR     OP_CLEAR_DATA
-        LEA     decoded_buffer, A2
+        LEA     decoded_buffer, A2  Load decode buffer into A2
                 
         ;print out the current address
         MOVE.L  #$0003, D2
         BRA      ITOA
         
-DO      MOVE.B  #$9, (A2)+
+DO      MOVE.B  #$9, (A2)+  ; Add space after long address
                 
         ;load the next instruction and jump to the opcode table entry
         LEA     OP_TABLE, A0
@@ -1000,11 +1000,13 @@ DONE
 
 * Put variables and constants here
    
+       
+buffer_size         EQU         64 
+decoded_buffer      EQU         $2000
+   
 CR                  EQU         $0D
 LF                  EQU         $0A
-stack               EQU         $2000
-buffer_size         EQU         64 
-decoded_buffer      EQU         64
+stack               EQU         $0000A000
 lines_p_screen      EQU         20
 right3              EQU         3
 right4              EQU         4
@@ -1049,9 +1051,7 @@ ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
 ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
 ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
 EA_WRONGSIZE
-
-
-
+                 
 WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 
 USER_INST           DC.B        'Please follow the proper input instructions below: ',CR,LF
@@ -1067,12 +1067,13 @@ EXIT_PROMPT         DC.B        'Program has execution has stopped.',CR,LF,0
       
 START_IN            DC.B        'Enter a starting address: ',CR,LF,0 
 END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
-START_ADDRESS       DS.B        64     
-END_ADDRESS         DS.B        64 
+START_ADDRESS       DS.B        32     
+END_ADDRESS         DS.B        32 
 ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0       
 
 
     END    START        ; last line of source
+
 
 
 
