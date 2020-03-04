@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 3/3/2020 7:33:48 PM
+Created On: 3/3/2020 10:43:32 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  Disassembler for the Motorola MC68000 Microprocessor
@@ -490,7 +490,7 @@ Created On: 3/3/2020 7:33:48 PM
 00001486  6700 0584                486          BEQ     OP_ASL              ; Go to opcode ASL
 0000148A  B23C 0001                487          CMP.B   #1, D1              ; when D1 is 1
 0000148E  6700 05B4                488          BEQ     OP_LSL              ; Go to opcode LSL
-00001492  B23C 0002                489          CMP.B   #2, D1              ; When D1 is 2
+00001492  B23C 0003                489          CMP.B   #3, D1              ; When D1 is 3
 00001496  6700 05E4                490          BEQ     OP_ROL              ; Go to opcode ROL
 0000149A                           491  
 0000149A                           492  MEMORY_1110_RIGHT:
@@ -502,7 +502,7 @@ Created On: 3/3/2020 7:33:48 PM
 000014AA  6700 0544                498          BEQ     OP_ASR              ; Go to opcode ASR
 000014AE  B23C 0001                499          CMP.B   #1, D1              ; when D1 is 1
 000014B2  6700 0574                500          BEQ     OP_LSR              ; Go to opcode LSR
-000014B6  B23C 0002                501          CMP.B   #2, D1              ; When D1 is 2
+000014B6  B23C 0003                501          CMP.B   #3, D1              ; When D1 is 3
 000014BA  6700 05A4                502          BEQ     OP_ROR              ; Go to opcode ROR
 000014BE                           503  
 000014BE                           504  code1111:                           ; Opcode not supported 
@@ -661,7 +661,7 @@ Created On: 3/3/2020 7:33:48 PM
 00001720  14FC 004D                657          MOVE.B  #'M', (A2)+
 00001724  14FC 004F                658          MOVE.B  #'O', (A2)+
 00001728  14FC 0056                659          MOVE.B  #'V', (A2)+
-0000172C  14FC 0041                660          MOVE.B  #'A', (A2)+
+0000172C  14FC 0045                660          MOVE.B  #'E', (A2)+
 00001730  14FC 0041                661          MOVE.B  #'A', (A2)+
 00001734  223C 00000000            662          MOVE.L  #ea_type_immediate, D1
 0000173A  4EB9 00001A98            663          JSR     EA_START

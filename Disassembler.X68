@@ -366,7 +366,7 @@ OP_TABLE
         JMP     code1111    ;   [unassigned]
         
 code0000:                           ; Opcodes ADDI and SUBI
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
         MOVE.B  #right8,D2          ; Used to shift 8 times to right
         LSR.W   D2,D1               ; Shift nibble into LSB position
@@ -378,7 +378,7 @@ code0001:                           ; Opcode MOVE.B
         BRA     OP_MOVE             ; Go to opcode MOVE
 
 code0010:                           ; Opcodes MOVE.L and MOVEA.L 
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
         LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -387,7 +387,7 @@ code0010:                           ; Opcodes MOVE.L and MOVEA.L
         BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 
 code0011:                           ; Opcodes MOVE.W and MOVEA.W 
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
         LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -396,7 +396,7 @@ code0011:                           ; Opcodes MOVE.W and MOVEA.W
         BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 
 code0100:                           ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
         MOVE.B  #right8,D2          ; Used to shift 8 times to right
         LSR.W   D2,D1               ; Shift nibble into LSB position
@@ -408,7 +408,7 @@ code0101:                           ; Opcode ADDQ.B/W/L
         BRA     OP_ADDQ             ; Go to opcode ADDQ
 
 code0110:                           ; Opcodes BRA and BSR
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #second_nibble,D1   ; Extract 2nd 4 bits from instruction word
         MOVE.B  #right8,D2          ; Used to shift 8 times to right
         LSR.W   D2,D1               ; Shift nibble into LSB position
@@ -420,7 +420,7 @@ code0111:                           ; Opcode MOVEQ
         BRA     OP_MOVEQ            ; Go to opcode MOVEQ
 
 code1000:                           ; Opcodes DIVU word and OR.B/W/L
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
         LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -438,7 +438,7 @@ code1011:                           ; Opcode CMP.B/W/L
         BRA     OP_CMP              ; Go to opcode CMP
 
 code1100:                           ; Opcodes MULS, MULU, AND.B/W/L
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
         LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -447,7 +447,7 @@ code1100:                           ; Opcodes MULS, MULU, AND.B/W/L
         JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
 
 code1101:                           ; Opcodes ADD.B/W/L, ADDA.B/W/L
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
         LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -456,7 +456,7 @@ code1101:                           ; Opcodes ADD.B/W/L, ADDA.B/W/L
         JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
 
 code1110:                           ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, LSR.B/W/L, ROL.B/W/L, ROR.B/W/L   
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
         LSR.W   D2,D1               ; Shift dst mode into LSB position
@@ -469,7 +469,7 @@ code1110:                           ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, L
         BEQ     MEMORY_1110_RIGHT   ; Go Memory Shift Right Side
     
         ; Check Register Shifts
-        MOVE.L  A5,D1                       ; A5 is current instruction word
+        MOVE.L  D0,D1                       ; D0 is current instruction word
         ANDI.W  #src_mode,D1                ; Extract 5-3 bits from instruction word
         MOVE.B  #right3,D2                  ; Used to shift 3 times to right
         LSR.W   D2,D1                       ; Shift 5-3 bits into LSB position
@@ -478,7 +478,7 @@ code1110:                           ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, L
         JMP     0(A0,D1)                    ; go to displacement (A0 + xxxx * 6)
 
 MEMORY_1110_LEFT:    
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
         MOVE.B  #right9,D2          ; Used to shift 9 times to right
         LSR.W   D2,D1               ; Shift dst reg into LSB position
@@ -486,11 +486,11 @@ MEMORY_1110_LEFT:
         BEQ     OP_ASL              ; Go to opcode ASL
         CMP.B   #1, D1              ; when D1 is 1
         BEQ     OP_LSL              ; Go to opcode LSL
-        CMP.B   #2, D1              ; When D1 is 2
+        CMP.B   #3, D1              ; When D1 is 3
         BEQ     OP_ROL              ; Go to opcode ROL
 
 MEMORY_1110_RIGHT:
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
         MOVE.B  #right9,D2          ; Used to shift 9 times to right
         LSR.W   D2,D1               ; Shift dst reg into LSB position
@@ -498,7 +498,7 @@ MEMORY_1110_RIGHT:
         BEQ     OP_ASR              ; Go to opcode ASR
         CMP.B   #1, D1              ; when D1 is 1
         BEQ     OP_LSR              ; Go to opcode LSR
-        CMP.B   #2, D1              ; When D1 is 2
+        CMP.B   #3, D1              ; When D1 is 3
         BEQ     OP_ROR              ; Go to opcode ROR
 
 code1111:                           ; Opcode not supported 
@@ -595,13 +595,13 @@ OP_1110_TABLE_REGISTER:
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
 
 JSR_NOP_RTS:
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
         LSR.W   D2,D1               ; Shift dst mode into LSB position
         CMP.B   #2, D1              ; When 010 in destination mode
         BEQ     OP_JSR              ; Go to opcode JSR
-        MOVE.L  A5,D1               ; A5 is current instruction word
+        MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #src_reg ,D1        ; Extract src reg position from instruction word
         CMP.B   #1, D1              ; When 001 in src register
         BEQ     OP_NOP              ; Go to opcode NOP
@@ -657,7 +657,7 @@ OP_MOVEA
         MOVE.B  #'M', (A2)+
         MOVE.B  #'O', (A2)+
         MOVE.B  #'V', (A2)+
-        MOVE.B  #'A', (A2)+
+        MOVE.B  #'E', (A2)+
         MOVE.B  #'A', (A2)+
         MOVE.L  #ea_type_immediate, D1
         JSR     EA_START
@@ -975,7 +975,7 @@ EA_SIZE_DONE
         RTS
         
 EA_IMMEDIATE
-        MOVE.L  A5, D1
+        MOVE.L  D0, D1
         ANDI.W  #dst_mode, D1
         MOVE.B  #right6, D2
         LSR.W   D2, D1
@@ -1073,6 +1073,9 @@ ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0
 
 
     END    START        ; last line of source
+
+
+
 
 
 *~Font name~Courier New~
