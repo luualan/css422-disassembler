@@ -505,115 +505,115 @@ code1111:                           ; Opcode not supported
         BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
          
 OP_0000_TABLE:
-    JMP     OP_UNSUPPORTED  ; 0 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; 1 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; 2 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; 3 Go to opcode unsupported  
-    JMP     OP_SUBI         ; 4 Go to opcode SUBI
-    JMP     OP_UNSUPPORTED  ; 5 Go to opcode unsupported  
-    JMP     OP_ADDI         ; 6 Go to opcode ADDI
-    JMP     OP_UNSUPPORTED  ; 7 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; 8 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; 9 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; A Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; B Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; C Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; D Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; E Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED  ; F Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; 0 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; 1 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; 2 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; 3 Go to opcode unsupported  
+        JMP     OP_SUBI         ; 4 Go to opcode SUBI
+        JMP     OP_UNSUPPORTED  ; 5 Go to opcode unsupported  
+        JMP     OP_ADDI         ; 6 Go to opcode ADDI
+        JMP     OP_UNSUPPORTED  ; 7 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; 8 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; 9 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; A Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; B Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; C Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; D Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; E Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED  ; F Go to opcode unsupported  
     
 OP_0100_TABLE:
-    JMP     OP_UNSUPPORTED      ; 0 Go to opcode unsupported  
-    JMP     OP_LEA              ; 1 Go to opcode LEA
-    JMP     OP_CLR              ; 2 Go to opcode CLR
-    JMP     OP_LEA              ; 3 Go to opcode LEA
-    JMP     OP_UNSUPPORTED      ; 4 Go to opcode unsupported  
-    JMP     OP_LEA              ; 5 Go to opcode LEA
-    JMP     OP_ADDI             ; 6 Go to opcode ADDI
-    JMP     OP_LEA              ; 7 Go to opcode LEA
-    JMP     OP_MOVEM            ; 8 Go to opcode MOVEM
-    JMP     OP_LEA              ; 9 Go to opcode LEA
-    JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
-    JMP     OP_LEA              ; B Go to opcode LEA
-    JMP     OP_MOVEM            ; C Go to opcode MOVEM
-    JMP     OP_LEA              ; D Go to opcode LEA
-    JMP     JSR_NOP_RTS         ; E Go to opcode JSR, NOP, or RTS
-    JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; 0 Go to opcode unsupported  
+        JMP     OP_LEA              ; 1 Go to opcode LEA
+        JMP     OP_CLR              ; 2 Go to opcode CLR
+        JMP     OP_LEA              ; 3 Go to opcode LEA
+        JMP     OP_UNSUPPORTED      ; 4 Go to opcode unsupported  
+        JMP     OP_LEA              ; 5 Go to opcode LEA
+        JMP     OP_ADDI             ; 6 Go to opcode ADDI
+        JMP     OP_LEA              ; 7 Go to opcode LEA
+        JMP     OP_MOVEM            ; 8 Go to opcode MOVEM
+        JMP     OP_LEA              ; 9 Go to opcode LEA
+        JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
+        JMP     OP_LEA              ; B Go to opcode LEA
+        JMP     OP_MOVEM            ; C Go to opcode MOVEM
+        JMP     OP_LEA              ; D Go to opcode LEA
+        JMP     JSR_NOP_RTS         ; E Go to opcode JSR, NOP, or RTS
+        JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
 OP_1100_TABLE:
-    JMP     OP_AND              ; 0 Go to opcode AND 
-    JMP     OP_AND              ; 1 Go to opcode AND
-    JMP     OP_AND              ; 2 Go to opcode AND
-    JMP     OP_MULU             ; 3 Go to opcode MULU
-    JMP     OP_AND              ; 4 Go to opcode AND 
-    JMP     OP_AND              ; 5 Go to opcode AND
-    JMP     OP_AND              ; 6 Go to opcode AND
-    JMP     OP_MULS             ; 7 Go to opcode MULS
-    JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; B Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; C Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; D Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
+        JMP     OP_AND              ; 0 Go to opcode AND 
+        JMP     OP_AND              ; 1 Go to opcode AND
+        JMP     OP_AND              ; 2 Go to opcode AND
+        JMP     OP_MULU             ; 3 Go to opcode MULU
+        JMP     OP_AND              ; 4 Go to opcode AND 
+        JMP     OP_AND              ; 5 Go to opcode AND
+        JMP     OP_AND              ; 6 Go to opcode AND
+        JMP     OP_MULS             ; 7 Go to opcode MULS
+        JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; B Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; C Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; D Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
 OP_1101_TABLE:
-    JMP     OP_ADD              ; 0 Go to opcode ADD 
-    JMP     OP_ADD              ; 1 Go to opcode ADD
-    JMP     OP_ADD              ; 2 Go to opcode ADD
-    JMP     OP_ADDA             ; 3 Go to opcode ADDA
-    JMP     OP_ADD              ; 4 Go to opcode ADD 
-    JMP     OP_ADD              ; 5 Go to opcode ADD
-    JMP     OP_ADD              ; 6 Go to opcode ADD
-    JMP     OP_ADDA             ; 7 Go to opcode ADDA
-    JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; B Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; C Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; D Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
+        JMP     OP_ADD              ; 0 Go to opcode ADD 
+        JMP     OP_ADD              ; 1 Go to opcode ADD
+        JMP     OP_ADD              ; 2 Go to opcode ADD
+        JMP     OP_ADDA             ; 3 Go to opcode ADDA
+        JMP     OP_ADD              ; 4 Go to opcode ADD 
+        JMP     OP_ADD              ; 5 Go to opcode ADD
+        JMP     OP_ADD              ; 6 Go to opcode ADD
+        JMP     OP_ADDA             ; 7 Go to opcode ADDA
+        JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; B Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; C Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; D Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
 OP_1110_TABLE_REGISTER:
-    JMP     OP_ASR              ; 0 Go to opcode ASR
-    JMP     OP_LSR              ; 1 Go to opcode LSR
-    JMP     OP_UNSUPPORTED      ; 2 Go to opcode unsupported  
-    JMP     OP_ROR              ; 3 Go to opcode ROR
-    JMP     OP_ASL              ; 4 Go to opcode ASL 
-    JMP     OP_LSL              ; 5 Go to opcode LSL
-    JMP     OP_UNSUPPORTED      ; 6 Go to opcode unsupported 
-    JMP     OP_ROL              ; 7 Go to opcode ROL
-    JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; B Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; C Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; D Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
-    JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
+        JMP     OP_ASR              ; 0 Go to opcode ASR
+        JMP     OP_LSR              ; 1 Go to opcode LSR
+        JMP     OP_UNSUPPORTED      ; 2 Go to opcode unsupported  
+        JMP     OP_ROR              ; 3 Go to opcode ROR
+        JMP     OP_ASL              ; 4 Go to opcode ASL 
+        JMP     OP_LSL              ; 5 Go to opcode LSL
+        JMP     OP_UNSUPPORTED      ; 6 Go to opcode unsupported 
+        JMP     OP_ROL              ; 7 Go to opcode ROL
+        JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; B Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; C Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; D Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
+        JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
 
 JSR_NOP_RTS:
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-    MOVE.B  #right6,D2          ; Used to shift 6 times to right
-    LSR.W   D2,D1               ; Shift dst mode into LSB position
-    CMP.B   #2, D1              ; When 010 in destination mode
-    BEQ     OP_JSR              ; Go to opcode JSR
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #src_reg ,D1        ; Extract src reg position from instruction word
-    CMP.B   #1, D1              ; When 001 in src register
-    BEQ     OP_NOP              ; Go to opcode NOP
-    CMP.B   #5, D1              ; When 005 in src register
-    BEQ     OP_RTS              ; Go to opcode RTS
-    BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported 
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
+        MOVE.B  #right6,D2          ; Used to shift 6 times to right
+        LSR.W   D2,D1               ; Shift dst mode into LSB position
+        CMP.B   #2, D1              ; When 010 in destination mode
+        BEQ     OP_JSR              ; Go to opcode JSR
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #src_reg ,D1        ; Extract src reg position from instruction word
+        CMP.B   #1, D1              ; When 001 in src register
+        BEQ     OP_NOP              ; Go to opcode NOP
+        CMP.B   #5, D1              ; When 005 in src register
+        BEQ     OP_RTS              ; Go to opcode RTS
+        BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported 
 
 OP_UNSUPPORTED
-    LEA     ERROR_MESSAGE, A1 
-    MOVE.B  #14, D0
-    TRAP    #15
-    BRA     DONE
+        LEA     ERROR_MESSAGE, A1 
+        MOVE.B  #14, D0
+        TRAP    #15
+        BRA     DONE
         
 *----------------------------------------------------------------------------------------------*
 * param D0 the current instruction in word
@@ -1000,39 +1000,39 @@ DONE
 
 * Put variables and constants here
    
-CR              EQU         $0D
-LF              EQU         $0A
-stack           EQU         $2000
-buffer_size     EQU         64 
-decoded_buffer  EQU         64
-lines_p_screen  EQU         20
-right3          EQU         3
-right4          EQU         4
-right6          EQU         6
-right8          EQU         8
-right9          EQU         9
-right12         EQU         12
-right16         EQU         16
-right24         EQU         24
-ascii_y_n       DC.B        32
-y_uppercase     EQU         $59         
-y_lowercase     EQU         $79
-n_uppercase     EQU         $4E
-n_lowercase     EQU         $6E
-task2           EQU         $02
-task5           EQU         $05
-task9           EQU         $09
-task13          EQU         $0D
-task14          EQU         $0E
-first_nibble    EQU         $F000
-second_nibble   EQU         $0F00   
-third_nibble    EQU         $00F0
-fourth_nibble   EQU         $000F
-dst_mode        EQU         $00C0
-dst_reg         EQU         $0E00
-src_mode        EQU         $0018
-src_reg         EQU         $0007
-bit8            EQU         $0100
+CR                  EQU         $0D
+LF                  EQU         $0A
+stack               EQU         $2000
+buffer_size         EQU         64 
+decoded_buffer      EQU         64
+lines_p_screen      EQU         20
+right3              EQU         3
+right4              EQU         4
+right6              EQU         6
+right8              EQU         8
+right9              EQU         9
+right12             EQU         12
+right16             EQU         16
+right24             EQU         24
+ascii_y_n           DC.B        32
+y_uppercase         EQU         $59         
+y_lowercase         EQU         $79
+n_uppercase         EQU         $4E
+n_lowercase         EQU         $6E
+task2               EQU         $02
+task5               EQU         $05
+task9               EQU         $09
+task13              EQU         $0D
+task14              EQU         $0E
+first_nibble        EQU         $F000
+second_nibble       EQU         $0F00   
+third_nibble        EQU         $00F0
+fourth_nibble       EQU         $000F
+dst_mode            EQU         $00C0
+dst_reg             EQU         $0E00
+src_mode            EQU         $0018
+src_reg             EQU         $0007
+bit8                EQU         $0100
 
 ea_type_immediate   EQU     0       ; EA Type = immediate
 ea_type_move        EQU     1       ; EA Type = move
@@ -1052,24 +1052,24 @@ EA_WRONGSIZE
 
 
 
-WELCOME         DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
+WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 
-USER_INST       DC.B        'Please follow the proper input instructions below: ',CR,LF
-                DC.B        '- Starting address must be lower than ending address.',CR,LF
-                DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
-                DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
-                DC.B        '- Do not put spaces in between input characters.',CR,LF
-                DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
+USER_INST           DC.B        'Please follow the proper input instructions below: ',CR,LF
+                    DC.B        '- Starting address must be lower than ending address.',CR,LF
+                    DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
+                    DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
+                    DC.B        '- Do not put spaces in between input characters.',CR,LF
+                    DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
                 
-ENTER_PROMPT    DC.B        'Press enter to continue...',CR,LF,0
-PROMPT_AGAIN    DC.B        'Press Y to continue / N to exit.',CR,LF,0
-EXIT_PROMPT     DC.B        'Program has execution has stopped.',CR,LF,0
+ENTER_PROMPT        DC.B        'Press enter to continue...',CR,LF,0
+PROMPT_AGAIN        DC.B        'Press Y to continue / N to exit.',CR,LF,0
+EXIT_PROMPT         DC.B        'Program has execution has stopped.',CR,LF,0
       
-START_IN        DC.B        'Enter a starting address: ',CR,LF,0 
-END_IN          DC.B        'Enter an ending address: ',CR,LF,0 
-START_ADDRESS   DS.B        64     
-END_ADDRESS     DS.B        64 
-ERROR_MESSAGE   DC.B        'Error, the input is Invalid.',CR,LF,0       
+START_IN            DC.B        'Enter a starting address: ',CR,LF,0 
+END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
+START_ADDRESS       DS.B        64     
+END_ADDRESS         DS.B        64 
+ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0       
 
 
     END    START        ; last line of source
