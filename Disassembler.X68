@@ -991,37 +991,43 @@ EA_IMMEDIATE    ; 0 ea_immediate
         LSR.W   D2, D1
         ANDI.B  #3, D1
         MOVE.B  D1, D2
-        BRA     EA_SIZE_IMMEDIATE
+        JSR     EA_SIZE_IMMEDIATE
+
+        MOVE.L  D0, D3          ; Store the dst mode in D3
+        ANDI.W  #dst_mode, D3    ; get bits 5-3
+        MOVE.B  right3, D2      ; shift the bits 5-3 to the LSB
+        LSR.W   D2, D3          ; do the actual shift 
+        BRA     EA_GEN_SRC
+
+        MOVE.L  D0, D4          ; Store the dst reg in D4
+        ANDI.W  #dst_reg, D4     ; get the bits at 2-0
+
  
 EA_MOVE         ; 1: ea_move
         MOVE.L  D0, D1
-        ANDI.W  first_nibble, D1
+        ANDI.W  #first_nibble, D1
         MOVE.B  right12, D2 
         LSR.W   D2, D1
         ANDI.B  #3, D1
         MOVE.B  D1, D2
-        BRA     EA_SIZE_MOVE
+        JSR     EA_SIZE_MOVE
         
         MOVE.L  D0, D3          ; Store the src mode in D3
-        ANDI.W  src_mode, D3    ; get bits 5-3
+        ANDI.W  #src_mode, D3    ; get bits 5-3
         MOVE.B  right3, D2      ; shift the bits 5-3 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
         BRA     EA_GEN_SRC
         
-        
-        
-        MOVE.L  D0, D4          ;   
+        MOVE.L  D0, D4          ; Store the src reg in D4
+        ANDI.W  #src_reg, D4     ; get the bits at 2-0
         
         MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode. 
-        ANDI.W  dst_mode, D3    ; get bits 11-9
+        ANDI.W  #dst_mode, D3    ; get bits 11-9
         MOVE.B  right9, D2      ; shift the bits 11-9 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
         BRA     EA_GEN_SRC
         
         
-        
-        
-
 EA_MOVEA        ; 2: ea_movea
 EA_LEA          ; 3: ea_lea
 EA_DSTONLY      ; 4: ea_dstonly
@@ -1030,6 +1036,8 @@ EA_MOVEM        ; 6: ea_movem
 EA_TRAP         ; 7: ea_trap
 EA_QUICK        ; 8: ea_quick
 EA_branch       ; 9: ea_branch
+
+EA_REG
 
 EA_GEN_SRC
         LEA     EA_GEN_TABLE_SRC, A0
@@ -1048,21 +1056,44 @@ EA_GEN_TABLE_SRC
 
 EA_Dn               ; 000: Dn
         MOVE.B  #'D', (A2)+
+        ADDI.B  #$30, D4
+        MOVE.B  D4, (A2)+
 
 EA_An               ; 001: An
         MOVE.B  #'A', (A2)+
+        ADDI.B  #$30, D4
+        MOVE.B  D4, (A2)+
 
 EA_An_Indirect      ; 010: (An)
         MOVE.B  #'(', (A2)+
         MOVE.B  #'A', (A2)+
-        BRA     
+        ADDI.B  #$30, D4
+        MOVE.B  D4, (A2)+
         MOVE.B  #')', (A2)+
         
 EA_An_Indirect_Inc  ; 011: (An)+
+        MOVE.B  #'(', (A2)+
+        MOVE.B  #'A', (A2)+
+        ADDI.B  #$30, D4
+        MOVE.B  D4, (A2)+
+        MOVE.B  #')', (A2)+
+        MOVE.B  #'+', (A2)+
+        
 EA_An_Indirect_Dec  ; 100: -(An)
+        MOVE.B  #'-', (A2)+
+        MOVE.B  #'(', (A2)+
+        MOVE.B  #'A', (A2)+
+        ADDI.B  #$30, D4
+        MOVE.B  D4, (A2)+
+        MOVE.B  #')', (A2)+
+        
 EA_d16_An_Indirect  ; 101: (D16, An)
 EA_d8_An_X_Indirect ; 110: (D8, An, Xn)
+
 EA_Absolute         ; 111: (xxx).W,(xxx).L, or #<data>
+        
+
+
 
 
 DONE        
