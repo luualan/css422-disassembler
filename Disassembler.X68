@@ -112,26 +112,38 @@ COMPLETE_ENDA       MOVEA.L D5, A6  ; A6 holds the ending address.
 ODD     LEA     ERROR_MESSAGE, A1 
         MOVE.B  #14, D0
         TRAP    #15
+
+*--------------------------------------------------------------------------------------
+* param D2 data size to convert into ASCII
+* param A2 a pointer to decode_buf
+* param A5 the current address
+* itoa (D2, A2, A5) {
+* D0 byte data in ACII
+* D1 #sfhit
+* D7 long data to convert into ASCII
+* }
         
-ITOA    MOVEM.L D0-D1, -(SP) ; convert integer to ASCII
-        CMP.B   #$00, D2
+ITOA    
+        MOVEM.L D0-D1,-(SP) ; convert integer to ASCII
+        
+        CMP.B   #%00, D2    ; byte
         BEQ     ITOA_BYTE
-        CMP.B   #$01, D2
+        CMP.B   #%01, D2    ; word
         BEQ     ITOA_WORD
-        CMP.B   #$10, D2
+        CMP.B   #%10, D2    ; long
         BEQ     ITOA_LONG
-        JMP     ITOA_LONGADDRESS
+        JMP     ITOA_LONGADDRESS    ; long address
         
 ITOA_MOVE
-        MOVEM.L D0-D1, -(SP)
-        
-        CMP.B   #%01, D2
+        MOVEM.L D0-D1,-(SP)
+
+        CMP.B   #%01, D2    ; byte
         BEQ     ITOA_BYTE
-        CMP.B   #%11, D2
+        CMP.B   #%11, D2    ; word
         BEQ     ITOA_WORD
-        CMP.B   #%10,D2
+        CMP.B   #%10,D2     ; long
         BEQ     ITOA_LONG
-        JMP     ITOA_LONGADDRESS
+        JMP     ITOA_LONGADDRESS ; long address
 
 ITOA_BYTE
         MOVE.W  (A5)+,D7
@@ -207,7 +219,7 @@ ITOA_CONVERT_A_TO_F
 
 ITOA_DONE
         MOVEM.L (SP)+, D0-D1
-        RTS
+        BRA DO
 
 *-------------------------------------------------------------------------------*
 
@@ -305,13 +317,14 @@ DECODE_MEMORY
                 
         ;print out the current address
         MOVE.L  #$0003, D2
-        JSR     ITOA
-        MOVE.B  #$9, (A2)+
+        BRA      ITOA
+        
+DO      MOVE.B  #$9, (A2)+
                 
         ;load the next instruction and jump to the opcode table entry
         LEA     OP_TABLE, A0
         CLR.L   D0
-        MOVE.W  (A5)+, D0
+        MOVE.W  (A5)+, D0       ; increment A5 store value into D0
         MOVE.L  D0, D1
         MOVE.B  #right12, D2
         LSR.W   D2, D1
@@ -334,7 +347,6 @@ OP_CLEAR_DATA_LOOP
         RTS
 
 *------------------------------------------------------------------------------------*
-
 OP_TABLE
         JMP     code0000    ; ADDI.bwl/ ANDI.bwl / CMPI.bwl / EORI.bwl / ORI.bwl / SUBI.bwl 
         JMP     code0001    ; MOVE.b
@@ -353,86 +365,144 @@ OP_TABLE
         JMP     code1110    ; ASL.bwl / ASR.bwl / LSL.bwl / LSR.bwl / ROR.bwl / ROL.bwl
         JMP     code1111    ;   [unassigned]
         
-code0000:                       ; Opcodes ADDI and SUBI
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
-    MOVE.B  #right8,D2          ; Used to shift 8 times to right
-    LSR.W   D2,D1               ; Shift nibble into LSB position
-    MULU    #6, D1              ; Set displacement 
-    LEA     OP_0000_TABLE,A0    ; Load table into A0
-    JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
+code0000:                           ; Opcodes ADDI and SUBI
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
+        MOVE.B  #right8,D2          ; Used to shift 8 times to right
+        LSR.W   D2,D1               ; Shift nibble into LSB position
+        MULU    #6, D1              ; Set displacement 
+        LEA     OP_0000_TABLE,A0    ; Load table into A0
+        JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
 
-code0001:                       ; Opcode MOVE.B
-    BRA     OP_MOVE             ; Go to opcode MOVE
+code0001:                           ; Opcode MOVE.B
+        BRA     OP_MOVE             ; Go to opcode MOVE
 
-code0010:                       ; Opcodes MOVE.L and MOVEA.L 
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-    MOVE.B  #right6,D2          ; Used to shift 6 times to right
-    LSR.W   D2,D1               ; Shift dst mode into LSB position
-    CMP.B   #1, D1              ; When 001 in destination mode
-    BEQ     OP_MOVEA            ; Go to opcode MOVEA
-    BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
+code0010:                           ; Opcodes MOVE.L and MOVEA.L 
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
+        MOVE.B  #right6,D2          ; Used to shift 6 times to right
+        LSR.W   D2,D1               ; Shift dst mode into LSB position
+        CMP.B   #1, D1              ; When 001 in destination mode
+        BEQ     OP_MOVEA            ; Go to opcode MOVEA
+        BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 
-code0011:                       ; Opcodes MOVE.W and MOVEA.W 
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-    MOVE.B  #right6,D2          ; Used to shift 6 times to right
-    LSR.W   D2,D1               ; Shift dst mode into LSB position
-    CMP.B   #1, D1              ; When 001 in destination mode
-    BEQ     OP_MOVEA            ; Go to opcode MOVEA
-    BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
+code0011:                           ; Opcodes MOVE.W and MOVEA.W 
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
+        MOVE.B  #right6,D2          ; Used to shift 6 times to right
+        LSR.W   D2,D1               ; Shift dst mode into LSB position
+        CMP.B   #1, D1              ; When 001 in destination mode
+        BEQ     OP_MOVEA            ; Go to opcode MOVEA
+        BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 
-code0100:                       ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
-    MOVE.B  #right8,D2          ; Used to shift 8 times to right
-    LSR.W   D2,D1               ; Shift nibble into LSB position
-    MULU    #6, D1              ; Set displacement 
-    LEA     OP_0100_TABLE,A0    ; Load table into A0
-    JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
+code0100:                           ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
+        MOVE.B  #right8,D2          ; Used to shift 8 times to right
+        LSR.W   D2,D1               ; Shift nibble into LSB position
+        MULU    #6, D1              ; Set displacement 
+        LEA     OP_0100_TABLE,A0    ; Load table into A0
+        JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
 
-code0101:                       ; Opcode ADDQ.B/W/L
-    BRA     OP_ADDQ             ; Go to opcode ADDQ
+code0101:                           ; Opcode ADDQ.B/W/L
+        BRA     OP_ADDQ             ; Go to opcode ADDQ
 
-code0110:                       ; Opcodes BRA and BSR
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #second_nibble,D1   ; Extract 2nd 4 bits from instruction word
-    MOVE.B  #right8,D2          ; Used to shift 8 times to right
-    LSR.W   D2,D1               ; Shift nibble into LSB position
-    CMP.B   #0, D1              ; When 0000 in destination mode
-    BEQ     OP_BRA              ; Go to opcode BRA
-    BRA     OP_BSR              ; Otherwise, go to opcode BSR
+code0110:                           ; Opcodes BRA and BSR
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #second_nibble,D1   ; Extract 2nd 4 bits from instruction word
+        MOVE.B  #right8,D2          ; Used to shift 8 times to right
+        LSR.W   D2,D1               ; Shift nibble into LSB position
+        CMP.B   #0, D1              ; When 0000 in destination mode
+        BEQ     OP_BRA              ; Go to opcode BRA
+        BRA     OP_BSR              ; Otherwise, go to opcode BSR
 
-code0111:                       ; Opcode MOVEQ
-    BRA     OP_MOVEQ            ; Go to opcode MOVEQ
+code0111:                           ; Opcode MOVEQ
+        BRA     OP_MOVEQ            ; Go to opcode MOVEQ
 
-code1000:                       ; Opcodes DIVU word and OR.B/W/L
-    MOVE.L  A5,D1               ; A5 is current instruction word
-    ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-    MOVE.B  #right6,D2          ; Used to shift 6 times to right
-    LSR.W   D2,D1               ; Shift dst mode into LSB position
-    CMP.B   #3, D1              ; When 011 in destination mode
-    BEQ     OP_DIVU             ; Go to opcode DIVU word
-    BRA     OP_OR               ; Otherwise, go to opcode OR
+code1000:                           ; Opcodes DIVU word and OR.B/W/L
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
+        MOVE.B  #right6,D2          ; Used to shift 6 times to right
+        LSR.W   D2,D1               ; Shift dst mode into LSB position
+        CMP.B   #3, D1              ; When 011 in destination mode
+        BEQ     OP_DIVU             ; Go to opcode DIVU word
+        BRA     OP_OR               ; Otherwise, go to opcode OR
 
-code1001:                       ; Opcode SUB.B/W/L
-    BRA     OP_SUB              ; Go to opcode SUB   
+code1001:                           ; Opcode SUB.B/W/L
+        BRA     OP_SUB              ; Go to opcode SUB   
 
-code1010:                       ; Opcode not supported 
-    BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
+code1010:                           ; Opcode not supported 
+        BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
      
-code1011:                       ; Opcode CMP.B/W/L
-    BRA     OP_CMP              ; Go to opcode CMP
+code1011:                           ; Opcode CMP.B/W/L
+        BRA     OP_CMP              ; Go to opcode CMP
 
-code1100:                       ; Opcodes MULS, MULU, AND.B/W/L
+code1100:                           ; Opcodes MULS, MULU, AND.B/W/L
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
+        MOVE.B  #right6,D2          ; Used to shift 6 times to right
+        LSR.W   D2,D1               ; Shift dst mode into LSB position
+        MULU    #6, D1              ; Set displacement 
+        LEA     OP_1100_TABLE,A0    ; Load table into A0
+        JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
 
-code1101:                       ; Opcodes ADD.B/W/L, ADDA.B/W/L
+code1101:                           ; Opcodes ADD.B/W/L, ADDA.B/W/L
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
+        MOVE.B  #right6,D2          ; Used to shift 6 times to right
+        LSR.W   D2,D1               ; Shift dst mode into LSB position
+        MULU    #6, D1              ; Set displacement 
+        LEA     OP_1101_TABLE,A0    ; Load table into A0
+        JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
 
-code1110:                       ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, LSR.B/W/L, ROL.B/W/L, ROR.B/W/L                       
+code1110:                           ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, LSR.B/W/L, ROL.B/W/L, ROR.B/W/L   
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
+        MOVE.B  #right6,D2          ; Used to shift 6 times to right
+        LSR.W   D2,D1               ; Shift dst mode into LSB position
+   
+        ; Check Memory Shifts
+        CMP.B   #7, D1              ; When 111
+        BEQ     MEMORY_1110_LEFT    ; Go to Memory Shift Left Side
+    
+        CMP.B   #3, D1              ; When 011
+        BEQ     MEMORY_1110_RIGHT   ; Go Memory Shift Right Side
+    
+        ; Check Register Shifts
+        MOVE.L  A5,D1                       ; A5 is current instruction word
+        ANDI.W  #src_mode,D1                ; Extract 5-3 bits from instruction word
+        MOVE.B  #right3,D2                  ; Used to shift 3 times to right
+        LSR.W   D2,D1                       ; Shift 5-3 bits into LSB position
+        MULU    #6, D1                      ; Set displacement 
+        LEA     OP_1110_TABLE_REGISTER,A0   ; Load table into A0
+        JMP     0(A0,D1)                    ; go to displacement (A0 + xxxx * 6)
 
-code1111:                       ; Opcode not supported 
-    BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
+MEMORY_1110_LEFT:    
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
+        MOVE.B  #right9,D2          ; Used to shift 9 times to right
+        LSR.W   D2,D1               ; Shift dst reg into LSB position
+        CMP.B   #0,D1               ; When D1 is 0
+        BEQ     OP_ASL              ; Go to opcode ASL
+        CMP.B   #1, D1              ; when D1 is 1
+        BEQ     OP_LSL              ; Go to opcode LSL
+        CMP.B   #2, D1              ; When D1 is 2
+        BEQ     OP_ROL              ; Go to opcode ROL
+
+MEMORY_1110_RIGHT:
+        MOVE.L  A5,D1               ; A5 is current instruction word
+        ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
+        MOVE.B  #right9,D2          ; Used to shift 9 times to right
+        LSR.W   D2,D1               ; Shift dst reg into LSB position
+        CMP.B   #0,D1               ; When D1 is 0
+        BEQ     OP_ASR              ; Go to opcode ASR
+        CMP.B   #1, D1              ; when D1 is 1
+        BEQ     OP_LSR              ; Go to opcode LSR
+        CMP.B   #2, D1              ; When D1 is 2
+        BEQ     OP_ROR              ; Go to opcode ROR
+
+code1111:                           ; Opcode not supported 
+        BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
          
 OP_0000_TABLE:
     JMP     OP_UNSUPPORTED  ; 0 Go to opcode unsupported  
@@ -452,7 +522,7 @@ OP_0000_TABLE:
     JMP     OP_UNSUPPORTED  ; E Go to opcode unsupported  
     JMP     OP_UNSUPPORTED  ; F Go to opcode unsupported  
     
- OP_0100_TABLE:
+OP_0100_TABLE:
     JMP     OP_UNSUPPORTED      ; 0 Go to opcode unsupported  
     JMP     OP_LEA              ; 1 Go to opcode LEA
     JMP     OP_CLR              ; 2 Go to opcode CLR
@@ -468,6 +538,60 @@ OP_0000_TABLE:
     JMP     OP_MOVEM            ; C Go to opcode MOVEM
     JMP     OP_LEA              ; D Go to opcode LEA
     JMP     JSR_NOP_RTS         ; E Go to opcode JSR, NOP, or RTS
+    JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
+    
+OP_1100_TABLE:
+    JMP     OP_AND              ; 0 Go to opcode AND 
+    JMP     OP_AND              ; 1 Go to opcode AND
+    JMP     OP_AND              ; 2 Go to opcode AND
+    JMP     OP_MULU             ; 3 Go to opcode MULU
+    JMP     OP_AND              ; 4 Go to opcode AND 
+    JMP     OP_AND              ; 5 Go to opcode AND
+    JMP     OP_AND              ; 6 Go to opcode AND
+    JMP     OP_MULS             ; 7 Go to opcode MULS
+    JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; B Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; C Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; D Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
+    
+OP_1101_TABLE:
+    JMP     OP_ADD              ; 0 Go to opcode ADD 
+    JMP     OP_ADD              ; 1 Go to opcode ADD
+    JMP     OP_ADD              ; 2 Go to opcode ADD
+    JMP     OP_ADDA             ; 3 Go to opcode ADDA
+    JMP     OP_ADD              ; 4 Go to opcode ADD 
+    JMP     OP_ADD              ; 5 Go to opcode ADD
+    JMP     OP_ADD              ; 6 Go to opcode ADD
+    JMP     OP_ADDA             ; 7 Go to opcode ADDA
+    JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; B Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; C Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; D Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
+    
+OP_1110_TABLE_REGISTER:
+    JMP     OP_ASR              ; 0 Go to opcode ASR
+    JMP     OP_LSR              ; 1 Go to opcode LSR
+    JMP     OP_UNSUPPORTED      ; 2 Go to opcode unsupported  
+    JMP     OP_ROR              ; 3 Go to opcode ROR
+    JMP     OP_ASL              ; 4 Go to opcode ASL 
+    JMP     OP_LSL              ; 5 Go to opcode LSL
+    JMP     OP_UNSUPPORTED      ; 6 Go to opcode unsupported 
+    JMP     OP_ROL              ; 7 Go to opcode ROL
+    JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; B Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; C Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; D Go to opcode unsupported  
+    JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
     JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
 
 JSR_NOP_RTS:
@@ -489,6 +613,7 @@ OP_UNSUPPORTED
     LEA     ERROR_MESSAGE, A1 
     MOVE.B  #14, D0
     TRAP    #15
+    BRA     DONE
         
 *----------------------------------------------------------------------------------------------*
 * param D0 the current instruction in word
@@ -870,20 +995,22 @@ EA_branch       ; 9: ea_branch
 
 
         
-        
+DONE        
     SIMHALT             ; halt simulator
 
 * Put variables and constants here
    
 CR              EQU         $0D
 LF              EQU         $0A
-stack           EQU         $000A0000
+stack           EQU         $2000
 buffer_size     EQU         64 
 decoded_buffer  EQU         64
 lines_p_screen  EQU         20
+right3          EQU         3
 right4          EQU         4
 right6          EQU         6
 right8          EQU         8
+right9          EQU         9
 right12         EQU         12
 right16         EQU         16
 right24         EQU         24
