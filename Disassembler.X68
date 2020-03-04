@@ -979,7 +979,7 @@ EA_IMMEDIATE
         ANDI.W  #dst_mode, D1
         MOVE.B  #right6, D2
         LSR.W   D2, D1
-        ADDI.B  #3, D1
+        ANDI.B  #3, D1
         MOVE.B  D1, D2
         BRA     EA_SIZE
         
@@ -993,8 +993,31 @@ EA_TRAP         ; 7: ea_trap
 EA_QUICK        ; 8: ea_quick
 EA_branch       ; 9: ea_branch
 
+EA_GEN_SRC
+        LEA     EA_GEN_TABLE_SRC, A0
+        MULU    #6, D3
+        JMP     0(A0,D3)            ; jump to each ea src generation table entry 
 
-        
+EA_GEN_TABLE_SRC
+        JMP     EA_Dn               ; 000: Dn
+        JMP     EA_An               ; 001: An
+        JMP     EA_An_Indirect      ; 010: (An)
+        JMP     EA_An_Indirect_Inc  ; 011: (An)+
+        JMP     EA_An_Indirect_Dec  ; 100: -(An)
+        JMP     EA_d16_An_Indirect  ; 101: (D16, An)
+        JMP     EA_d8_An_X_Indirect ; 110: (D8, An, Xn)
+        JMP     EA_Absolute         ; 111: (xxx).W,(xxx).L, or #<data>
+
+EA_Dn               ; 000: Dn
+EA_An               ; 001: An
+EA_An_Indirect      ; 010: (An)
+EA_An_Indirect_Inc  ; 011: (An)+
+EA_An_Indirect_Dec  ; 100: -(An)
+EA_d16_An_Indirect  ; 101: (D16, An)
+EA_d8_An_X_Indirect ; 110: (D8, An, Xn)
+EA_Absolute         ; 111: (xxx).W,(xxx).L, or #<data>
+
+
 DONE        
     SIMHALT             ; halt simulator
 
@@ -1073,9 +1096,6 @@ ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0
 
 
     END    START        ; last line of source
-
-
-
 
 
 
