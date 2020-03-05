@@ -219,7 +219,7 @@ ITOA_CONVERT_A_TO_F
 
 ITOA_DONE
         MOVEM.L (SP)+, D0-D1
-        BRA DO
+        BRA     DO
 
 *-------------------------------------------------------------------------------*
 
@@ -659,7 +659,7 @@ OP_MOVEA
         MOVE.B  #'V', (A2)+
         MOVE.B  #'E', (A2)+
         MOVE.B  #'A', (A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_movea, D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -722,7 +722,7 @@ OP_LEA
         MOVE.B  #'L', (A2)+
         MOVE.B  #'E', (A2)+
         MOVE.B  #'A', (A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_lea, D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -1013,19 +1013,19 @@ EA_MOVE         ; 1: ea_move
         MOVE.B  D1, D2
         JSR     EA_SIZE_MOVE
         
-        MOVE.B  #$9, (A2)+      ; print out a space after the size.
+        MOVE.B  #$20, (A2)+      ; print out a space after the size.
         
         MOVE.L  D0, D4          ; Store the src reg in D4
         ANDI.W  #src_reg, D4    ; get the bits at 2-0
         
         MOVE.L  D0, D3          ; Store the src mode in D3
         ANDI.W  #src_mode, D3   ; get bits 5-3
-        MOVE.B  #right3, D2      ; shift the bits 5-3 to the LSB
+        MOVE.B  #right3, D2     ; shift the bits 5-3 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
         JSR     EA_GEN_SRC
         
         MOVE.B  #$2C,(A2)+      ; Add comma after size print
-        MOVE.B  #$9, (A2)+      ; Add space after comma
+        MOVE.B  #$20, (A2)+      ; Add space after comma
         
         MOVE.L  D0, D4          ; Store the dest reg in D4
         ANDI.W  #dst_reg, D4    ; get the bits at 11-9
@@ -1034,13 +1034,58 @@ EA_MOVE         ; 1: ea_move
         
         MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode. 
         ANDI.W  #dst_mode, D3   ; get bits 8-6
-        MOVE.B  #right6, D2      ; shift the bits 8-6 to the LSB
+        MOVE.B  #right6, D2     ; shift the bits 8-6 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
-        BRA     EA_GEN_SRC
+        JSR     EA_GEN_SRC
+        
+        LEA     decoded_buffer, A1
+        MOVE.B  #13, D0
+        TRAP    #15
+        
+        BRA     DECODE_MEMORY
         
         
 EA_MOVEA        ; 2: ea_movea
+
+
 EA_LEA          ; 3: ea_lea
+        MOVE.B  #$20, (A2)+      ; print out a space after the LEA
+        
+        MOVE.L  D0, D4          ; Store the src reg in D4
+        ANDI.W  #src_reg, D4    ; get the bits at 2-0
+        
+        MOVE.L  D0, D3          ; Store the src mode in D3
+        ANDI.W  #src_mode, D3   ; get bits 5-3
+        MOVE.B  #right3, D2     ; shift the bits 5-3 to the LSB
+        LSR.W   D2, D3          ; do the actual shift 
+        JSR     EA_GEN_SRC
+        
+        MOVE.B  #$2C,(A2)+      ; Add comma after size print
+        MOVE.B  #$20, (A2)+      ; Add space after comma
+
+        MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode. 
+        ANDI.W  #dst_mode, D3   ; get bits 8-6
+        MOVE.B  #right6, D2     ; shift the bits 8-6 to the LSB
+        LSR.W   D2, D3          ; do the actual shift
+        CMP.B   #3, D3
+        BEQ     CHANGE_BITSTO_001   ; change the D3 bits to 001. 
+        JMP     ERROR_MESSAGE       ; Print out an error message if bits 8-6 are not 111. 
+CHANGE_BITSTO_001
+        MOVE.B  #%001, D3       ; set D3 to 001 to ensure the print out A. 
+        
+        MOVE.L  D0, D4          ; Store the dest reg in D4 to get the Address register number. 
+        ANDI.W  #dst_reg, D4    ; get the bits at 11-9
+        MOVE.B  #right9, D2     ; shift the bits 11-9 to the LSB
+        LSR.W   D2, D4          ; do the actual shift
+        JSR     EA_GEN_SRC      ; Print out the address register.
+        
+        LEA     decoded_buffer, A1
+        MOVE.B  #13, D0
+        TRAP    #15
+        
+        BRA     DECODE_MEMORY
+        
+
 EA_DSTONLY      ; 4: ea_dstonly
 EA_EXT          ; 5: ea_ext
 EA_MOVEM        ; 6: ea_movem
@@ -1048,7 +1093,6 @@ EA_TRAP         ; 7: ea_trap
 EA_QUICK        ; 8: ea_quick
 EA_branch       ; 9: ea_branch
 
-EA_REG
 
 EA_GEN_SRC
         LEA     EA_GEN_TABLE_SRC, A0
