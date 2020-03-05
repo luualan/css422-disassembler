@@ -670,7 +670,7 @@ OP_MOVE
         MOVE.B  #'O', (A2)+
         MOVE.B  #'V', (A2)+
         MOVE.B  #'E', (A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_move, D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -958,7 +958,7 @@ EA_SIZE_IMMEDIATE
         BEQ     EA_SIZE_W       
         CMP.B   #%10, D2        ; .l
         BEQ     EA_SIZE_L
-        JMP     EA_WRONGSIZE    ; wrong size
+        BRA     EA_Wrong_Size    ; wrong size
 
 EA_SIZE_MOVE
         CMP.B   #%01, D2        ; .b
@@ -967,7 +967,7 @@ EA_SIZE_MOVE
         BEQ     EA_SIZE_W       
         CMP.B   #%10, D2        ; .l
         BEQ     EA_SIZE_L
-        JMP     EA_WRONGSIZE    ; wrong size
+        BRA     EA_Wrong_Size    ; wrong size
 
 EA_SIZE_B
         MOVE.B  #'.', (A2)+
@@ -997,7 +997,7 @@ EA_IMMEDIATE    ; 0 ea_immediate
         ANDI.W  #dst_mode, D3    ; get bits 5-3
         MOVE.B  right3, D2      ; shift the bits 5-3 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
-        BRA     EA_GEN_SRC
+        JSR     EA_GEN_SRC
 
         MOVE.L  D0, D4          ; Store the dst reg in D4
         ANDI.W  #dst_reg, D4     ; get the bits at 2-0
@@ -1006,26 +1006,34 @@ EA_IMMEDIATE    ; 0 ea_immediate
 EA_MOVE         ; 1: ea_move
         MOVE.L  D0, D1
         ANDI.W  #first_nibble, D1
-        MOVE.B  right12, D2 
+        MOVE.B  #right12, D2 
         LSR.W   D2, D1
         ANDI.B  #3, D1
         MOVE.B  D1, D2
         JSR     EA_SIZE_MOVE
         
+        MOVE.L  D0, D4          ; Store the src reg in D4
+        ANDI.W  #src_reg, D4    ; get the bits at 2-0
+        
         MOVE.L  D0, D3          ; Store the src mode in D3
-        ANDI.W  #src_mode, D3    ; get bits 5-3
-        MOVE.B  right3, D2      ; shift the bits 5-3 to the LSB
+        ANDI.W  #src_mode, D3   ; get bits 5-3
+        MOVE.B  #right3, D2      ; shift the bits 5-3 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
         JSR     EA_GEN_SRC
         
-        MOVE.L  D0, D4          ; Store the src reg in D4
-        ANDI.W  #src_reg, D4     ; get the bits at 2-0
+        MOVE.B  #$2C,(A2)+      ; Add comma after size print
+        MOVE.B  #$9, (A2)+      ; Add space after comma
+        
+        MOVE.L  D0, D4          ; Store the dest reg in D4
+        ANDI.W  #dst_reg, D4    ; get the bits at 11-9
+        MOVE.B  #right3, D2      ; shift the bits 11-9 to the LSB
+        LSR.W   D2, D3          ; do the actual shift
         
         MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode. 
-        ANDI.W  #dst_mode, D3    ; get bits 11-9
-        MOVE.B  right9, D2      ; shift the bits 11-9 to the LSB
+        ANDI.W  #dst_mode, D3   ; get bits 8-6
+        MOVE.B  #right6, D2      ; shift the bits 8-6 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
-        JSR     EA_GEN_SRC
+        BRA     EA_GEN_SRC
         
         
 EA_MOVEA        ; 2: ea_movea
@@ -1050,16 +1058,13 @@ EA_GEN_TABLE_SRC
         JMP     EA_An_Indirect      ; 010: (An)
         JMP     EA_An_Indirect_Inc  ; 011: (An)+
         JMP     EA_An_Indirect_Dec  ; 100: -(An)
-        JMP     EA_d16_An_Indirect  ; 101: (D16, An)
-        JMP     EA_d8_An_X_Indirect ; 110: (D8, An, Xn)
-        JMP     EA_Absolute         ; 111: (xxx).W,(xxx).L, or #<data>
+        JMP     EA_Absolute_And_Immediate     ; 111: (xxx).W,(xxx).L, or #<data>
 
 EA_Dn               ; 000: Dn
         MOVE.B  #'D', (A2)+
         ADDI.B  #$30, D4
         MOVE.B  D4, (A2)+
         RTS
-      
 
 EA_An               ; 001: An
         MOVE.B  #'A', (A2)+
@@ -1093,17 +1098,15 @@ EA_An_Indirect_Dec  ; 100: -(An)
         MOVE.B  #')', (A2)+
         RTS
         
-EA_d16_An_Indirect  ; 101: (D16, An)
-RTS
-
-EA_d8_An_X_Indirect ; 110: (D8, An, Xn)
-RTS
-
-EA_Absolute         ; 111: (xxx).W,(xxx).L, or #<data>
-RTS
+EA_Absolute_And_Immediate         ; 111: (xxx).W,(xxx).L, or #<data>
         
 
 
+EA_Wrong_Size
+        LEA     EA_WRONGSIZE, A1 
+        MOVE.B  #14, D0
+        TRAP    #15
+        BRA     DONE
 
 
 DONE        
@@ -1161,8 +1164,8 @@ ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
 ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
 ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
 ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
-EA_WRONGSIZE
-                 
+EA_WRONGSIZE        DC.B        'Wrong size.',CR,LF,0
+             
 WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 
 USER_INST           DC.B        'Please follow the proper input instructions below: ',CR,LF
@@ -1191,7 +1194,6 @@ ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
-
 
 
 *~Font name~Courier New~
