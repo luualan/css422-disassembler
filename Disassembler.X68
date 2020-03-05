@@ -125,7 +125,6 @@ ODD     LEA     ERROR_MESSAGE, A1
         
 ITOA    
         MOVEM.L D0-D1,-(SP) ; convert integer to ASCII
-        
         CMP.B   #%00, D2    ; byte
         BEQ     ITOA_BYTE
         CMP.B   #%01, D2    ; word
@@ -135,8 +134,7 @@ ITOA
         JMP     ITOA_LONGADDRESS    ; long address
         
 ITOA_MOVE
-        MOVEM.L D0-D1,-(SP)
-
+        MOVEM.L D0-D1,-(SP) ; convert integer to ASCII
         CMP.B   #%01, D2    ; byte
         BEQ     ITOA_BYTE
         CMP.B   #%11, D2    ; word
@@ -219,7 +217,7 @@ ITOA_CONVERT_A_TO_F
 
 ITOA_DONE
         MOVEM.L (SP)+, D0-D1
-        BRA     DO
+        RTS
 
 *-------------------------------------------------------------------------------*
 
@@ -284,12 +282,12 @@ EXIT
         
 *---------------------------------------------------------------------------------*
 * D0: the current instruction. 
-* D1: 
+* D1: used as temp storage
 * D2: data size / shift count
 * D3: loop counter for the amount of lines per screen. 
 * D4: 
 * D5: 
-* D6: 
+* D6: store first nibble
 * D7: 
 * A0: 
 * A1: A pointer to the message to print out. 
@@ -302,7 +300,6 @@ EXIT
 *---------------------------------------------------------------------------------*
                               
 DECODE_MEMORY     
-
 *Clear the data and address registers used to obtain the starting and ending address. 
         CLR.L   D0
         CLR.L   D5
@@ -317,9 +314,9 @@ DECODE_MEMORY
                 
         ;print out the current address
         MOVE.L  #$0003, D2
-        BRA      ITOA
+        JSR      ITOA
         
-DO      MOVE.B  #$9, (A2)+  ; Add space after long address
+        MOVE.B  #$9, (A2)+  ; Add space after long address
                 
         ;load the next instruction and jump to the opcode table entry
         LEA     OP_TABLE, A0
@@ -328,6 +325,7 @@ DO      MOVE.B  #$9, (A2)+  ; Add space after long address
         MOVE.L  D0, D1
         MOVE.B  #right12, D2
         LSR.W   D2, D1
+        MOVE.L  D1, D6          ; store first nibble into D6
         MULU    #6, D1
         JMP     0(A0, D1)
 OP_FINISH
@@ -622,7 +620,7 @@ OP_UNSUPPORTED
 * param A5 current address
 * ea_start(D0, D1, A2, A5){
 * D2: size
-* D3: src moe, dst mode
+* D3: src mode, dst mode
 * D4: src regs, dst regs
 * D5: #shifts
 * D7: immediate data
@@ -659,7 +657,7 @@ OP_MOVEA
         MOVE.B  #'V', (A2)+
         MOVE.B  #'E', (A2)+
         MOVE.B  #'A', (A2)+
-        MOVE.L  #ea_movea, D1
+        MOVE.L  #ea_type_immediate, D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -722,7 +720,7 @@ OP_LEA
         MOVE.B  #'L', (A2)+
         MOVE.B  #'E', (A2)+
         MOVE.B  #'A', (A2)+
-        MOVE.L  #ea_type_lea, D1
+        MOVE.L  #ea_type_immediate, D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -1002,8 +1000,9 @@ EA_IMMEDIATE    ; 0 ea_immediate
         MOVE.L  D0, D4          ; Store the dst reg in D4
         ANDI.W  #dst_reg, D4     ; get the bits at 2-0
 
- 
+
 EA_MOVE         ; 1: ea_move
+        
         MOVE.L  D0, D1
         ANDI.W  #first_nibble, D1
         MOVE.B  #right12, D2 
@@ -1012,11 +1011,8 @@ EA_MOVE         ; 1: ea_move
         MOVE.B  D1, D2
         JSR     EA_SIZE_MOVE
         
-<<<<<<< HEAD
-=======
         MOVE.B  #$20, (A2)+      ; print out a space after the size.
         
->>>>>>> b653bae7aa633c959fbef04642b5ca866f807e06
         MOVE.L  D0, D4          ; Store the src reg in D4
         ANDI.W  #src_reg, D4    ; get the bits at 2-0
         
@@ -1031,8 +1027,8 @@ EA_MOVE         ; 1: ea_move
         
         MOVE.L  D0, D4          ; Store the dest reg in D4
         ANDI.W  #dst_reg, D4    ; get the bits at 11-9
-        MOVE.B  #right3, D2      ; shift the bits 11-9 to the LSB
-        LSR.W   D2, D3          ; do the actual shift
+        MOVE.B  #right9, D2     ; shift the bits 11-9 to the LSB
+        LSR.W   D2, D4          ; do the actual shift
         
         MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode. 
         ANDI.W  #dst_mode, D3   ; get bits 8-6
@@ -1071,7 +1067,8 @@ EA_LEA          ; 3: ea_lea
         LSR.W   D2, D3          ; do the actual shift
         CMP.B   #3, D3
         BEQ     CHANGE_BITSTO_001   ; change the D3 bits to 001. 
-        JMP     ERROR_MESSAGE       ; Print out an error message if bits 8-6 are not 111. 
+        JMP     ERROR_MESSAGE       ; Print out an error message if bits 8-6 are not 111.
+ 
 CHANGE_BITSTO_001
         MOVE.B  #%001, D3       ; set D3 to 001 to ensure the print out A. 
         
@@ -1086,7 +1083,7 @@ CHANGE_BITSTO_001
         TRAP    #15
         
         BRA     DECODE_MEMORY
-        
+
 
 EA_DSTONLY      ; 4: ea_dstonly
 EA_EXT          ; 5: ea_ext
@@ -1095,6 +1092,7 @@ EA_TRAP         ; 7: ea_trap
 EA_QUICK        ; 8: ea_quick
 EA_branch       ; 9: ea_branch
 
+EA_REG
 
 EA_GEN_SRC
         LEA     EA_GEN_TABLE_SRC, A0
@@ -1102,62 +1100,113 @@ EA_GEN_SRC
         JMP     0(A0,D3)            ; jump to each ea src generation table entry 
 
 EA_GEN_TABLE_SRC
-        JMP     EA_Dn               ; 000: Dn
-        JMP     EA_An               ; 001: An
-        JMP     EA_An_Indirect      ; 010: (An)
-        JMP     EA_An_Indirect_Inc  ; 011: (An)+
-        JMP     EA_An_Indirect_Dec  ; 100: -(An)
-        JMP     EA_Absolute_And_Immediate     ; 111: (xxx).W,(xxx).L, or #<data>
+        JMP     EA_Dn                       ; 000: Dn
+        JMP     EA_An                       ; 001: An
+        JMP     EA_An_Indirect              ; 010: (An)
+        JMP     EA_An_Indirect_Inc          ; 011: (An)+
+        JMP     EA_An_Indirect_Dec          ; 100: -(An)
+        JMP     EA_UNSUPPORTED              ; 101: Unsupported EA
+        JMP     EA_UNSUPPORTED              ; 110: Unsupported EA
+        JMP     EA_Absolute_And_Immediate   ; 111: (xxx).W,(xxx).L, or #<data>
 
 EA_Dn               ; 000: Dn
-        MOVE.B  #'D', (A2)+
+        MOVE.B  #'D',(A2)+
         ADDI.B  #$30, D4
         MOVE.B  D4, (A2)+
         RTS
 
 EA_An               ; 001: An
-        MOVE.B  #'A', (A2)+
-        ADDI.B  #$30, D4
+        MOVE.B  #'A',(A2)+
+        ADDI.B  #$30,D4
         MOVE.B  D4, (A2)+
         RTS
 
 EA_An_Indirect      ; 010: (An)
-        MOVE.B  #'(', (A2)+
-        MOVE.B  #'A', (A2)+
+        MOVE.B  #'(',(A2)+
+        MOVE.B  #'A',(A2)+
         ADDI.B  #$30, D4
         MOVE.B  D4, (A2)+
-        MOVE.B  #')', (A2)+
+        MOVE.B  #')',(A2)+
         RTS
         
 EA_An_Indirect_Inc  ; 011: (An)+
-        MOVE.B  #'(', (A2)+
-        MOVE.B  #'A', (A2)+
+        MOVE.B  #'(',(A2)+
+        MOVE.B  #'A',(A2)+
         ADDI.B  #$30, D4
         MOVE.B  D4, (A2)+
-        MOVE.B  #')', (A2)+
-        MOVE.B  #'+', (A2)+
+        MOVE.B  #')',(A2)+
+        MOVE.B  #'+',(A2)+
         RTS
         
 EA_An_Indirect_Dec  ; 100: -(An)
-        MOVE.B  #'-', (A2)+
-        MOVE.B  #'(', (A2)+
-        MOVE.B  #'A', (A2)+
+        MOVE.B  #'-',(A2)+
+        MOVE.B  #'(',(A2)+
+        MOVE.B  #'A',(A2)+
         ADDI.B  #$30, D4
-        MOVE.B  D4, (A2)+
-        MOVE.B  #')', (A2)+
+        MOVE.B  D4,(A2)+
+        MOVE.B  #')',(A2)+
+        RTS
+
+EA_UNSUPPORTED
+        LEA     EA_TYPE_ERROR, A1
+        MOVE.B  #14, D0
+        TRAP    #15  
+        RTS 
+        
+EA_Absolute_And_Immediate           ; 111: (xxx).W,(xxx).L, or #<data>
+        CMP.B   #0, D4              ; If D4 is (xxx).W
+        BEQ     ABSOLUTE_WORD
+        
+        CMP.B   #1, D4              ; If D4 is (xxx).L
+        BEQ     ABSOLUTE_LONG
+        
+        CMP.B   #4, D4              ; If D4 is #<data>  
+        BEQ     IMMEDIATE
+        
+        BRA     ABSOLUTE_IMMEDIATE_ERROR    
+
+ABSOLUTE_WORD:
+        MOVE.B  #$24, (A2)+         ; Add $ symbol
+        MOVE.L  #$0001, D2          ; Insert 1 to D2 
+        JSR      ITOA               ; Convert word hex values to ITOA
         RTS
         
-EA_Absolute_And_Immediate         ; 111: (xxx).W,(xxx).L, or #<data>
+ABSOLUTE_LONG:
+        MOVE.B  #$24, (A2)+         ; Add $ symbol
+        MOVE.L  #$0002, D2          ; Insert 2 to D2
+        JSR      ITOA               ; Convert long hex values to ITOA
+        RTS
+
+IMMEDIATE:
+        MOVE.B  #$23, (A2)+         ; Add # symbol
+        CMP.B    #1, D6             ; Compare if MOVE.b (code0001)
+        BEQ DO_ITOA_MOVE
+        CMP.B    #2, D6             ; Compare if MOVE.l / MOVEA.l (code0010)
+        BEQ DO_ITOA_MOVE
+        CMP.B    #3, D6             ; Compare if  MOVE.w / MOVEA.w (code0011)
+        BEQ DO_ITOA_MOVE
         
-
-
+        JSR ITOA                    ; Go to ITOA when not a move instruction
+        
+        ; ERROR HANDLE
+        RTS
+        
+DO_ITOA_MOVE
+        JSR ITOA_MOVE
+        RTS
+              
 EA_Wrong_Size
         LEA     EA_WRONGSIZE, A1 
         MOVE.B  #14, D0
         TRAP    #15
         BRA     DONE
-
-
+        
+ABSOLUTE_IMMEDIATE_ERROR  
+        LEA     ABSOLUTE_WRONGREG, A1 
+        MOVE.B  #14, D0
+        TRAP    #15
+        BRA     DONE
+         
 DONE        
     SIMHALT             ; halt simulator
 
@@ -1165,7 +1214,7 @@ DONE
    
        
 buffer_size         EQU         64 
-decoded_buffer      EQU         $2000
+decoded_buffer      EQU         $5000
    
 CR                  EQU         $0D
 LF                  EQU         $0A
@@ -1193,9 +1242,9 @@ first_nibble        EQU         $F000
 second_nibble       EQU         $0F00   
 third_nibble        EQU         $00F0
 fourth_nibble       EQU         $000F
-dst_mode            EQU         $00C0
+dst_mode            EQU         $01C0
 dst_reg             EQU         $0E00
-src_mode            EQU         $0018
+src_mode            EQU         $0038
 src_reg             EQU         $0007
 bit8                EQU         $0100
 
@@ -1213,7 +1262,10 @@ ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
 ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
 ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
 ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
-EA_WRONGSIZE        DC.B        'Wrong size.',CR,LF,0
+EA_WRONGSIZE        DC.B    'Wrong size.',CR,LF,0
+ABSOLUTE_WRONGREG   DC.B    'Error. Register does not exist for Absolute and immediate.',CR,LF,0
+EA_TYPE_ERROR       DC.B    'Error. EA type is not supported.',CR,LF,0
+
              
 WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 
@@ -1243,6 +1295,7 @@ ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
 
 
 *~Font name~Courier New~
