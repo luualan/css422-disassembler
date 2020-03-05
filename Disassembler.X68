@@ -1016,7 +1016,7 @@ EA_MOVE         ; 1: ea_move
         ANDI.W  #src_mode, D3    ; get bits 5-3
         MOVE.B  right3, D2      ; shift the bits 5-3 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
-        BRA     EA_GEN_SRC
+        JSR     EA_GEN_SRC
         
         MOVE.L  D0, D4          ; Store the src reg in D4
         ANDI.W  #src_reg, D4     ; get the bits at 2-0
@@ -1025,7 +1025,7 @@ EA_MOVE         ; 1: ea_move
         ANDI.W  #dst_mode, D3    ; get bits 11-9
         MOVE.B  right9, D2      ; shift the bits 11-9 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
-        BRA     EA_GEN_SRC
+        JSR     EA_GEN_SRC
         
         
 EA_MOVEA        ; 2: ea_movea
@@ -1058,11 +1058,14 @@ EA_Dn               ; 000: Dn
         MOVE.B  #'D', (A2)+
         ADDI.B  #$30, D4
         MOVE.B  D4, (A2)+
+        RTS
+      
 
 EA_An               ; 001: An
         MOVE.B  #'A', (A2)+
         ADDI.B  #$30, D4
         MOVE.B  D4, (A2)+
+        RTS
 
 EA_An_Indirect      ; 010: (An)
         MOVE.B  #'(', (A2)+
@@ -1070,6 +1073,7 @@ EA_An_Indirect      ; 010: (An)
         ADDI.B  #$30, D4
         MOVE.B  D4, (A2)+
         MOVE.B  #')', (A2)+
+        RTS
         
 EA_An_Indirect_Inc  ; 011: (An)+
         MOVE.B  #'(', (A2)+
@@ -1078,6 +1082,7 @@ EA_An_Indirect_Inc  ; 011: (An)+
         MOVE.B  D4, (A2)+
         MOVE.B  #')', (A2)+
         MOVE.B  #'+', (A2)+
+        RTS
         
 EA_An_Indirect_Dec  ; 100: -(An)
         MOVE.B  #'-', (A2)+
@@ -1086,11 +1091,16 @@ EA_An_Indirect_Dec  ; 100: -(An)
         ADDI.B  #$30, D4
         MOVE.B  D4, (A2)+
         MOVE.B  #')', (A2)+
+        RTS
         
 EA_d16_An_Indirect  ; 101: (D16, An)
+RTS
+
 EA_d8_An_X_Indirect ; 110: (D8, An, Xn)
+RTS
 
 EA_Absolute         ; 111: (xxx).W,(xxx).L, or #<data>
+RTS
         
 
 
@@ -1181,6 +1191,7 @@ ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
 
 
 *~Font name~Courier New~
