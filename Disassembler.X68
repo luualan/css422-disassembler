@@ -720,7 +720,7 @@ OP_LEA
         MOVE.B  #'L', (A2)+
         MOVE.B  #'E', (A2)+
         MOVE.B  #'A', (A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_lea, D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -1030,7 +1030,7 @@ EA_MOVE         ; 1: ea_move
         MOVE.B  #right9, D2     ; shift the bits 11-9 to the LSB
         LSR.W   D2, D4          ; do the actual shift
         
-        MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode. 
+        MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode 
         ANDI.W  #dst_mode, D3   ; get bits 8-6
         MOVE.B  #right6, D2     ; shift the bits 8-6 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
@@ -1059,24 +1059,24 @@ EA_LEA          ; 3: ea_lea
         JSR     EA_GEN_SRC
         
         MOVE.B  #$2C,(A2)+      ; Add comma after size print
-        MOVE.B  #$20, (A2)+      ; Add space after comma
+        MOVE.B  #$20, (A2)+     ; Add space after comma
 
-        MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode. 
-        ANDI.W  #dst_mode, D3   ; get bits 8-6
-        MOVE.B  #right6, D2     ; shift the bits 8-6 to the LSB
-        LSR.W   D2, D3          ; do the actual shift
-        CMP.B   #3, D3
-        BEQ     CHANGE_BITSTO_001   ; change the D3 bits to 001. 
-        JMP     ERROR_MESSAGE       ; Print out an error message if bits 8-6 are not 111.
+        MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode 
+        ANDI.W  #dst_mode, D3   ; Get bits 8-6
+        MOVE.B  #right6, D2     ; Shift the bits 8-6 to the LSB
+        LSR.W   D2, D3          ; Do the actual shift
+        CMP.B   #7, D3          ; Check if D3 is 111
+        BEQ     CHANGE_BITSTO_001   ; change the D3 bits to 001 
+        BRA     DEST_INVALID    ; Print out an error message if bits 8-6 are not 111
  
 CHANGE_BITSTO_001
-        MOVE.B  #%001, D3       ; set D3 to 001 to ensure the print out A. 
+        MOVE.B  #%001, D3       ; set D3 to 001 to ensure the print out A 
         
-        MOVE.L  D0, D4          ; Store the dest reg in D4 to get the Address register number. 
+        MOVE.L  D0, D4          ; Store the dest reg in D4 to get the Address register number
         ANDI.W  #dst_reg, D4    ; get the bits at 11-9
         MOVE.B  #right9, D2     ; shift the bits 11-9 to the LSB
         LSR.W   D2, D4          ; do the actual shift
-        JSR     EA_GEN_SRC      ; Print out the address register.
+        JSR     EA_GEN_SRC      ; Print out the address register
         
         LEA     decoded_buffer, A1
         MOVE.B  #13, D0
@@ -1206,6 +1206,13 @@ ABSOLUTE_IMMEDIATE_ERROR
         MOVE.B  #14, D0
         TRAP    #15
         BRA     DONE
+        
+DEST_INVALID
+        LEA     DEST_INVALID_MSG, A1 
+        MOVE.B  #14, D0
+        TRAP    #15
+        BRA     DONE
+
          
 DONE        
     SIMHALT             ; halt simulator
@@ -1265,6 +1272,7 @@ ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
 EA_WRONGSIZE        DC.B    'Wrong size.',CR,LF,0
 ABSOLUTE_WRONGREG   DC.B    'Error. Register does not exist for Absolute and immediate.',CR,LF,0
 EA_TYPE_ERROR       DC.B    'Error. EA type is not supported.',CR,LF,0
+DEST_INVALID_MSG    DC.B    'Error. Destination effective address is invalid.',CR,LF,0
 
              
 WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
@@ -1295,6 +1303,7 @@ ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
 
 
 
