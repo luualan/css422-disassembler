@@ -8,10 +8,7 @@
 * disassembled code to the display.
 *-----------------------------------------------------------
     ORG    $1000
-START:      JSR     DISP_W          ; Display Welcome Message. 
-            JSR     DISP_UI         ; Display User Instructions.
-            JSR     PROMPT_START    ; Prompt the user for starting address. 
-            
+START:            
 *------------------------------------------------------------*
 * D0: used for the tasks
 * D1: used to hold the size of the input obtained. 
@@ -22,96 +19,109 @@ START:      JSR     DISP_W          ; Display Welcome Message.
 * A1: a pointer to the message to print out. 
 *------------------------------------------------------------*
 
-DISP_W      MOVE.B  #14,D0	        ; Display Welcome Message. 
+DISP_W      MOVE.B  #14,D0	                ; Display Welcome Message. 
             LEA	    WELCOME,A1
             TRAP    #15
 
 * Put program code here
 
-DISP_UI         MOVE.B  #14,D0             ; Display User Instructions. 
+DISP_UI         MOVE.B  #14,D0              ; Display User Instructions. 
                 LEA	    USER_INST,A1
                 TRAP    #15	   
 
-       
-PROMPT_START    LEA     stack, SP          ; SP = stack ($A0000)
-                LEA     START_IN,A1        ; Display starting address message
+PROMPT_START    LEA     stack, SP           ; SP = stack ($A0000)
+                LEA     START_IN,A1         ; Display starting address message
                 MOVE.B  #14,D0
                 TRAP    #15       
      
-READ_START      LEA     START_ADDRESS,A1        ; Store user's starting address input
-                MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
+READ_START      LEA     START_ADDRESS,A1    ; Store user's starting address input
+                MOVE.B  #2,D0               ; Read user's input into A1; length is stored into D1
                 TRAP    #15
-                MOVE.B  #0,D6
+                MOVE.B  #0,D6               ; Used to indicate we are at start address
 
 VALIDATE_START  BRA     ATOI
 
-PROMPT_END      LEA     END_IN,A1        ; Display starting address message
+PROMPT_END      LEA     END_IN,A1           ; Display starting address message
                 MOVE.B  #14,D0
                 TRAP    #15            
-READ_END        LEA     END_ADDRESS,A1        ; Store user's starting address input
-                MOVE.B  #2,D0                   ; Read user's input into A1; length is stored into D1
+READ_END        LEA     END_ADDRESS,A1      ; Store user's starting address input
+                MOVE.B  #2,D0               ; Read user's input into A1; length is stored into D1
                 TRAP    #15
-                MOVE.B  #1,D6
+                MOVE.B  #1,D6               ; Used to indicate we are at end address
 
 VALIDATE_END    BRA     ATOI
-
+               
 * D0 stores the value to pushed from A1.
 
 ATOI            MOVE.B  (A1)+,D0    ; Move to next character in A1 and store in D0			
                 CMP.B   #$30,D0
-                BLT     INVALID
+                BLT     INPUT_INVALID
                 CMP.B   #$39,D0
                 BGT     ASCII_TO_HEX_LETTER
                 SUB.B   #$30,D0     ; Subtract by 30 to get the numbers 0-9
                 ADD.L   D0,D5
                 SUBI    #1,D1       ; Decrement input's length to move to next character          
                 CMP.B   #0,D1       ; Compare to see if we're at the last digit
-                BEQ     LASTDIGITCHECK
+                BEQ     LAST_DIGIT_CHECK
                 LSL.L   #4,D5
                 BRA	    ATOI
 
   
 ASCII_TO_HEX_LETTER     CMP.B   #$41,D0
-                        BLT     INVALID
+                        BLT     INPUT_INVALID
                         CMP.B   #$46, D0
-                        BGT     INVALID 
+                        BGT     INPUT_INVALID 
                         SUB.B   #$31,D0     ; Subtract by 31 to get the numbers A-F
                         SUB.B   #6,D0
                         ADD.L   D0,D5
                         SUBI    #1,D1
-                        BEQ     LASTDIGITCHECK
+                        BEQ     LAST_DIGIT_CHECK
                         LSL.L   #4,D5
                         BRA     ATOI     
 
                     
-INVALID     LEA     ERROR_MESSAGE, A1   ; Display error message
-            MOVE.B  #14, D0
-            TRAP    #15
-            CLR.B   D6
- 
+INPUT_INVALID   LEA     ERROR_MESSAGE, A1   ; Display error message
+                MOVE.B  #14, D0
+                TRAP    #15
+                CLR.B   D6
                 
-LASTDIGITCHECK      MOVE.L  D5, D7  ; D7 used as temporary storage
-                    LSR.B   #1, D7  ; Check for carry bit to see if last digit is odd
-                    BCS     ODD
+                CMP.B   #0,D6           ; When D6 is 0
+                BEQ     PROMPT_START    ; Go back to start prompt
+                CMP.B   #1,D6           ; When D6 is 1
+                BEQ     PROMPT_END      ; Go back to end prompt
+
+                          
+LAST_DIGIT_CHECK    MOVE.L  D5, D7          ; D7 used as temporary storage
+                    LSR.B   #1, D7          ; Check for carry bit to see if last digit is odd
+                    BCS     LAST_DIGIT_ODD  ; branch when there is a carry; this indicates odd last digit 
                     CLR.L   D7
                     CMP.B   #0,D6
-                    BEQ     COMPLETE_STARTA  ; When even, go to prompt for end address
+                    BEQ     COMPLETE_START  
                     CMP.B   #1,D6
-                    BEQ     COMPLETE_ENDA
+                    BEQ     COMPLETE_END
 
-COMPLETE_STARTA     MOVEA.L D5, A4  ; A4 holds the starting address.
+COMPLETE_START      MOVEA.L D5, A4  ; A4 holds the starting address
                     CLR.L   D5 
                     BRA PROMPT_END
 
-
-COMPLETE_ENDA       MOVEA.L D5, A6  ; A6 holds the ending address. 
-                     MOVEA.L A4, A5  ; Store starting address into current address
-                    BRA DECODE_MEMORY
-
-
-ODD     LEA     ERROR_MESSAGE, A1 
-        MOVE.B  #14, D0
-        TRAP    #15
+COMPLETE_END        MOVEA.L D5, A6  ; A6 holds the ending address
+                    MOVEA.L A4, A5  ; Store starting address into current address
+                    
+                    *Clear the data and address registers used to obtain the starting and ending address 
+                    CLR.L   D0
+                    CLR.L   D5
+                    CLR.L   D6
+                    MOVEA   #0, A1
+                    BRA     START_DECODING  ; All inputs are valid, go to the decode process
+                    
+LAST_DIGIT_ODD      LEA     ODD_ERROR_MESSAGE, A1 
+                    MOVE.B  #14, D0
+                    TRAP    #15
+                    
+                    CMP.B   #0,D6           ; When D6 is 0
+                    BEQ     PROMPT_START    ; Go back to start prompt
+                    CMP.B   #1,D6           ; When D6 is 1
+                    BEQ     PROMPT_END      ; Go back to end prompt
 
 *--------------------------------------------------------------------------------------
 * param D2 data size to convert into ASCII
@@ -220,7 +230,6 @@ ITOA_DONE
         RTS
 
 *-------------------------------------------------------------------------------*
-
 START_DECODING
         CLR.L   D2
         
@@ -231,12 +240,13 @@ DECODING_ITERATION
         LEA     decoded_buffer, A1
         TRAP    #15
         
-        ;check if decoding has finished or if the screen is filled. 
+        ;check if decoding has finished or if the screen is filled 
         CMP.L   A5, A6
-        BLE     CONTINUE_OR_END
+        BLE     CONTINUE_OR_END     ; If A6-A5 <= 0, go to CONTINUE_OR_END 
+        
         ;have yet to reach the ending address
-        ADDQ.B  #1, D2
-        CMP.B   lines_p_screen, D2
+        ADDQ.B  #1, D2              ; D2 (screen_line_counter)++
+        CMP.B   #lines_p_screen, D2
         BGE     DECODE_PAUSE
         ;not yet reached the maximum lines per screen. 
         BRA     DECODING_ITERATION
@@ -267,19 +277,15 @@ CONTINUE_OR_END
         BEQ     EXIT
         CMPI.B  #n_lowercase, D3
         BEQ     EXIT
-
         BRA     CONTINUE_OR_END 
         
 EXIT
         MOVE.B  #task14, D0
         LEA     EXIT_PROMPT, A1
-        TRAP    #15
-        
-        MOVE.B  #task9, D0
-        TRAP    #15
+        TRAP    #15  
+        BRA     DONE
 
-        
-        
+               
 *---------------------------------------------------------------------------------*
 * D0: the current instruction. 
 * D1: used as temp storage
@@ -297,15 +303,8 @@ EXIT
 * A5: The current address. 
 * A6: Store the ending address. 
 * A7: Stack pointer. 
-*---------------------------------------------------------------------------------*
-                              
-DECODE_MEMORY     
-*Clear the data and address registers used to obtain the starting and ending address. 
-        CLR.L   D0
-        CLR.L   D5
-        CLR.L   D6
-        MOVEA   #0, A1
-        
+*---------------------------------------------------------------------------------*                             
+DECODE_MEMORY       
         MOVEM.L D2/A6, -(SP)
                 
         ;zero clear the decode_buffer
@@ -321,23 +320,24 @@ DECODE_MEMORY
         ;load the next instruction and jump to the opcode table entry
         LEA     OP_TABLE, A0
         CLR.L   D0
-        MOVE.W  (A5)+, D0       ; increment A5 store value into D0
-        MOVE.L  D0, D1
-        MOVE.B  #right12, D2
-        LSR.W   D2, D1
-        MOVE.L  D1, D6          ; store first nibble into D6
-        MULU    #6, D1
-        JMP     0(A0, D1)
+        MOVE.W  (A5)+, D0       ; Store A5's value into D0, then increment A5
+        MOVE.L  D0, D1          ; Store A5's value from D0 into D1
+        MOVE.B  #right12, D2    ; Store 12 into D2
+        LSR.W   D2, D1          ; Shift first nibble into LSB position
+        MOVE.L  D1, D6          ; Store first nibble into D6
+        MULU    #6, D1          ; Multiply 6 to D1
+        JMP     0(A0, D1)       ; Go to displacement (A0 + D1 * 6)      
 OP_FINISH
-        MOVEM.L (SP)+, D2/A6
+        MOVEM.L (SP)+, D2/A6,
         RTS
 
 *------------------------------------------------------------------------------------*
-        ;clear the 32 bits within the decoded_buffer       
+*Clear the 32 bits within the decoded_buffer       
 OP_CLEAR_DATA
         CLR.L   D3
         MOVE.B  #buffer_size, D3
         LEA     decoded_buffer, A2
+        
 OP_CLEAR_DATA_LOOP
         MOVE.B  #0, (A2)+
         SUBI    #1, D3
@@ -363,19 +363,19 @@ OP_TABLE
         JMP     code1110    ; ASL.bwl / ASR.bwl / LSL.bwl / LSR.bwl / ROR.bwl / ROL.bwl
         JMP     code1111    ;   [unassigned]
         
-code0000:                           ; Opcodes ADDI and SUBI
+code0000                            ; Opcodes ADDI and SUBI
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
         MOVE.B  #right8,D2          ; Used to shift 8 times to right
         LSR.W   D2,D1               ; Shift nibble into LSB position
         MULU    #6, D1              ; Set displacement 
         LEA     OP_0000_TABLE,A0    ; Load table into A0
-        JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
+        JMP     0(A0,D1)            ; go to displacement (A0 + D1 * 6)
 
-code0001:                           ; Opcode MOVE.B
+code0001                            ; Opcode MOVE.B
         BRA     OP_MOVE             ; Go to opcode MOVE
 
-code0010:                           ; Opcodes MOVE.L and MOVEA.L 
+code0010                            ; Opcodes MOVE.L and MOVEA.L 
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
@@ -384,7 +384,7 @@ code0010:                           ; Opcodes MOVE.L and MOVEA.L
         BEQ     OP_MOVEA            ; Go to opcode MOVEA
         BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 
-code0011:                           ; Opcodes MOVE.W and MOVEA.W 
+code0011                            ; Opcodes MOVE.W and MOVEA.W 
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
@@ -393,19 +393,19 @@ code0011:                           ; Opcodes MOVE.W and MOVEA.W
         BEQ     OP_MOVEA            ; Go to opcode MOVEA
         BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 
-code0100:                           ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
+code0100                            ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
         MOVE.B  #right8,D2          ; Used to shift 8 times to right
         LSR.W   D2,D1               ; Shift nibble into LSB position
         MULU    #6, D1              ; Set displacement 
         LEA     OP_0100_TABLE,A0    ; Load table into A0
-        JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
+        JMP     0(A0,D1)            ; go to displacement (A0 + D1 * 6)
 
-code0101:                           ; Opcode ADDQ.B/W/L
+code0101                            ; Opcode ADDQ.B/W/L
         BRA     OP_ADDQ             ; Go to opcode ADDQ
 
-code0110:                           ; Opcodes BRA and BSR
+code0110                            ; Opcodes BRA and BSR
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #second_nibble,D1   ; Extract 2nd 4 bits from instruction word
         MOVE.B  #right8,D2          ; Used to shift 8 times to right
@@ -414,10 +414,10 @@ code0110:                           ; Opcodes BRA and BSR
         BEQ     OP_BRA              ; Go to opcode BRA
         BRA     OP_BSR              ; Otherwise, go to opcode BSR
 
-code0111:                           ; Opcode MOVEQ
+code0111                            ; Opcode MOVEQ
         BRA     OP_MOVEQ            ; Go to opcode MOVEQ
 
-code1000:                           ; Opcodes DIVU word and OR.B/W/L
+code1000                            ; Opcodes DIVU word and OR.B/W/L
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
@@ -426,34 +426,34 @@ code1000:                           ; Opcodes DIVU word and OR.B/W/L
         BEQ     OP_DIVU             ; Go to opcode DIVU word
         BRA     OP_OR               ; Otherwise, go to opcode OR
 
-code1001:                           ; Opcode SUB.B/W/L
+code1001                            ; Opcode SUB.B/W/L
         BRA     OP_SUB              ; Go to opcode SUB   
 
-code1010:                           ; Opcode not supported 
+code1010                            ; Opcode not supported 
         BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
      
-code1011:                           ; Opcode CMP.B/W/L
+code1011                            ; Opcode CMP.B/W/L
         BRA     OP_CMP              ; Go to opcode CMP
 
-code1100:                           ; Opcodes MULS, MULU, AND.B/W/L
+code1100                            ; Opcodes MULS, MULU, AND.B/W/L
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
         LSR.W   D2,D1               ; Shift dst mode into LSB position
         MULU    #6, D1              ; Set displacement 
         LEA     OP_1100_TABLE,A0    ; Load table into A0
-        JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
+        JMP     0(A0,D1)            ; Go to displacement (A0 + D1 * 6)
 
-code1101:                           ; Opcodes ADD.B/W/L, ADDA.B/W/L
+code1101                            ; Opcodes ADD.B/W/L, ADDA.B/W/L
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
         LSR.W   D2,D1               ; Shift dst mode into LSB position
         MULU    #6, D1              ; Set displacement 
         LEA     OP_1101_TABLE,A0    ; Load table into A0
-        JMP     0(A0,D1)            ; go to displacement (A0 + xxxx * 6)
+        JMP     0(A0,D1)            ; Go to displacement (A0 + D1 * 6)
 
-code1110:                           ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, LSR.B/W/L, ROL.B/W/L, ROR.B/W/L   
+code1110                            ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, LSR.B/W/L, ROL.B/W/L, ROR.B/W/L   
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
@@ -475,7 +475,7 @@ code1110:                           ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, L
         LEA     OP_1110_TABLE_REGISTER,A0   ; Load table into A0
         JMP     0(A0,D1)                    ; go to displacement (A0 + xxxx * 6)
 
-MEMORY_1110_LEFT:    
+MEMORY_1110_LEFT    
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
         MOVE.B  #right9,D2          ; Used to shift 9 times to right
@@ -487,7 +487,7 @@ MEMORY_1110_LEFT:
         CMP.B   #3, D1              ; When D1 is 3
         BEQ     OP_ROL              ; Go to opcode ROL
 
-MEMORY_1110_RIGHT:
+MEMORY_1110_RIGHT
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
         MOVE.B  #right9,D2          ; Used to shift 9 times to right
@@ -499,10 +499,10 @@ MEMORY_1110_RIGHT:
         CMP.B   #3, D1              ; When D1 is 3
         BEQ     OP_ROR              ; Go to opcode ROR
 
-code1111:                           ; Opcode not supported 
+code1111                            ; Opcode not supported 
         BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
          
-OP_0000_TABLE:
+OP_0000_TABLE
         JMP     OP_UNSUPPORTED  ; 0 Go to opcode unsupported  
         JMP     OP_UNSUPPORTED  ; 1 Go to opcode unsupported  
         JMP     OP_UNSUPPORTED  ; 2 Go to opcode unsupported  
@@ -520,7 +520,7 @@ OP_0000_TABLE:
         JMP     OP_UNSUPPORTED  ; E Go to opcode unsupported  
         JMP     OP_UNSUPPORTED  ; F Go to opcode unsupported  
     
-OP_0100_TABLE:
+OP_0100_TABLE
         JMP     OP_UNSUPPORTED      ; 0 Go to opcode unsupported  
         JMP     OP_LEA              ; 1 Go to opcode LEA
         JMP     OP_CLR              ; 2 Go to opcode CLR
@@ -538,7 +538,7 @@ OP_0100_TABLE:
         JMP     JSR_NOP_RTS         ; E Go to opcode JSR, NOP, or RTS
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
-OP_1100_TABLE:
+OP_1100_TABLE
         JMP     OP_AND              ; 0 Go to opcode AND 
         JMP     OP_AND              ; 1 Go to opcode AND
         JMP     OP_AND              ; 2 Go to opcode AND
@@ -556,7 +556,7 @@ OP_1100_TABLE:
         JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
-OP_1101_TABLE:
+OP_1101_TABLE
         JMP     OP_ADD              ; 0 Go to opcode ADD 
         JMP     OP_ADD              ; 1 Go to opcode ADD
         JMP     OP_ADD              ; 2 Go to opcode ADD
@@ -574,7 +574,7 @@ OP_1101_TABLE:
         JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
-OP_1110_TABLE_REGISTER:
+OP_1110_TABLE_REGISTER
         JMP     OP_ASR              ; 0 Go to opcode ASR
         JMP     OP_LSR              ; 1 Go to opcode LSR
         JMP     OP_UNSUPPORTED      ; 2 Go to opcode unsupported  
@@ -592,7 +592,7 @@ OP_1110_TABLE_REGISTER:
         JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
 
-JSR_NOP_RTS:
+JSR_NOP_RTS
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D2          ; Used to shift 6 times to right
@@ -608,7 +608,7 @@ JSR_NOP_RTS:
         BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported 
 
 OP_UNSUPPORTED
-        LEA     ERROR_MESSAGE, A1 
+        LEA     OPCODE_INVALID, A1 
         MOVE.B  #14, D0
         TRAP    #15
         BRA     DONE
@@ -923,8 +923,7 @@ OP_ROL
         JSR     EA_START
         JMP     OP_FINISH
         
-*-----------------------------------------------------------------------*
-        
+*-----------------------------------------------------------------------*   
 EA_START
         MOVEM.L D2-D4/A0-A1, -(SP)
         
@@ -998,7 +997,8 @@ EA_IMMEDIATE    ; 0 ea_immediate
         JSR     EA_GEN_SRC
 
         MOVE.L  D0, D4          ; Store the dst reg in D4
-        ANDI.W  #dst_reg, D4     ; get the bits at 2-0
+        ANDI.W  #dst_reg, D4    ; get the bits at 2-0
+        JMP     EA_FINISH       ; Go to function
 
 
 EA_MOVE         ; 1: ea_move
@@ -1011,43 +1011,38 @@ EA_MOVE         ; 1: ea_move
         MOVE.B  D1, D2
         JSR     EA_SIZE_MOVE
         
-        MOVE.B  #$20, (A2)+      ; print out a space after the size.
+        MOVE.B  #$20, (A2)+     ; Print out a space after the size
         
         MOVE.L  D0, D4          ; Store the src reg in D4
-        ANDI.W  #src_reg, D4    ; get the bits at 2-0
+        ANDI.W  #src_reg, D4    ; Get the bits at 2-0
         
         MOVE.L  D0, D3          ; Store the src mode in D3
-        ANDI.W  #src_mode, D3   ; get bits 5-3
-        MOVE.B  #right3, D2     ; shift the bits 5-3 to the LSB
-        LSR.W   D2, D3          ; do the actual shift 
+        ANDI.W  #src_mode, D3   ; Get bits 5-3
+        MOVE.B  #right3, D2     ; Shift the bits 5-3 to the LSB
+        LSR.W   D2, D3          ; Do the actual shift 
         JSR     EA_GEN_SRC
         
         MOVE.B  #$2C,(A2)+      ; Add comma after size print
-        MOVE.B  #$20, (A2)+      ; Add space after comma
+        MOVE.B  #$20, (A2)+     ; Add space after comma
         
         MOVE.L  D0, D4          ; Store the dest reg in D4
-        ANDI.W  #dst_reg, D4    ; get the bits at 11-9
-        MOVE.B  #right9, D2     ; shift the bits 11-9 to the LSB
-        LSR.W   D2, D4          ; do the actual shift
+        ANDI.W  #dst_reg, D4    ; Get the bits at 11-9
+        MOVE.B  #right9, D2     ; Shift the bits 11-9 to the LSB
+        LSR.W   D2, D4          ; Do the actual shift
         
         MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode 
-        ANDI.W  #dst_mode, D3   ; get bits 8-6
-        MOVE.B  #right6, D2     ; shift the bits 8-6 to the LSB
-        LSR.W   D2, D3          ; do the actual shift 
+        ANDI.W  #dst_mode, D3   ; Get bits 8-6
+        MOVE.B  #right6, D2     ; Shift the bits 8-6 to the LSB
+        LSR.W   D2, D3          ; Do the actual shift 
         JSR     EA_GEN_SRC
-        
-        LEA     decoded_buffer, A1
-        MOVE.B  #13, D0
-        TRAP    #15
-        
-        BRA     DECODE_MEMORY
-        
-        
+        JMP     EA_FINISH       ; Go to function
+
+           
 EA_MOVEA        ; 2: ea_movea
 
 
 EA_LEA          ; 3: ea_lea
-        MOVE.B  #$20, (A2)+      ; print out a space after the LEA
+        MOVE.B  #$20, (A2)+     ; print out a space after the LEA
         
         MOVE.L  D0, D4          ; Store the src reg in D4
         ANDI.W  #src_reg, D4    ; get the bits at 2-0
@@ -1056,8 +1051,15 @@ EA_LEA          ; 3: ea_lea
         ANDI.W  #src_mode, D3   ; get bits 5-3
         MOVE.B  #right3, D2     ; shift the bits 5-3 to the LSB
         LSR.W   D2, D3          ; do the actual shift 
-        JSR     EA_GEN_SRC
+        CMP     #2, D3          ; If D3 (src mode) is 010 (An)
+        BEQ     LEA_SRC_VALID
+        CMP     #7, D3          ; If D3 (src mode) is 111 (W or L)
+        BEQ     LEA_SRC_VALID
+        BRA     SRC_INVALID     ; when src mode is not 010 or 111, branch to error message
         
+LEA_SRC_VALID        
+        JSR     EA_GEN_SRC      ; Go to function 
+ 
         MOVE.B  #$2C,(A2)+      ; Add comma after size print
         MOVE.B  #$20, (A2)+     ; Add space after comma
 
@@ -1066,10 +1068,10 @@ EA_LEA          ; 3: ea_lea
         MOVE.B  #right6, D2     ; Shift the bits 8-6 to the LSB
         LSR.W   D2, D3          ; Do the actual shift
         CMP.B   #7, D3          ; Check if D3 is 111
-        BEQ     CHANGE_BITSTO_001   ; change the D3 bits to 001 
-        BRA     DEST_INVALID    ; Print out an error message if bits 8-6 are not 111
- 
-CHANGE_BITSTO_001
+        BEQ     CHANGE_TO_001   ; change the D3 bits to 001 
+        BRA     DST_INVALID     ; Print out an error message if bits 8-6 (dst mode) are not 111
+  
+CHANGE_TO_001
         MOVE.B  #%001, D3       ; set D3 to 001 to ensure the print out A 
         
         MOVE.L  D0, D4          ; Store the dest reg in D4 to get the Address register number
@@ -1077,13 +1079,7 @@ CHANGE_BITSTO_001
         MOVE.B  #right9, D2     ; shift the bits 11-9 to the LSB
         LSR.W   D2, D4          ; do the actual shift
         JSR     EA_GEN_SRC      ; Print out the address register
-        
-        LEA     decoded_buffer, A1
-        MOVE.B  #13, D0
-        TRAP    #15
-        
-        BRA     DECODE_MEMORY
-
+        JMP     EA_FINISH       ; Go to function
 
 EA_DSTONLY      ; 4: ea_dstonly
 EA_EXT          ; 5: ea_ext
@@ -1165,30 +1161,30 @@ EA_Absolute_And_Immediate           ; 111: (xxx).W,(xxx).L, or #<data>
         
         BRA     ABSOLUTE_IMMEDIATE_ERROR    
 
-ABSOLUTE_WORD:
+ABSOLUTE_WORD
         MOVE.B  #$24, (A2)+         ; Add $ symbol
         MOVE.L  #$0001, D2          ; Insert 1 to D2 
         JSR      ITOA               ; Convert word hex values to ITOA
         RTS
         
-ABSOLUTE_LONG:
+ABSOLUTE_LONG
         MOVE.B  #$24, (A2)+         ; Add $ symbol
         MOVE.L  #$0002, D2          ; Insert 2 to D2
         JSR      ITOA               ; Convert long hex values to ITOA
         RTS
 
-IMMEDIATE:
+IMMEDIATE
         MOVE.B  #$23, (A2)+         ; Add # symbol
-        CMP.B    #1, D6             ; Compare if MOVE.b (code0001)
+        MOVE.B  #$24, (A2)+         ; Add $ symbol
+
+        CMP.B    #1, D6             ; If MOVE.b (code0001)
         BEQ DO_ITOA_MOVE
-        CMP.B    #2, D6             ; Compare if MOVE.l / MOVEA.l (code0010)
+        CMP.B    #2, D6             ; If MOVE.l / MOVEA.l (code0010)
         BEQ DO_ITOA_MOVE
-        CMP.B    #3, D6             ; Compare if  MOVE.w / MOVEA.w (code0011)
+        CMP.B    #3, D6             ; If  MOVE.w / MOVEA.w (code0011)
         BEQ DO_ITOA_MOVE
         
         JSR ITOA                    ; Go to ITOA when not a move instruction
-        
-        ; ERROR HANDLE
         RTS
         
 DO_ITOA_MOVE
@@ -1207,8 +1203,14 @@ ABSOLUTE_IMMEDIATE_ERROR
         TRAP    #15
         BRA     DONE
         
-DEST_INVALID
-        LEA     DEST_INVALID_MSG, A1 
+DST_INVALID
+        LEA     DST_INVALID_MSG, A1 
+        MOVE.B  #14, D0
+        TRAP    #15
+        BRA     DONE
+        
+SRC_INVALID 
+        LEA     SRC_INVALID_MSG, A1 
         MOVE.B  #14, D0
         TRAP    #15
         BRA     DONE
@@ -1272,8 +1274,11 @@ ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
 EA_WRONGSIZE        DC.B    'Wrong size.',CR,LF,0
 ABSOLUTE_WRONGREG   DC.B    'Error. Register does not exist for Absolute and immediate.',CR,LF,0
 EA_TYPE_ERROR       DC.B    'Error. EA type is not supported.',CR,LF,0
-DEST_INVALID_MSG    DC.B    'Error. Destination effective address is invalid.',CR,LF,0
-
+DST_INVALID_MSG     DC.B    'Error. Destination effective address is invalid.',CR,LF,0
+SRC_INVALID_MSG     DC.B    'Error. Source effective address is invalid.',CR,LF,0
+OPCODE_INVALID      DC.B    'Error. Opcode is invalid.',CR,LF,0
+ERROR_MESSAGE       DC.B    'Error, the input is invalid.',CR,LF,0  
+ODD_ERROR_MESSAGE   DC.B    'Error, the last digit of the address is odd, which is invalid.',CR,LF,0  
              
 WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 
@@ -1292,7 +1297,7 @@ START_IN            DC.B        'Enter a starting address: ',CR,LF,0
 END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
 START_ADDRESS       DS.B        32     
 END_ADDRESS         DS.B        32 
-ERROR_MESSAGE       DC.B        'Error, the input is Invalid.',CR,LF,0       
+     
 
 
     END    START        ; last line of source
