@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 3/6/2020 4:35:45 AM
+Created On: 3/6/2020 5:02:49 AM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  Disassembler for the Motorola MC68000 Microprocessor
@@ -959,7 +959,7 @@ Created On: 3/6/2020 4:35:45 AM
 00001B06  6700 0034                955          BEQ     EA_SIZE_W       
 00001B0A  B43C 0002                956          CMP.B   #%10, D2        ; .l
 00001B0E  6700 0036                957          BEQ     EA_SIZE_L
-00001B12  6000 0240                958          BRA     EA_Wrong_Size    ; wrong size
+00001B12  6000 0240                958          BRA     EA_WRONG_SIZE    ; wrong size
 00001B16                           959  
 00001B16                           960  EA_SIZE_MOVE
 00001B16  B43C 0001                961          CMP.B   #%01, D2        ; .b
@@ -968,7 +968,7 @@ Created On: 3/6/2020 4:35:45 AM
 00001B22  6700 0018                964          BEQ     EA_SIZE_W       
 00001B26  B43C 0002                965          CMP.B   #%10, D2        ; .l
 00001B2A  6700 001A                966          BEQ     EA_SIZE_L
-00001B2E  6000 0224                967          BRA     EA_Wrong_Size    ; wrong size
+00001B2E  6000 0224                967          BRA     EA_WRONG_SIZE   ; wrong size
 00001B32                           968  
 00001B32                           969  EA_SIZE_B
 00001B32  14FC 002E                970          MOVE.B  #'.', (A2)+
@@ -1090,7 +1090,7 @@ Created On: 3/6/2020 4:35:45 AM
 00001C4C                          1086  EA_MOVEM        ; 6: ea_movem
 00001C4C                          1087  EA_TRAP         ; 7: ea_trap
 00001C4C                          1088  EA_QUICK        ; 8: ea_quick
-00001C4C                          1089  EA_branch       ; 9: ea_branch
+00001C4C                          1089  EA_BRANCH       ; 9: ea_branch
 00001C4C                          1090  
 00001C4C                          1091  EA_REG
 00001C4C                          1092  
@@ -1195,8 +1195,8 @@ Created On: 3/6/2020 4:35:45 AM
 00001D4E  4EB8 1136               1191          JSR ITOA_MOVE
 00001D52  4E75                    1192          RTS
 00001D54                          1193                
-00001D54                          1194  EA_Wrong_Size
-00001D54  43F9 00001D99           1195          LEA     EA_WRONGSIZE, A1 
+00001D54                          1194  EA_WRONG_SIZE 
+00001D54  43F9 00001D99           1195          LEA     WRONG_SIZE_MESSAGE, A1 
 00001D5A  103C 000E               1196          MOVE.B  #14, D0
 00001D5E  4E4F                    1197          TRAP    #15
 00001D60  6000 0032               1198          BRA     DONE
@@ -1218,93 +1218,91 @@ Created On: 3/6/2020 4:35:45 AM
 00001D8A  103C 000E               1214          MOVE.B  #14, D0
 00001D8E  4E4F                    1215          TRAP    #15
 00001D90  6000 0002               1216          BRA     DONE
-00001D94                          1217  
-00001D94                          1218           
-00001D94                          1219  DONE        
-00001D94  FFFF FFFF               1220      SIMHALT             ; halt simulator
-00001D98                          1221  
-00001D98                          1222  * Put variables and constants here
-00001D98                          1223     
-00001D98                          1224         
-00001D98  =00000040               1225  buffer_size         EQU         64 
-00001D98  =00005000               1226  decoded_buffer      EQU         $5000
-00001D98                          1227     
-00001D98  =0000000D               1228  CR                  EQU         $0D
-00001D98  =0000000A               1229  LF                  EQU         $0A
-00001D98  =0000A000               1230  stack               EQU         $0000A000
-00001D98  =00000014               1231  lines_p_screen      EQU         20
-00001D98  =00000003               1232  right3              EQU         3
-00001D98  =00000004               1233  right4              EQU         4
-00001D98  =00000006               1234  right6              EQU         6
-00001D98  =00000008               1235  right8              EQU         8
-00001D98  =00000009               1236  right9              EQU         9
-00001D98  =0000000C               1237  right12             EQU         12
-00001D98  =00000010               1238  right16             EQU         16
-00001D98  =00000018               1239  right24             EQU         24
-00001D98= 20                      1240  ascii_y_n           DC.B        32
-00001D99  =00000059               1241  y_uppercase         EQU         $59         
-00001D99  =00000079               1242  y_lowercase         EQU         $79
-00001D99  =0000004E               1243  n_uppercase         EQU         $4E
-00001D99  =0000006E               1244  n_lowercase         EQU         $6E
-00001D99  =00000002               1245  task2               EQU         $02
-00001D99  =00000005               1246  task5               EQU         $05
-00001D99  =00000009               1247  task9               EQU         $09
-00001D99  =0000000D               1248  task13              EQU         $0D
-00001D99  =0000000E               1249  task14              EQU         $0E
-00001D99  =0000F000               1250  first_nibble        EQU         $F000
-00001D99  =00000F00               1251  second_nibble       EQU         $0F00   
-00001D99  =000000F0               1252  third_nibble        EQU         $00F0
-00001D99  =0000000F               1253  fourth_nibble       EQU         $000F
-00001D99  =000001C0               1254  dst_mode            EQU         $01C0
-00001D99  =00000E00               1255  dst_reg             EQU         $0E00
-00001D99  =00000038               1256  src_mode            EQU         $0038
-00001D99  =00000007               1257  src_reg             EQU         $0007
-00001D99  =00000100               1258  bit8                EQU         $0100
-00001D99                          1259  
-00001D99  =00000000               1260  ea_type_immediate   EQU     0       ; EA Type = immediate
-00001D99  =00000001               1261  ea_type_move        EQU     1       ; EA Type = move
-00001D99  =00000002               1262  ea_type_movea       EQU     2       ; EA Type = movea
-00001D99  =0000000C               1263  ea_type_movea6      EQU     12      ; EA Type = movea * 6
-00001D99  =00000003               1264  ea_type_lea         EQU     3       ; EA Type = lea
-00001D99  =00000004               1265  ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
-00001D99  =00000005               1266  ea_type_ext         EQU     5       ; EA Type = ext
-00001D99  =00000006               1267  ea_type_movem       EQU     6       ; EA Type = movem
-00001D99  =00000007               1268  ea_type_trap        EQU     7       ; EA Type = trap
-00001D99  =00000008               1269  ea_type_quick       EQU     8       ; EA Type = addq, subq
-00001D99  =00000009               1270  ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
-00001D99  =00000000               1271  ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
-00001D99  =00000001               1272  ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
-00001D99  =00000002               1273  ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
-00001D99= 57 72 6F 6E 67 20 ...   1274  EA_WRONGSIZE        DC.B    'Wrong size.',CR,LF,0
-00001DA7= 45 72 72 6F 72 2E ...   1275  ABSOLUTE_WRONGREG   DC.B    'Error. Register does not exist for Absolute and immediate.',CR,LF,0
-00001DE4= 45 72 72 6F 72 2E ...   1276  EA_TYPE_ERROR       DC.B    'Error. EA type is not supported.',CR,LF,0
-00001E07= 45 72 72 6F 72 2E ...   1277  DST_INVALID_MSG     DC.B    'Error. Destination effective address is invalid.',CR,LF,0
-00001E3A= 45 72 72 6F 72 2E ...   1278  SRC_INVALID_MSG     DC.B    'Error. Source effective address is invalid.',CR,LF,0
-00001E68= 45 72 72 6F 72 2E ...   1279  OPCODE_INVALID      DC.B    'Error. Opcode is invalid.',CR,LF,0
-00001E84= 45 72 72 6F 72 2C ...   1280  ERROR_MESSAGE       DC.B    'Error, the input is invalid.',CR,LF,0  
-00001EA3= 45 72 72 6F 72 2C ...   1281  ODD_ERROR_MESSAGE   DC.B    'Error, the last digit of the address is odd, which is invalid.',CR,LF,0  
-00001EE4                          1282               
-00001EE4= 57 65 6C 63 6F 6D ...   1283  WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
-00001F1A                          1284  
-00001F1A= 50 6C 65 61 73 65 ...   1285  USER_INST           DC.B        'Please follow the proper input instructions below: ',CR,LF
-00001F4F= 2D 20 53 74 61 72 ...   1286                      DC.B        '- Starting address must be lower than ending address.',CR,LF
-00001F86= 2D 20 54 68 65 20 ...   1287                      DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
-00001FCF= 2D 20 53 74 61 72 ...   1288                      DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
-00002015= 2D 20 44 6F 20 6E ...   1289                      DC.B        '- Do not put spaces in between input characters.',CR,LF
-00002047= 2D 20 56 61 6C 69 ...   1290                      DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
-00002094                          1291                  
-00002094= 50 72 65 73 73 20 ...   1292  ENTER_PROMPT        DC.B        'Press enter to continue...',CR,LF,0
-000020B1= 50 72 65 73 73 20 ...   1293  PROMPT_AGAIN        DC.B        'Press Y to continue / N to exit.',CR,LF,0
-000020D4= 50 72 6F 67 72 61 ...   1294  EXIT_PROMPT         DC.B        'Program has execution has stopped.',CR,LF,0
-000020F9                          1295        
-000020F9= 45 6E 74 65 72 20 ...   1296  START_IN            DC.B        'Enter a starting address: ',CR,LF,0 
-00002116= 45 6E 74 65 72 20 ...   1297  END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
-00002132                          1298  START_ADDRESS       DS.B        32     
-00002152                          1299  END_ADDRESS         DS.B        32 
-00002172                          1300       
-00002172                          1301  
-00002172                          1302  
-00002172                          1303      END    START        ; last line of source
+00001D94                          1217          
+00001D94  FFFF FFFF               1218  DONE    SIMHALT             ; halt simulator
+00001D98                          1219  
+00001D98                          1220  * Put variables and constants here
+00001D98                          1221     
+00001D98                          1222         
+00001D98  =00000040               1223  buffer_size         EQU         64 
+00001D98  =00005000               1224  decoded_buffer      EQU         $5000
+00001D98                          1225     
+00001D98  =0000000D               1226  CR                  EQU         $0D
+00001D98  =0000000A               1227  LF                  EQU         $0A
+00001D98  =0000A000               1228  stack               EQU         $0000A000
+00001D98  =00000014               1229  lines_p_screen      EQU         20
+00001D98  =00000003               1230  right3              EQU         3
+00001D98  =00000004               1231  right4              EQU         4
+00001D98  =00000006               1232  right6              EQU         6
+00001D98  =00000008               1233  right8              EQU         8
+00001D98  =00000009               1234  right9              EQU         9
+00001D98  =0000000C               1235  right12             EQU         12
+00001D98  =00000010               1236  right16             EQU         16
+00001D98  =00000018               1237  right24             EQU         24
+00001D98= 20                      1238  ascii_y_n           DC.B        32
+00001D99  =00000059               1239  y_uppercase         EQU         $59         
+00001D99  =00000079               1240  y_lowercase         EQU         $79
+00001D99  =0000004E               1241  n_uppercase         EQU         $4E
+00001D99  =0000006E               1242  n_lowercase         EQU         $6E
+00001D99  =00000002               1243  task2               EQU         $02
+00001D99  =00000005               1244  task5               EQU         $05
+00001D99  =00000009               1245  task9               EQU         $09
+00001D99  =0000000D               1246  task13              EQU         $0D
+00001D99  =0000000E               1247  task14              EQU         $0E
+00001D99  =0000F000               1248  first_nibble        EQU         $F000
+00001D99  =00000F00               1249  second_nibble       EQU         $0F00   
+00001D99  =000000F0               1250  third_nibble        EQU         $00F0
+00001D99  =0000000F               1251  fourth_nibble       EQU         $000F
+00001D99  =000001C0               1252  dst_mode            EQU         $01C0
+00001D99  =00000E00               1253  dst_reg             EQU         $0E00
+00001D99  =00000038               1254  src_mode            EQU         $0038
+00001D99  =00000007               1255  src_reg             EQU         $0007
+00001D99  =00000100               1256  bit8                EQU         $0100
+00001D99                          1257  
+00001D99  =00000000               1258  ea_type_immediate   EQU     0       ; EA Type = immediate
+00001D99  =00000001               1259  ea_type_move        EQU     1       ; EA Type = move
+00001D99  =00000002               1260  ea_type_movea       EQU     2       ; EA Type = movea
+00001D99  =0000000C               1261  ea_type_movea6      EQU     12      ; EA Type = movea * 6
+00001D99  =00000003               1262  ea_type_lea         EQU     3       ; EA Type = lea
+00001D99  =00000004               1263  ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
+00001D99  =00000005               1264  ea_type_ext         EQU     5       ; EA Type = ext
+00001D99  =00000006               1265  ea_type_movem       EQU     6       ; EA Type = movem
+00001D99  =00000007               1266  ea_type_trap        EQU     7       ; EA Type = trap
+00001D99  =00000008               1267  ea_type_quick       EQU     8       ; EA Type = addq, subq
+00001D99  =00000009               1268  ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
+00001D99  =00000000               1269  ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
+00001D99  =00000001               1270  ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
+00001D99  =00000002               1271  ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
+00001D99= 57 72 6F 6E 67 20 ...   1272  WRONG_SIZE_MESSAGE  DC.B    'Wrong size.',CR,LF,0
+00001DA7= 45 72 72 6F 72 2E ...   1273  ABSOLUTE_WRONGREG   DC.B    'Error. Register does not exist for Absolute and immediate.',CR,LF,0
+00001DE4= 45 72 72 6F 72 2E ...   1274  EA_TYPE_ERROR       DC.B    'Error. EA type is not supported.',CR,LF,0
+00001E07= 45 72 72 6F 72 2E ...   1275  DST_INVALID_MSG     DC.B    'Error. Destination effective address is invalid.',CR,LF,0
+00001E3A= 45 72 72 6F 72 2E ...   1276  SRC_INVALID_MSG     DC.B    'Error. Source effective address is invalid.',CR,LF,0
+00001E68= 45 72 72 6F 72 2E ...   1277  OPCODE_INVALID      DC.B    'Error. Opcode is invalid.',CR,LF,0
+00001E84= 45 72 72 6F 72 2C ...   1278  ERROR_MESSAGE       DC.B    'Error, the input is invalid.',CR,LF,0  
+00001EA3= 45 72 72 6F 72 2C ...   1279  ODD_ERROR_MESSAGE   DC.B    'Error, the last digit of the address is odd, which is invalid.',CR,LF,0  
+00001EE4                          1280               
+00001EE4= 57 65 6C 63 6F 6D ...   1281  WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
+00001F1A                          1282  
+00001F1A= 50 6C 65 61 73 65 ...   1283  USER_INST           DC.B        'Please follow the proper input instructions below: ',CR,LF
+00001F4F= 2D 20 53 74 61 72 ...   1284                      DC.B        '- Starting address must be lower than ending address.',CR,LF
+00001F86= 2D 20 54 68 65 20 ...   1285                      DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
+00001FCF= 2D 20 53 74 61 72 ...   1286                      DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
+00002015= 2D 20 44 6F 20 6E ...   1287                      DC.B        '- Do not put spaces in between input characters.',CR,LF
+00002047= 2D 20 56 61 6C 69 ...   1288                      DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
+00002094                          1289                  
+00002094= 50 72 65 73 73 20 ...   1290  ENTER_PROMPT        DC.B        'Press enter to continue...',CR,LF,0
+000020B1= 50 72 65 73 73 20 ...   1291  PROMPT_AGAIN        DC.B        'Press Y to continue / N to exit.',CR,LF,0
+000020D4= 50 72 6F 67 72 61 ...   1292  EXIT_PROMPT         DC.B        'Program has execution has stopped.',CR,LF,0
+000020F9                          1293        
+000020F9= 45 6E 74 65 72 20 ...   1294  START_IN            DC.B        'Enter a starting address: ',CR,LF,0 
+00002116= 45 6E 74 65 72 20 ...   1295  END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
+00002132                          1296  START_ADDRESS       DS.B        32     
+00002152                          1297  END_ADDRESS         DS.B        32 
+00002172                          1298       
+00002172                          1299  
+00002172                          1300  
+00002172                          1301      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -1399,7 +1397,6 @@ EA_TYPE_QUICK       8
 EA_TYPE_TABLE       1ABA
 EA_TYPE_TRAP        7
 EA_UNSUPPORTED      1CE6
-EA_WRONGSIZE        1D99
 EA_WRONG_SIZE       1D54
 END_ADDRESS         2152
 END_IN              2116
@@ -1508,5 +1505,6 @@ USER_INST           1F1A
 VALIDATE_END        105A
 VALIDATE_START      103A
 WELCOME             1EE4
+WRONG_SIZE_MESSAGE  1D99
 Y_LOWERCASE         79
 Y_UPPERCASE         59

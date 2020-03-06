@@ -955,7 +955,7 @@ EA_SIZE_IMMEDIATE
         BEQ     EA_SIZE_W       
         CMP.B   #%10, D2        ; .l
         BEQ     EA_SIZE_L
-        BRA     EA_Wrong_Size    ; wrong size
+        BRA     EA_WRONG_SIZE    ; wrong size
 
 EA_SIZE_MOVE
         CMP.B   #%01, D2        ; .b
@@ -964,7 +964,7 @@ EA_SIZE_MOVE
         BEQ     EA_SIZE_W       
         CMP.B   #%10, D2        ; .l
         BEQ     EA_SIZE_L
-        BRA     EA_Wrong_Size    ; wrong size
+        BRA     EA_WRONG_SIZE   ; wrong size
 
 EA_SIZE_B
         MOVE.B  #'.', (A2)+
@@ -1086,7 +1086,7 @@ EA_EXT          ; 5: ea_ext
 EA_MOVEM        ; 6: ea_movem
 EA_TRAP         ; 7: ea_trap
 EA_QUICK        ; 8: ea_quick
-EA_branch       ; 9: ea_branch
+EA_BRANCH       ; 9: ea_branch
 
 EA_REG
 
@@ -1191,8 +1191,8 @@ DO_ITOA_MOVE
         JSR ITOA_MOVE
         RTS
               
-EA_Wrong_Size
-        LEA     EA_WRONGSIZE, A1 
+EA_WRONG_SIZE 
+        LEA     WRONG_SIZE_MESSAGE, A1 
         MOVE.B  #14, D0
         TRAP    #15
         BRA     DONE
@@ -1214,10 +1214,8 @@ SRC_INVALID
         MOVE.B  #14, D0
         TRAP    #15
         BRA     DONE
-
-         
-DONE        
-    SIMHALT             ; halt simulator
+        
+DONE    SIMHALT             ; halt simulator
 
 * Put variables and constants here
    
@@ -1271,7 +1269,7 @@ ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
 ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
 ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
 ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
-EA_WRONGSIZE        DC.B    'Wrong size.',CR,LF,0
+WRONG_SIZE_MESSAGE  DC.B    'Wrong size.',CR,LF,0
 ABSOLUTE_WRONGREG   DC.B    'Error. Register does not exist for Absolute and immediate.',CR,LF,0
 EA_TYPE_ERROR       DC.B    'Error. EA type is not supported.',CR,LF,0
 DST_INVALID_MSG     DC.B    'Error. Destination effective address is invalid.',CR,LF,0
