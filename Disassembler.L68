@@ -1,6 +1,6 @@
 00001000 Starting Address
 Assembler used: EASy68K Editor/Assembler v5.16.01
-Created On: 3/6/2020 5:02:49 AM
+Created On: 3/6/2020 8:22:28 PM
 
 00000000                             1  *-----------------------------------------------------------
 00000000                             2  * Title      :  Disassembler for the Motorola MC68000 Microprocessor
@@ -24,31 +24,31 @@ Created On: 3/6/2020 5:02:49 AM
 00001000                            20  *------------------------------------------------------------*
 00001000                            21  
 00001000  103C 000E                 22  DISP_W      MOVE.B  #14,D0                  ; Display Welcome Message. 
-00001004  43F9 00001EE4             23              LEA     WELCOME,A1
+00001004  43F9 00001F90             23              LEA     WELCOME,A1
 0000100A  4E4F                      24              TRAP    #15
 0000100C                            25  
 0000100C                            26  * Put program code here
 0000100C                            27  
 0000100C  103C 000E                 28  DISP_UI         MOVE.B  #14,D0              ; Display User Instructions. 
-00001010  43F9 00001F1A             29                  LEA     USER_INST,A1
+00001010  43F9 00001FC6             29                  LEA     USER_INST,A1
 00001016  4E4F                      30                  TRAP    #15    
 00001018                            31  
 00001018  4FF9 0000A000             32  PROMPT_START    LEA     stack, SP           ; SP = stack ($A0000)
-0000101E  43F9 000020F9             33                  LEA     START_IN,A1         ; Display starting address message
+0000101E  43F9 000021A5             33                  LEA     START_IN,A1         ; Display starting address message
 00001024  103C 000E                 34                  MOVE.B  #14,D0
 00001028  4E4F                      35                  TRAP    #15       
 0000102A                            36       
-0000102A  43F9 00002132             37  READ_START      LEA     START_ADDRESS,A1    ; Store user's starting address input
+0000102A  43F9 000021DE             37  READ_START      LEA     START_ADDRESS,A1    ; Store user's starting address input
 00001030  103C 0002                 38                  MOVE.B  #2,D0               ; Read user's input into A1; length is stored into D1
 00001034  4E4F                      39                  TRAP    #15
 00001036  1C3C 0000                 40                  MOVE.B  #0,D6               ; Used to indicate we are at start address
 0000103A                            41  
 0000103A  6000 0022                 42  VALIDATE_START  BRA     ATOI
 0000103E                            43  
-0000103E  43F9 00002116             44  PROMPT_END      LEA     END_IN,A1           ; Display starting address message
+0000103E  43F9 000021C2             44  PROMPT_END      LEA     END_IN,A1           ; Display starting address message
 00001044  103C 000E                 45                  MOVE.B  #14,D0
 00001048  4E4F                      46                  TRAP    #15            
-0000104A  43F9 00002152             47  READ_END        LEA     END_ADDRESS,A1      ; Store user's starting address input
+0000104A  43F9 000021FE             47  READ_END        LEA     END_ADDRESS,A1      ; Store user's starting address input
 00001050  103C 0002                 48                  MOVE.B  #2,D0               ; Read user's input into A1; length is stored into D1
 00001054  4E4F                      49                  TRAP    #15
 00001056  1C3C 0001                 50                  MOVE.B  #1,D6               ; Used to indicate we are at end address
@@ -84,7 +84,7 @@ Created On: 3/6/2020 5:02:49 AM
 000010A4  60B8                      80                          BRA     ATOI     
 000010A6                            81  
 000010A6                            82                      
-000010A6  43F9 00001E84             83  INPUT_INVALID   LEA     ERROR_MESSAGE, A1   ; Display error message
+000010A6  43F9 00001F30             83  INPUT_INVALID   LEA     ERROR_MESSAGE, A1   ; Display error message
 000010AC  103C 000E                 84                  MOVE.B  #14, D0
 000010B0  4E4F                      85                  TRAP    #15
 000010B2  4206                      86                  CLR.B   D6
@@ -118,7 +118,7 @@ Created On: 3/6/2020 5:02:49 AM
 000010F0  327C 0000                114                      MOVEA   #0, A1
 000010F4  6000 0138                115                      BRA     START_DECODING  ; All inputs are valid, go to the decode process
 000010F8                           116                      
-000010F8  43F9 00001EA3            117  LAST_DIGIT_ODD      LEA     ODD_ERROR_MESSAGE, A1 
+000010F8  43F9 00001F4F            117  LAST_DIGIT_ODD      LEA     ODD_ERROR_MESSAGE, A1 
 000010FE  103C 000E                118                      MOVE.B  #14, D0
 00001102  4E4F                     119                      TRAP    #15
 00001104                           120                      
@@ -257,7 +257,7 @@ Created On: 3/6/2020 5:02:49 AM
 00001254                           253  
 00001254                           254  DECODE_PAUSE
 00001254  103C 000E                255          MOVE.B  #task14, D0
-00001258  43F9 00002094            256          LEA     ENTER_PROMPT, A1
+00001258  43F9 00002140            256          LEA     ENTER_PROMPT, A1
 0000125E  4E4F                     257          TRAP    #15
 00001260  103C 0005                258          MOVE.B  #task5, D0
 00001264  4E4F                     259          TRAP    #15
@@ -265,14 +265,14 @@ Created On: 3/6/2020 5:02:49 AM
 00001268                           261  
 00001268                           262  CONTINUE_OR_END
 00001268  103C 000E                263          MOVE.B  #task14, D0
-0000126C  43F9 000020B1            264          LEA     PROMPT_AGAIN, A1
+0000126C  43F9 0000215D            264          LEA     PROMPT_AGAIN, A1
 00001272  4E4F                     265          TRAP    #15
 00001274                           266          
 00001274  103C 0002                267          MOVE.B  #task2, D0
-00001278  43F9 00001D98            268          LEA     ascii_y_n, A1
+00001278  43F9 00001E44            268          LEA     ascii_y_n, A1
 0000127E  4E4F                     269          TRAP    #15
 00001280                           270          
-00001280  1639 00001D98            271          MOVE.B  ascii_y_n, D3
+00001280  1639 00001E44            271          MOVE.B  ascii_y_n, D3
 00001286  0C03 0059                272          CMPI.B  #y_uppercase, D3
 0000128A  6700 FD8C                273          BEQ     PROMPT_START
 0000128E  0C03 0079                274          CMPI.B  #y_lowercase, D3
@@ -285,18 +285,18 @@ Created On: 3/6/2020 5:02:49 AM
 000012A8                           281          
 000012A8                           282  EXIT
 000012A8  103C 000E                283          MOVE.B  #task14, D0
-000012AC  43F9 000020D4            284          LEA     EXIT_PROMPT, A1
+000012AC  43F9 00002180            284          LEA     EXIT_PROMPT, A1
 000012B2  4E4F                     285          TRAP    #15  
-000012B4  6000 0ADE                286          BRA     DONE
+000012B4  6000 0B8A                286          BRA     DONE
 000012B8                           287  
 000012B8                           288                 
 000012B8                           289  *---------------------------------------------------------------------------------*
 000012B8                           290  * D0: the current instruction. 
 000012B8                           291  * D1: used as temp storage
-000012B8                           292  * D2: data size / shift count
+000012B8                           292  * D2: data size 
 000012B8                           293  * D3: loop counter for the amount of lines per screen. 
 000012B8                           294  * D4: 
-000012B8                           295  * D5: 
+000012B8                           295  * D5: #shifts
 000012B8                           296  * D6: store first nibble
 000012B8                           297  * D7: 
 000012B8                           298  * A0: 
@@ -326,8 +326,8 @@ Created On: 3/6/2020 5:02:49 AM
 000012D8  4280                     322          CLR.L   D0
 000012DA  301D                     323          MOVE.W  (A5)+, D0       ; Store A5's value into D0, then increment A5
 000012DC  2200                     324          MOVE.L  D0, D1          ; Store A5's value from D0 into D1
-000012DE  143C 000C                325          MOVE.B  #right12, D2    ; Store 12 into D2
-000012E2  E469                     326          LSR.W   D2, D1          ; Shift first nibble into LSB position
+000012DE  1A3C 000C                325          MOVE.B  #right12, D5    ; Store 12 into D5
+000012E2  EA69                     326          LSR.W   D5, D1          ; Shift first nibble into LSB position
 000012E4  2C01                     327          MOVE.L  D1, D6          ; Store first nibble into D6
 000012E6  C2FC 0006                328          MULU    #6, D1          ; Multiply 6 to D1
 000012EA  4EF0 1000                329          JMP     0(A0, D1)       ; Go to displacement (A0 + D1 * 6)      
@@ -370,8 +370,8 @@ Created On: 3/6/2020 5:02:49 AM
 0000136A                           366  code0000                            ; Opcodes ADDI and SUBI
 0000136A  2200                     367          MOVE.L  D0,D1               ; D0 is current instruction word
 0000136C  0241 0F00                368          ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
-00001370  143C 0008                369          MOVE.B  #right8,D2          ; Used to shift 8 times to right
-00001374  E469                     370          LSR.W   D2,D1               ; Shift nibble into LSB position
+00001370  1A3C 0008                369          MOVE.B  #right8,D5          ; Used to shift 8 times to right
+00001374  EA69                     370          LSR.W   D5,D1               ; Shift nibble into LSB position
 00001376  C2FC 0006                371          MULU    #6, D1              ; Set displacement 
 0000137A  41F9 000014CC            372          LEA     OP_0000_TABLE,A0    ; Load table into A0
 00001380  4EF0 1000                373          JMP     0(A0,D1)            ; go to displacement (A0 + D1 * 6)
@@ -382,8 +382,8 @@ Created On: 3/6/2020 5:02:49 AM
 00001388                           378  code0010                            ; Opcodes MOVE.L and MOVEA.L 
 00001388  2200                     379          MOVE.L  D0,D1               ; D0 is current instruction word
 0000138A  0241 01C0                380          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-0000138E  143C 0006                381          MOVE.B  #right6,D2          ; Used to shift 6 times to right
-00001392  E469                     382          LSR.W   D2,D1               ; Shift dst mode into LSB position
+0000138E  1A3C 0006                381          MOVE.B  #right6,D5          ; Used to shift 6 times to right
+00001392  EA69                     382          LSR.W   D5,D1               ; Shift dst mode into LSB position
 00001394  B23C 0001                383          CMP.B   #1, D1              ; When 001 in destination mode
 00001398  6700 0390                384          BEQ     OP_MOVEA            ; Go to opcode MOVEA
 0000139C  6000 03B0                385          BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
@@ -391,8 +391,8 @@ Created On: 3/6/2020 5:02:49 AM
 000013A0                           387  code0011                            ; Opcodes MOVE.W and MOVEA.W 
 000013A0  2200                     388          MOVE.L  D0,D1               ; D0 is current instruction word
 000013A2  0241 01C0                389          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-000013A6  143C 0006                390          MOVE.B  #right6,D2          ; Used to shift 6 times to right
-000013AA  E469                     391          LSR.W   D2,D1               ; Shift dst mode into LSB position
+000013A6  1A3C 0006                390          MOVE.B  #right6,D5          ; Used to shift 6 times to right
+000013AA  EA69                     391          LSR.W   D5,D1               ; Shift dst mode into LSB position
 000013AC  B23C 0001                392          CMP.B   #1, D1              ; When 001 in destination mode
 000013B0  6700 0378                393          BEQ     OP_MOVEA            ; Go to opcode MOVEA
 000013B4  6000 0398                394          BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
@@ -400,8 +400,8 @@ Created On: 3/6/2020 5:02:49 AM
 000013B8                           396  code0100                            ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
 000013B8  2200                     397          MOVE.L  D0,D1               ; D0 is current instruction word
 000013BA  0241 0F00                398          ANDI.W  #second_nibble,D1   ; Extract 2nd nibble from instruction word
-000013BE  143C 0008                399          MOVE.B  #right8,D2          ; Used to shift 8 times to right
-000013C2  E469                     400          LSR.W   D2,D1               ; Shift nibble into LSB position
+000013BE  1A3C 0008                399          MOVE.B  #right8,D5          ; Used to shift 8 times to right
+000013C2  EA69                     400          LSR.W   D5,D1               ; Shift nibble into LSB position
 000013C4  C2FC 0006                401          MULU    #6, D1              ; Set displacement 
 000013C8  41F9 0000152C            402          LEA     OP_0100_TABLE,A0    ; Load table into A0
 000013CE  4EF0 1000                403          JMP     0(A0,D1)            ; go to displacement (A0 + D1 * 6)
@@ -412,8 +412,8 @@ Created On: 3/6/2020 5:02:49 AM
 000013D6                           408  code0110                            ; Opcodes BRA and BSR
 000013D6  2200                     409          MOVE.L  D0,D1               ; D0 is current instruction word
 000013D8  0241 0F00                410          ANDI.W  #second_nibble,D1   ; Extract 2nd 4 bits from instruction word
-000013DC  143C 0008                411          MOVE.B  #right8,D2          ; Used to shift 8 times to right
-000013E0  E469                     412          LSR.W   D2,D1               ; Shift nibble into LSB position
+000013DC  1A3C 0008                411          MOVE.B  #right8,D5          ; Used to shift 8 times to right
+000013E0  EA69                     412          LSR.W   D5,D1               ; Shift nibble into LSB position
 000013E2  B23C 0000                413          CMP.B   #0, D1              ; When 0000 in destination mode
 000013E6  6700 0456                414          BEQ     OP_BRA              ; Go to opcode BRA
 000013EA  6000 04C2                415          BRA     OP_BSR              ; Otherwise, go to opcode BSR
@@ -424,8 +424,8 @@ Created On: 3/6/2020 5:02:49 AM
 000013F2                           420  code1000                            ; Opcodes DIVU word and OR.B/W/L
 000013F2  2200                     421          MOVE.L  D0,D1               ; D0 is current instruction word
 000013F4  0241 01C0                422          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-000013F8  143C 0006                423          MOVE.B  #right6,D2          ; Used to shift 6 times to right
-000013FC  E469                     424          LSR.W   D2,D1               ; Shift dst mode into LSB position
+000013F8  1A3C 0006                423          MOVE.B  #right6,D5          ; Used to shift 6 times to right
+000013FC  EA69                     424          LSR.W   D5,D1               ; Shift dst mode into LSB position
 000013FE  B23C 0003                425          CMP.B   #3, D1              ; When 011 in destination mode
 00001402  6700 04EE                426          BEQ     OP_DIVU             ; Go to opcode DIVU word
 00001406  6000 050A                427          BRA     OP_OR               ; Otherwise, go to opcode OR
@@ -442,8 +442,8 @@ Created On: 3/6/2020 5:02:49 AM
 00001416                           438  code1100                            ; Opcodes MULS, MULU, AND.B/W/L
 00001416  2200                     439          MOVE.L  D0,D1               ; D0 is current instruction word
 00001418  0241 01C0                440          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-0000141C  143C 0006                441          MOVE.B  #right6,D2          ; Used to shift 6 times to right
-00001420  E469                     442          LSR.W   D2,D1               ; Shift dst mode into LSB position
+0000141C  1A3C 0006                441          MOVE.B  #right6,D5          ; Used to shift 6 times to right
+00001420  EA69                     442          LSR.W   D5,D1               ; Shift dst mode into LSB position
 00001422  C2FC 0006                443          MULU    #6, D1              ; Set displacement 
 00001426  41F9 0000158C            444          LEA     OP_1100_TABLE,A0    ; Load table into A0
 0000142C  4EF0 1000                445          JMP     0(A0,D1)            ; Go to displacement (A0 + D1 * 6)
@@ -451,8 +451,8 @@ Created On: 3/6/2020 5:02:49 AM
 00001430                           447  code1101                            ; Opcodes ADD.B/W/L, ADDA.B/W/L
 00001430  2200                     448          MOVE.L  D0,D1               ; D0 is current instruction word
 00001432  0241 01C0                449          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-00001436  143C 0006                450          MOVE.B  #right6,D2          ; Used to shift 6 times to right
-0000143A  E469                     451          LSR.W   D2,D1               ; Shift dst mode into LSB position
+00001436  1A3C 0006                450          MOVE.B  #right6,D5          ; Used to shift 6 times to right
+0000143A  EA69                     451          LSR.W   D5,D1               ; Shift dst mode into LSB position
 0000143C  C2FC 0006                452          MULU    #6, D1              ; Set displacement 
 00001440  41F9 000015EC            453          LEA     OP_1101_TABLE,A0    ; Load table into A0
 00001446  4EF0 1000                454          JMP     0(A0,D1)            ; Go to displacement (A0 + D1 * 6)
@@ -460,8 +460,8 @@ Created On: 3/6/2020 5:02:49 AM
 0000144A                           456  code1110                            ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, LSR.B/W/L, ROL.B/W/L, ROR.B/W/L   
 0000144A  2200                     457          MOVE.L  D0,D1               ; D0 is current instruction word
 0000144C  0241 01C0                458          ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
-00001450  143C 0006                459          MOVE.B  #right6,D2          ; Used to shift 6 times to right
-00001454  E469                     460          LSR.W   D2,D1               ; Shift dst mode into LSB position
+00001450  1A3C 0006                459          MOVE.B  #right6,D5          ; Used to shift 6 times to right
+00001454  EA69                     460          LSR.W   D5,D1               ; Shift dst mode into LSB position
 00001456                           461     
 00001456                           462          ; Check Memory Shifts
 00001456  B23C 0007                463          CMP.B   #7, D1              ; When 111
@@ -473,8 +473,8 @@ Created On: 3/6/2020 5:02:49 AM
 00001466                           469          ; Check Register Shifts
 00001466  2200                     470          MOVE.L  D0,D1                       ; D0 is current instruction word
 00001468  0241 0038                471          ANDI.W  #src_mode,D1                ; Extract 5-3 bits from instruction word
-0000146C  143C 0003                472          MOVE.B  #right3,D2                  ; Used to shift 3 times to right
-00001470  E469                     473          LSR.W   D2,D1                       ; Shift 5-3 bits into LSB position
+0000146C  1A3C 0003                472          MOVE.B  #right3,D5                  ; Used to shift 3 times to right
+00001470  EA69                     473          LSR.W   D5,D1                       ; Shift 5-3 bits into LSB position
 00001472  C2FC 0006                474          MULU    #6, D1                      ; Set displacement 
 00001476  41F9 0000164C            475          LEA     OP_1110_TABLE_REGISTER,A0   ; Load table into A0
 0000147C  4EF0 1000                476          JMP     0(A0,D1)                    ; go to displacement (A0 + xxxx * 6)
@@ -482,8 +482,8 @@ Created On: 3/6/2020 5:02:49 AM
 00001480                           478  MEMORY_1110_LEFT    
 00001480  2200                     479          MOVE.L  D0,D1               ; D0 is current instruction word
 00001482  0241 0E00                480          ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
-00001486  143C 0009                481          MOVE.B  #right9,D2          ; Used to shift 9 times to right
-0000148A  E469                     482          LSR.W   D2,D1               ; Shift dst reg into LSB position
+00001486  1A3C 0009                481          MOVE.B  #right9,D5          ; Used to shift 9 times to right
+0000148A  EA69                     482          LSR.W   D5,D1               ; Shift dst reg into LSB position
 0000148C  B23C 0000                483          CMP.B   #0,D1               ; When D1 is 0
 00001490  6700 0584                484          BEQ     OP_ASL              ; Go to opcode ASL
 00001494  B23C 0001                485          CMP.B   #1, D1              ; when D1 is 1
@@ -494,8 +494,8 @@ Created On: 3/6/2020 5:02:49 AM
 000014A4                           490  MEMORY_1110_RIGHT
 000014A4  2200                     491          MOVE.L  D0,D1               ; D0 is current instruction word
 000014A6  0241 0E00                492          ANDI.W  #dst_reg,D1         ; Extract 11-9 position from instruction word
-000014AA  143C 0009                493          MOVE.B  #right9,D2          ; Used to shift 9 times to right
-000014AE  E469                     494          LSR.W   D2,D1               ; Shift dst reg into LSB position
+000014AA  1A3C 0009                493          MOVE.B  #right9,D5          ; Used to shift 9 times to right
+000014AE  EA69                     494          LSR.W   D5,D1               ; Shift dst reg into LSB position
 000014B0  B23C 0000                495          CMP.B   #0,D1               ; When D1 is 0
 000014B4  6700 0544                496          BEQ     OP_ASR              ; Go to opcode ASR
 000014B8  B23C 0001                497          CMP.B   #1, D1              ; when D1 is 1
@@ -599,23 +599,23 @@ Created On: 3/6/2020 5:02:49 AM
 000016AC                           595  JSR_NOP_RTS
 000016AC  2200                     596          MOVE.L  D0,D1               ; D0 is current instruction word
 000016AE  0241 01C0                597          ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
-000016B2  143C 0006                598          MOVE.B  #right6,D2          ; Used to shift 6 times to right
-000016B6  E469                     599          LSR.W   D2,D1               ; Shift dst mode into LSB position
+000016B2  1A3C 0006                598          MOVE.B  #right6,D5          ; Used to shift 6 times to right
+000016B6  EA69                     599          LSR.W   D5,D1               ; Shift dst mode into LSB position
 000016B8  B23C 0002                600          CMP.B   #2, D1              ; When 010 in destination mode
 000016BC  6700 0104                601          BEQ     OP_JSR              ; Go to opcode JSR
 000016C0  2200                     602          MOVE.L  D0,D1               ; D0 is current instruction word
-000016C2  0241 0007                603          ANDI.W  #src_reg ,D1        ; Extract src reg position from instruction word
-000016C6  B23C 0001                604          CMP.B   #1, D1              ; When 001 in src register
+000016C2  0241 0007                603          ANDI.W  #src_reg,D1         ; Extract src reg position from instruction word
+000016C6  B23C 0001                604          CMP.B   #1,D1               ; When 001 in src register
 000016CA  6700 00BE                605          BEQ     OP_NOP              ; Go to opcode NOP
-000016CE  B23C 0005                606          CMP.B   #5, D1              ; When 005 in src register
+000016CE  B23C 0005                606          CMP.B   #5,D1               ; When 005 in src register
 000016D2  6700 00D2                607          BEQ     OP_RTS              ; Go to opcode RTS
 000016D6  6000 0002                608          BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported 
 000016DA                           609  
 000016DA                           610  OP_UNSUPPORTED
-000016DA  43F9 00001E68            611          LEA     OPCODE_INVALID, A1 
-000016E0  103C 000E                612          MOVE.B  #14, D0
+000016DA  43F9 00001F14            611          LEA     OPCODE_INVALID,A1 
+000016E0  103C 000E                612          MOVE.B  #14,D0
 000016E4  4E4F                     613          TRAP    #15
-000016E6  6000 06AC                614          BRA     DONE
+000016E6  6000 0758                614          BRA     DONE
 000016EA                           615          
 000016EA                           616  *----------------------------------------------------------------------------------------------*
 000016EA                           617  * param D0 the current instruction in word
@@ -636,19 +636,19 @@ Created On: 3/6/2020 5:02:49 AM
 000016EA                           632  * First 4 bits: 0000
 000016EA                           633  
 000016EA                           634  OP_SUBI
-000016EA  14FC 0053                635          MOVE.B  #'S', (A2)+
-000016EE  14FC 0055                636          MOVE.B  #'U', (A2)+
-000016F2  14FC 0042                637          MOVE.B  #'B', (A2)+
-000016F6  14FC 0049                638          MOVE.B  #'I', (A2)+
+000016EA  14FC 0053                635          MOVE.B  #'S',(A2)+
+000016EE  14FC 0055                636          MOVE.B  #'U',(A2)+
+000016F2  14FC 0042                637          MOVE.B  #'B',(A2)+
+000016F6  14FC 0049                638          MOVE.B  #'I',(A2)+
 000016FA  223C 00000000            639          MOVE.L  #ea_type_immediate, D1
 00001700  4EB9 00001AA2            640          JSR     EA_START
 00001706  4EF8 12EE                641          JMP     OP_FINISH
 0000170A                           642          
 0000170A                           643  OP_ADDI
-0000170A  14FC 0041                644          MOVE.B  #'A', (A2)+
-0000170E  14FC 0044                645          MOVE.B  #'D', (A2)+
-00001712  14FC 0044                646          MOVE.B  #'D', (A2)+
-00001716  14FC 0049                647          MOVE.B  #'I', (A2)+
+0000170A  14FC 0041                644          MOVE.B  #'A',(A2)+
+0000170E  14FC 0044                645          MOVE.B  #'D',(A2)+
+00001712  14FC 0044                646          MOVE.B  #'D',(A2)+
+00001716  14FC 0049                647          MOVE.B  #'I',(A2)+
 0000171A  223C 00000000            648          MOVE.L  #ea_type_immediate, D1
 00001720  4EB9 00001AA2            649          JSR     EA_START
 00001726  4EF8 12EE                650          JMP     OP_FINISH
@@ -656,22 +656,22 @@ Created On: 3/6/2020 5:02:49 AM
 0000172A                           652  *-----------------------------------------------------------------------------------------------*
 0000172A                           653  * First 4 bits: 0001
 0000172A                           654  OP_MOVEA
-0000172A  14FC 004D                655          MOVE.B  #'M', (A2)+
-0000172E  14FC 004F                656          MOVE.B  #'O', (A2)+
-00001732  14FC 0056                657          MOVE.B  #'V', (A2)+
-00001736  14FC 0045                658          MOVE.B  #'E', (A2)+
-0000173A  14FC 0041                659          MOVE.B  #'A', (A2)+
-0000173E  223C 00000000            660          MOVE.L  #ea_type_immediate, D1
+0000172A  14FC 004D                655          MOVE.B  #'M',(A2)+
+0000172E  14FC 004F                656          MOVE.B  #'O',(A2)+
+00001732  14FC 0056                657          MOVE.B  #'V',(A2)+
+00001736  14FC 0045                658          MOVE.B  #'E',(A2)+
+0000173A  14FC 0041                659          MOVE.B  #'A',(A2)+
+0000173E  223C 00000002            660          MOVE.L  #ea_type_movea, D1
 00001744  4EB9 00001AA2            661          JSR     EA_START
 0000174A  4EF8 12EE                662          JMP     OP_FINISH
 0000174E                           663  
 0000174E                           664  *------------------------------------------------------------------------------------------------*
 0000174E                           665  * First 4 bits: 0011
 0000174E                           666  OP_MOVE
-0000174E  14FC 004D                667          MOVE.B  #'M', (A2)+
-00001752  14FC 004F                668          MOVE.B  #'O', (A2)+
-00001756  14FC 0056                669          MOVE.B  #'V', (A2)+
-0000175A  14FC 0045                670          MOVE.B  #'E', (A2)+
+0000174E  14FC 004D                667          MOVE.B  #'M',(A2)+
+00001752  14FC 004F                668          MOVE.B  #'O',(A2)+
+00001756  14FC 0056                669          MOVE.B  #'V',(A2)+
+0000175A  14FC 0045                670          MOVE.B  #'E',(A2)+
 0000175E  223C 00000001            671          MOVE.L  #ea_type_move, D1
 00001764  4EB9 00001AA2            672          JSR     EA_START
 0000176A  4EF8 12EE                673          JMP     OP_FINISH
@@ -679,51 +679,51 @@ Created On: 3/6/2020 5:02:49 AM
 0000176E                           675  *------------------------------------------------------------------------------------------------*
 0000176E                           676  * First 4 bits: 0100
 0000176E                           677  OP_CLR
-0000176E  14FC 0043                678          MOVE.B  #'C', (A2)+
-00001772  14FC 004C                679          MOVE.B  #'L', (A2)+
-00001776  14FC 0052                680          MOVE.B  #'R', (A2)+
+0000176E  14FC 0043                678          MOVE.B  #'C',(A2)+
+00001772  14FC 004C                679          MOVE.B  #'L',(A2)+
+00001776  14FC 0052                680          MOVE.B  #'R',(A2)+
 0000177A  223C 00000000            681          MOVE.L  #ea_type_immediate, D1
 00001780  4EB9 00001AA2            682          JSR     EA_START
 00001786  4EF8 12EE                683          JMP     OP_FINISH
 0000178A                           684          
 0000178A                           685  OP_NOP
-0000178A  14FC 004E                686          MOVE.B  #'N', (A2)+
-0000178E  14FC 004F                687          MOVE.B  #'O', (A2)+
-00001792  14FC 0050                688          MOVE.B  #'P', (A2)+
+0000178A  14FC 004E                686          MOVE.B  #'N',(A2)+
+0000178E  14FC 004F                687          MOVE.B  #'O',(A2)+
+00001792  14FC 0050                688          MOVE.B  #'P',(A2)+
 00001796  223C 00000000            689          MOVE.L  #ea_type_immediate, D1
 0000179C  4EB9 00001AA2            690          JSR     EA_START
 000017A2  4EF8 12EE                691          JMP     OP_FINISH
 000017A6                           692          
 000017A6                           693  OP_RTS
-000017A6  14FC 0052                694          MOVE.B  #'R', (A2)+
-000017AA  14FC 0054                695          MOVE.B  #'T', (A2)+
-000017AE  14FC 0053                696          MOVE.B  #'S', (A2)+
+000017A6  14FC 0052                694          MOVE.B  #'R',(A2)+
+000017AA  14FC 0054                695          MOVE.B  #'T',(A2)+
+000017AE  14FC 0053                696          MOVE.B  #'S',(A2)+
 000017B2  223C 00000000            697          MOVE.L  #ea_type_immediate, D1
 000017B8  4EB9 00001AA2            698          JSR     EA_START
 000017BE  4EF8 12EE                699          JMP     OP_FINISH
 000017C2                           700          
 000017C2                           701  OP_JSR
-000017C2  14FC 004A                702          MOVE.B  #'J', (A2)+
-000017C6  14FC 0053                703          MOVE.B  #'S', (A2)+
-000017CA  14FC 0052                704          MOVE.B  #'R', (A2)+
+000017C2  14FC 004A                702          MOVE.B  #'J',(A2)+
+000017C6  14FC 0053                703          MOVE.B  #'S',(A2)+
+000017CA  14FC 0052                704          MOVE.B  #'R',(A2)+
 000017CE  223C 00000000            705          MOVE.L  #ea_type_immediate, D1
 000017D4  4EB9 00001AA2            706          JSR     EA_START
 000017DA  4EF8 12EE                707          JMP     OP_FINISH
 000017DE                           708  
 000017DE                           709  OP_MOVEM
-000017DE  14FC 004D                710          MOVE.B  #'M', (A2)+
-000017E2  14FC 004F                711          MOVE.B  #'O', (A2)+
-000017E6  14FC 0056                712          MOVE.B  #'V', (A2)+
-000017EA  14FC 0045                713          MOVE.B  #'E', (A2)+
-000017EE  14FC 004D                714          MOVE.B  #'M', (A2)+
+000017DE  14FC 004D                710          MOVE.B  #'M',(A2)+
+000017E2  14FC 004F                711          MOVE.B  #'O',(A2)+
+000017E6  14FC 0056                712          MOVE.B  #'V',(A2)+
+000017EA  14FC 0045                713          MOVE.B  #'E',(A2)+
+000017EE  14FC 004D                714          MOVE.B  #'M',(A2)+
 000017F2  223C 00000000            715          MOVE.L  #ea_type_immediate, D1
 000017F8  4EB9 00001AA2            716          JSR     EA_START
 000017FE  4EF8 12EE                717          JMP     OP_FINISH
 00001802                           718          
 00001802                           719  OP_LEA
-00001802  14FC 004C                720          MOVE.B  #'L', (A2)+
-00001806  14FC 0045                721          MOVE.B  #'E', (A2)+
-0000180A  14FC 0041                722          MOVE.B  #'A', (A2)+
+00001802  14FC 004C                720          MOVE.B  #'L',(A2)+
+00001806  14FC 0045                721          MOVE.B  #'E',(A2)+
+0000180A  14FC 0041                722          MOVE.B  #'A',(A2)+
 0000180E  223C 00000003            723          MOVE.L  #ea_type_lea, D1
 00001814  4EB9 00001AA2            724          JSR     EA_START
 0000181A  4EF8 12EE                725          JMP     OP_FINISH
@@ -731,10 +731,10 @@ Created On: 3/6/2020 5:02:49 AM
 0000181E                           727  *------------------------------------------------------------------------------------------------*
 0000181E                           728  * First 4 bits: 0101
 0000181E                           729  OP_ADDQ
-0000181E  14FC 0041                730          MOVE.B  #'A', (A2)+
-00001822  14FC 0044                731          MOVE.B  #'D', (A2)+
-00001826  14FC 0044                732          MOVE.B  #'D', (A2)+
-0000182A  14FC 0051                733          MOVE.B  #'Q', (A2)+
+0000181E  14FC 0041                730          MOVE.B  #'A',(A2)+
+00001822  14FC 0044                731          MOVE.B  #'D',(A2)+
+00001826  14FC 0044                732          MOVE.B  #'D',(A2)+
+0000182A  14FC 0051                733          MOVE.B  #'Q',(A2)+
 0000182E  223C 00000000            734          MOVE.L  #ea_type_immediate, D1
 00001834  4EB9 00001AA2            735          JSR     EA_START
 0000183A  4EF8 12EE                736          JMP     OP_FINISH
@@ -742,53 +742,53 @@ Created On: 3/6/2020 5:02:49 AM
 0000183E                           738  *------------------------------------------------------------------------------------------------*
 0000183E                           739  * First 4 bits: 0110
 0000183E                           740  OP_BRA
-0000183E  14FC 0042                741          MOVE.B  #'B', (A2)+
-00001842  14FC 0052                742          MOVE.B  #'R', (A2)+
-00001846  14FC 0041                743          MOVE.B  #'A', (A2)+
+0000183E  14FC 0042                741          MOVE.B  #'B',(A2)+
+00001842  14FC 0052                742          MOVE.B  #'R',(A2)+
+00001846  14FC 0041                743          MOVE.B  #'A',(A2)+
 0000184A  223C 00000000            744          MOVE.L  #ea_type_immediate, D1
 00001850  4EB9 00001AA2            745          JSR     EA_START
 00001856  4EF8 12EE                746          JMP     OP_FINISH
 0000185A                           747  
 0000185A                           748  OP_BCC
-0000185A  14FC 0042                749          MOVE.B  #'B', (A2)+
-0000185E  14FC 0043                750          MOVE.B  #'C', (A2)+
-00001862  14FC 0043                751          MOVE.B  #'C', (A2)+
+0000185A  14FC 0042                749          MOVE.B  #'B',(A2)+
+0000185E  14FC 0043                750          MOVE.B  #'C',(A2)+
+00001862  14FC 0043                751          MOVE.B  #'C',(A2)+
 00001866  223C 00000000            752          MOVE.L  #ea_type_immediate, D1
 0000186C  4EB9 00001AA2            753          JSR     EA_START
 00001872  4EF8 12EE                754          JMP     OP_FINISH
 00001876                           755          
 00001876                           756  OP_BGT
-00001876  14FC 0042                757          MOVE.B  #'B', (A2)+
-0000187A  14FC 0047                758          MOVE.B  #'G', (A2)+
-0000187E  14FC 0054                759          MOVE.B  #'T', (A2)+
+00001876  14FC 0042                757          MOVE.B  #'B',(A2)+
+0000187A  14FC 0047                758          MOVE.B  #'G',(A2)+
+0000187E  14FC 0054                759          MOVE.B  #'T',(A2)+
 00001882  223C 00000000            760          MOVE.L  #ea_type_immediate, D1
 00001888  4EB9 00001AA2            761          JSR     EA_START
 0000188E  4EF8 12EE                762          JMP     OP_FINISH
 00001892                           763  
 00001892                           764  OP_BLE
-00001892  14FC 0042                765          MOVE.B  #'B', (A2)+
-00001896  14FC 004C                766          MOVE.B  #'L', (A2)+
-0000189A  14FC 0045                767          MOVE.B  #'E', (A2)+
+00001892  14FC 0042                765          MOVE.B  #'B',(A2)+
+00001896  14FC 004C                766          MOVE.B  #'L',(A2)+
+0000189A  14FC 0045                767          MOVE.B  #'E',(A2)+
 0000189E  223C 00000000            768          MOVE.L  #ea_type_immediate, D1
 000018A4  4EB9 00001AA2            769          JSR     EA_START
 000018AA  4EF8 12EE                770          JMP     OP_FINISH
 000018AE                           771          
 000018AE                           772  OP_BSR
-000018AE  14FC 0042                773          MOVE.B  #'B', (A2)+
-000018B2  14FC 0053                774          MOVE.B  #'S', (A2)+
-000018B6  14FC 0052                775          MOVE.B  #'R', (A2)+
+000018AE  14FC 0042                773          MOVE.B  #'B',(A2)+
+000018B2  14FC 0053                774          MOVE.B  #'S',(A2)+
+000018B6  14FC 0052                775          MOVE.B  #'R',(A2)+
 000018BA  223C 00000000            776          MOVE.L  #ea_type_immediate, D1
 000018C0  4EB9 00001AA2            777          JSR     EA_START
 000018C6  4EF8 12EE                778          JMP     OP_FINISH
 000018CA                           779  *------------------------------------------------------------------------------------------------*
 000018CA                           780  * First 4 bits: 0111
 000018CA                           781  OP_MOVEQ
-000018CA  14FC 004D                782          MOVE.B  #'M', (A2)+
-000018CE  14FC 004F                783          MOVE.B  #'O', (A2)+
-000018D2  14FC 0056                784          MOVE.B  #'V', (A2)+
-000018D6  14FC 0056                785          MOVE.B  #'V', (A2)+
-000018DA  14FC 0045                786          MOVE.B  #'E', (A2)+
-000018DE  14FC 0051                787          MOVE.B  #'Q', (A2)+
+000018CA  14FC 004D                782          MOVE.B  #'M',(A2)+
+000018CE  14FC 004F                783          MOVE.B  #'O',(A2)+
+000018D2  14FC 0056                784          MOVE.B  #'V',(A2)+
+000018D6  14FC 0056                785          MOVE.B  #'V',(A2)+
+000018DA  14FC 0045                786          MOVE.B  #'E',(A2)+
+000018DE  14FC 0051                787          MOVE.B  #'Q',(A2)+
 000018E2  223C 00000000            788          MOVE.L  #ea_type_immediate, D1
 000018E8  4EB9 00001AA2            789          JSR     EA_START
 000018EE  4EF8 12EE                790          JMP     OP_FINISH
@@ -796,17 +796,17 @@ Created On: 3/6/2020 5:02:49 AM
 000018F2                           792  *------------------------------------------------------------------------------------------------*
 000018F2                           793  * First 4 bits: 1000
 000018F2                           794  OP_DIVU
-000018F2  14FC 0044                795          MOVE.B  #'D', (A2)+
-000018F6  14FC 0049                796          MOVE.B  #'I', (A2)+
-000018FA  14FC 0056                797          MOVE.B  #'V', (A2)+
-000018FE  14FC 0055                798          MOVE.B  #'U', (A2)+
+000018F2  14FC 0044                795          MOVE.B  #'D',(A2)+
+000018F6  14FC 0049                796          MOVE.B  #'I',(A2)+
+000018FA  14FC 0056                797          MOVE.B  #'V',(A2)+
+000018FE  14FC 0055                798          MOVE.B  #'U',(A2)+
 00001902  223C 00000000            799          MOVE.L  #ea_type_immediate, D1
 00001908  4EB9 00001AA2            800          JSR     EA_START
 0000190E  4EF8 12EE                801          JMP     OP_FINISH
 00001912                           802    
 00001912                           803  OP_OR
-00001912  14FC 004F                804          MOVE.B  #'O', (A2)+
-00001916  14FC 0052                805          MOVE.B  #'R', (A2)+
+00001912  14FC 004F                804          MOVE.B  #'O',(A2)+
+00001916  14FC 0052                805          MOVE.B  #'R',(A2)+
 0000191A  223C 00000000            806          MOVE.L  #ea_type_immediate, D1
 00001920  4EB9 00001AA2            807          JSR     EA_START
 00001926  4EF8 12EE                808          JMP     OP_FINISH
@@ -814,9 +814,9 @@ Created On: 3/6/2020 5:02:49 AM
 0000192A                           810  *------------------------------------------------------------------------------------------------*
 0000192A                           811  * First 4 bits: 1001
 0000192A                           812  OP_SUB
-0000192A  14FC 0053                813          MOVE.B  #'S', (A2)+
-0000192E  14FC 0055                814          MOVE.B  #'U', (A2)+
-00001932  14FC 0042                815          MOVE.B  #'B', (A2)+
+0000192A  14FC 0053                813          MOVE.B  #'S',(A2)+
+0000192E  14FC 0055                814          MOVE.B  #'U',(A2)+
+00001932  14FC 0042                815          MOVE.B  #'B',(A2)+
 00001936  223C 00000000            816          MOVE.L  #ea_type_immediate, D1
 0000193C  4EB9 00001AA2            817          JSR     EA_START
 00001942  4EF8 12EE                818          JMP     OP_FINISH
@@ -824,9 +824,9 @@ Created On: 3/6/2020 5:02:49 AM
 00001946                           820  *------------------------------------------------------------------------------------------------*
 00001946                           821  * First 4 bits: 1011
 00001946                           822  OP_CMP
-00001946  14FC 0043                823          MOVE.B  #'C', (A2)+
-0000194A  14FC 004D                824          MOVE.B  #'M', (A2)+
-0000194E  14FC 0050                825          MOVE.B  #'P', (A2)+
+00001946  14FC 0043                823          MOVE.B  #'C',(A2)+
+0000194A  14FC 004D                824          MOVE.B  #'M',(A2)+
+0000194E  14FC 0050                825          MOVE.B  #'P',(A2)+
 00001952  223C 00000000            826          MOVE.L  #ea_type_immediate, D1
 00001958  4EB9 00001AA2            827          JSR     EA_START
 0000195E  4EF8 12EE                828          JMP     OP_FINISH
@@ -834,27 +834,27 @@ Created On: 3/6/2020 5:02:49 AM
 00001962                           830  *------------------------------------------------------------------------------------------------*
 00001962                           831  * First 4 bits: 1100
 00001962                           832  OP_MULU
-00001962  14FC 004D                833          MOVE.B  #'M', (A2)+
-00001966  14FC 0055                834          MOVE.B  #'U', (A2)+
-0000196A  14FC 004C                835          MOVE.B  #'L', (A2)+
-0000196E  14FC 0055                836          MOVE.B  #'U', (A2)+
+00001962  14FC 004D                833          MOVE.B  #'M',(A2)+
+00001966  14FC 0055                834          MOVE.B  #'U',(A2)+
+0000196A  14FC 004C                835          MOVE.B  #'L',(A2)+
+0000196E  14FC 0055                836          MOVE.B  #'U',(A2)+
 00001972  223C 00000000            837          MOVE.L  #ea_type_immediate, D1
 00001978  4EB9 00001AA2            838          JSR     EA_START
 0000197E  4EF8 12EE                839          JMP     OP_FINISH
 00001982                           840          
 00001982                           841  OP_MULS
-00001982  14FC 004D                842          MOVE.B  #'M', (A2)+
-00001986  14FC 0055                843          MOVE.B  #'U', (A2)+
-0000198A  14FC 004C                844          MOVE.B  #'L', (A2)+
-0000198E  14FC 0053                845          MOVE.B  #'S', (A2)+
+00001982  14FC 004D                842          MOVE.B  #'M',(A2)+
+00001986  14FC 0055                843          MOVE.B  #'U',(A2)+
+0000198A  14FC 004C                844          MOVE.B  #'L',(A2)+
+0000198E  14FC 0053                845          MOVE.B  #'S',(A2)+
 00001992  223C 00000000            846          MOVE.L  #ea_type_immediate, D1
 00001998  4EB9 00001AA2            847          JSR     EA_START
 0000199E  4EF8 12EE                848          JMP     OP_FINISH
 000019A2                           849          
 000019A2                           850  OP_AND
-000019A2  14FC 0041                851          MOVE.B  #'A', (A2)+
-000019A6  14FC 004E                852          MOVE.B  #'N', (A2)+
-000019AA  14FC 0044                853          MOVE.B  #'D', (A2)+
+000019A2  14FC 0041                851          MOVE.B  #'A',(A2)+
+000019A6  14FC 004E                852          MOVE.B  #'N',(A2)+
+000019AA  14FC 0044                853          MOVE.B  #'D',(A2)+
 000019AE  223C 00000000            854          MOVE.L  #ea_type_immediate, D1
 000019B4  4EB9 00001AA2            855          JSR     EA_START
 000019BA  4EF8 12EE                856          JMP     OP_FINISH
@@ -862,18 +862,18 @@ Created On: 3/6/2020 5:02:49 AM
 000019BE                           858  *------------------------------------------------------------------------------------------------*
 000019BE                           859  * First 4 bits: 1101
 000019BE                           860  OP_ADD
-000019BE  14FC 0041                861          MOVE.B  #'A', (A2)+
-000019C2  14FC 0044                862          MOVE.B  #'D', (A2)+
-000019C6  14FC 0044                863          MOVE.B  #'D', (A2)+
+000019BE  14FC 0041                861          MOVE.B  #'A',(A2)+
+000019C2  14FC 0044                862          MOVE.B  #'D',(A2)+
+000019C6  14FC 0044                863          MOVE.B  #'D',(A2)+
 000019CA  223C 00000000            864          MOVE.L  #ea_type_immediate, D1
 000019D0  4EB9 00001AA2            865          JSR     EA_START
 000019D6  4EF8 12EE                866          JMP     OP_FINISH
 000019DA                           867  
 000019DA                           868  OP_ADDA
-000019DA  14FC 0041                869          MOVE.B  #'A', (A2)+
-000019DE  14FC 0044                870          MOVE.B  #'D', (A2)+
-000019E2  14FC 0044                871          MOVE.B  #'D', (A2)+
-000019E6  14FC 0041                872          MOVE.B  #'A', (A2)+
+000019DA  14FC 0041                869          MOVE.B  #'A',(A2)+
+000019DE  14FC 0044                870          MOVE.B  #'D',(A2)+
+000019E2  14FC 0044                871          MOVE.B  #'D',(A2)+
+000019E6  14FC 0041                872          MOVE.B  #'A',(A2)+
 000019EA  223C 00000000            873          MOVE.L  #ea_type_immediate, D1
 000019F0  4EB9 00001AA2            874          JSR     EA_START
 000019F6  4EF8 12EE                875          JMP     OP_FINISH
@@ -881,48 +881,48 @@ Created On: 3/6/2020 5:02:49 AM
 000019FA                           877  *------------------------------------------------------------------------------------------------*
 000019FA                           878  * First 4 bits: 1110
 000019FA                           879  OP_ASR
-000019FA  14FC 0041                880          MOVE.B  #'A', (A2)+
-000019FE  14FC 0053                881          MOVE.B  #'S', (A2)+
-00001A02  14FC 0052                882          MOVE.B  #'R', (A2)+
+000019FA  14FC 0041                880          MOVE.B  #'A',(A2)+
+000019FE  14FC 0053                881          MOVE.B  #'S',(A2)+
+00001A02  14FC 0052                882          MOVE.B  #'R',(A2)+
 00001A06  223C 00000000            883          MOVE.L  #ea_type_immediate, D1
 00001A0C  4EB9 00001AA2            884          JSR     EA_START
 00001A12  4EF8 12EE                885          JMP     OP_FINISH
 00001A16                           886  OP_ASL
-00001A16  14FC 0041                887          MOVE.B  #'A', (A2)+
-00001A1A  14FC 0053                888          MOVE.B  #'S', (A2)+
-00001A1E  14FC 004C                889          MOVE.B  #'L', (A2)+
+00001A16  14FC 0041                887          MOVE.B  #'A',(A2)+
+00001A1A  14FC 0053                888          MOVE.B  #'S',(A2)+
+00001A1E  14FC 004C                889          MOVE.B  #'L',(A2)+
 00001A22  223C 00000000            890          MOVE.L  #ea_type_immediate, D1
 00001A28  4EB9 00001AA2            891          JSR     EA_START
 00001A2E  4EF8 12EE                892          JMP     OP_FINISH
 00001A32                           893          
 00001A32                           894  OP_LSR
-00001A32  14FC 004C                895          MOVE.B  #'L', (A2)+
-00001A36  14FC 0053                896          MOVE.B  #'S', (A2)+
-00001A3A  14FC 0052                897          MOVE.B  #'R', (A2)+
+00001A32  14FC 004C                895          MOVE.B  #'L',(A2)+
+00001A36  14FC 0053                896          MOVE.B  #'S',(A2)+
+00001A3A  14FC 0052                897          MOVE.B  #'R',(A2)+
 00001A3E  223C 00000000            898          MOVE.L  #ea_type_immediate, D1
 00001A44  4EB9 00001AA2            899          JSR     EA_START
 00001A4A  4EF8 12EE                900          JMP     OP_FINISH
 00001A4E                           901         
 00001A4E                           902  OP_LSL
-00001A4E  14FC 004C                903          MOVE.B  #'L', (A2)+
-00001A52  14FC 0053                904          MOVE.B  #'S', (A2)+
-00001A56  14FC 004C                905          MOVE.B  #'L', (A2)+
+00001A4E  14FC 004C                903          MOVE.B  #'L',(A2)+
+00001A52  14FC 0053                904          MOVE.B  #'S',(A2)+
+00001A56  14FC 004C                905          MOVE.B  #'L',(A2)+
 00001A5A  223C 00000000            906          MOVE.L  #ea_type_immediate, D1
 00001A60  4EB9 00001AA2            907          JSR     EA_START
 00001A66  4EF8 12EE                908          JMP     OP_FINISH
 00001A6A                           909          
 00001A6A                           910  OP_ROR
-00001A6A  14FC 0052                911          MOVE.B  #'R', (A2)+
-00001A6E  14FC 004F                912          MOVE.B  #'O', (A2)+
-00001A72  14FC 0052                913          MOVE.B  #'R', (A2)+
+00001A6A  14FC 0052                911          MOVE.B  #'R',(A2)+
+00001A6E  14FC 004F                912          MOVE.B  #'O',(A2)+
+00001A72  14FC 0052                913          MOVE.B  #'R',(A2)+
 00001A76  223C 00000000            914          MOVE.L  #ea_type_immediate, D1
 00001A7C  4EB9 00001AA2            915          JSR     EA_START
 00001A82  4EF8 12EE                916          JMP     OP_FINISH
 00001A86                           917          
 00001A86                           918  OP_ROL
-00001A86  14FC 0052                919          MOVE.B  #'R', (A2)+
-00001A8A  14FC 004F                920          MOVE.B  #'O', (A2)+
-00001A8E  14FC 004C                921          MOVE.B  #'L', (A2)+
+00001A86  14FC 0052                919          MOVE.B  #'R',(A2)+
+00001A8A  14FC 004F                920          MOVE.B  #'O',(A2)+
+00001A8E  14FC 004C                921          MOVE.B  #'L',(A2)+
 00001A92  223C 00000000            922          MOVE.L  #ea_type_immediate, D1
 00001A98  4EB9 00001AA2            923          JSR     EA_START
 00001A9E  4EF8 12EE                924          JMP     OP_FINISH
@@ -940,369 +940,436 @@ Created On: 3/6/2020 5:02:49 AM
 00001AB8  4E75                     936          RTS
 00001ABA                           937          
 00001ABA                           938  EA_TYPE_TABLE
-00001ABA  4EF9 00001B52            939          JMP     EA_IMMEDIATE    ; 0: ea_immediate
-00001AC0  4EF9 00001B86            940          JMP     EA_MOVE         ; 1: ea_move
-00001AC6  4EF9 00001BE2            941          JMP     EA_MOVEA        ; 2: ea_movea
-00001ACC  4EF9 00001BE2            942          JMP     EA_LEA          ; 3: ea_lea
-00001AD2  4EF9 00001C4C            943          JMP     EA_DSTONLY      ; 4: ea_dstonly
-00001AD8  4EF9 00001C4C            944          JMP     EA_EXT          ; 5: ea_ext
-00001ADE  4EF9 00001C4C            945          JMP     EA_MOVEM        ; 6: ea_movem
-00001AE4  4EF9 00001C4C            946          JMP     EA_TRAP         ; 7: ea_trap
-00001AEA  4EF9 00001C4C            947          JMP     EA_QUICK        ; 8: ea_quick
-00001AF0  4EF9 00001C4C            948          JMP     EA_branch       ; 9: ea_branch
+00001ABA  4EF9 00001B66            939          JMP     EA_IMMEDIATE    ; 0: ea_immediate
+00001AC0  4EF9 00001BB6            940          JMP     EA_MOVE         ; 1: ea_move
+00001AC6  4EF9 00001C1A            941          JMP     EA_MOVEA        ; 2: ea_movea
+00001ACC  4EF9 00001C82            942          JMP     EA_LEA          ; 3: ea_lea
+00001AD2  4EF9 00001CF8            943          JMP     EA_DSTONLY      ; 4: ea_dstonly
+00001AD8  4EF9 00001CF8            944          JMP     EA_EXT          ; 5: ea_ext
+00001ADE  4EF9 00001CF8            945          JMP     EA_MOVEM        ; 6: ea_movem
+00001AE4  4EF9 00001CF8            946          JMP     EA_TRAP         ; 7: ea_trap
+00001AEA  4EF9 00001CF8            947          JMP     EA_QUICK        ; 8: ea_quick
+00001AF0  4EF9 00001CF8            948          JMP     EA_branch       ; 9: ea_branch
 00001AF6  4EF8 1AB4                949          JMP     EA_FINISH
 00001AFA                           950          
 00001AFA                           951  EA_SIZE_IMMEDIATE
-00001AFA  B43C 0000                952          CMP.B   #%00, D2        ; .b
-00001AFE  6700 0032                953          BEQ     EA_SIZE_B       
-00001B02  B43C 0001                954          CMP.B   #%01, D2        ; .w
-00001B06  6700 0034                955          BEQ     EA_SIZE_W       
-00001B0A  B43C 0002                956          CMP.B   #%10, D2        ; .l
-00001B0E  6700 0036                957          BEQ     EA_SIZE_L
-00001B12  6000 0240                958          BRA     EA_WRONG_SIZE    ; wrong size
+00001AFA  B43C 0000                952          CMP.B   #%00,D2         ; .b
+00001AFE  6700 0046                953          BEQ     EA_SIZE_B       
+00001B02  B43C 0001                954          CMP.B   #%01,D2         ; .w
+00001B06  6700 0048                955          BEQ     EA_SIZE_W       
+00001B0A  B43C 0002                956          CMP.B   #%10,D2         ; .l
+00001B0E  6700 004A                957          BEQ     EA_SIZE_L
+00001B12  6000 02EC                958          BRA     EA_WRONG_SIZE    ; wrong size
 00001B16                           959  
 00001B16                           960  EA_SIZE_MOVE
-00001B16  B43C 0001                961          CMP.B   #%01, D2        ; .b
-00001B1A  6700 0016                962          BEQ     EA_SIZE_B       
-00001B1E  B43C 0003                963          CMP.B   #%11, D2        ; .w
-00001B22  6700 0018                964          BEQ     EA_SIZE_W       
-00001B26  B43C 0002                965          CMP.B   #%10, D2        ; .l
-00001B2A  6700 001A                966          BEQ     EA_SIZE_L
-00001B2E  6000 0224                967          BRA     EA_WRONG_SIZE   ; wrong size
+00001B16  B43C 0001                961          CMP.B   #%01,D2         ; .b
+00001B1A  6700 002A                962          BEQ     EA_SIZE_B       
+00001B1E  B43C 0003                963          CMP.B   #%11,D2         ; .w
+00001B22  6700 002C                964          BEQ     EA_SIZE_W       
+00001B26  B43C 0002                965          CMP.B   #%10,D2         ; .l
+00001B2A  6700 002E                966          BEQ     EA_SIZE_L
+00001B2E  6000 02D0                967          BRA     EA_WRONG_SIZE   ; wrong size
 00001B32                           968  
-00001B32                           969  EA_SIZE_B
-00001B32  14FC 002E                970          MOVE.B  #'.', (A2)+
-00001B36  14FC 0042                971          MOVE.B  #'B', (A2)+
-00001B3A  4E75                     972          RTS
-00001B3C                           973  EA_SIZE_W
-00001B3C  14FC 002E                974          MOVE.B  #'.', (A2)+
-00001B40  14FC 0057                975          MOVE.B  #'W', (A2)+
-00001B44  4E75                     976          RTS
-00001B46                           977  EA_SIZE_L
-00001B46  14FC 002E                978          MOVE.B  #'.', (A2)+
-00001B4A  14FC 004C                979          MOVE.B  #'L', (A2)+
-00001B4E  4E75                     980          RTS
-00001B50                           981  EA_SIZE_DONE
-00001B50  4E75                     982          RTS
-00001B52                           983          
-00001B52                           984  EA_IMMEDIATE    ; 0 ea_immediate
-00001B52  2200                     985          MOVE.L  D0, D1
-00001B54  0241 01C0                986          ANDI.W  #dst_mode, D1
-00001B58  143C 0006                987          MOVE.B  #right6, D2
-00001B5C  E469                     988          LSR.W   D2, D1
-00001B5E  0201 0003                989          ANDI.B  #3, D1
-00001B62  1401                     990          MOVE.B  D1, D2
-00001B64  4EB8 1AFA                991          JSR     EA_SIZE_IMMEDIATE
-00001B68                           992  
-00001B68  2600                     993          MOVE.L  D0, D3          ; Store the dst mode in D3
-00001B6A  0243 01C0                994          ANDI.W  #dst_mode, D3    ; get bits 5-3
-00001B6E  1439 00000003            995          MOVE.B  right3, D2      ; shift the bits 5-3 to the LSB
-00001B74  E46B                     996          LSR.W   D2, D3          ; do the actual shift 
-00001B76  4EB9 00001C4C            997          JSR     EA_GEN_SRC
-00001B7C                           998  
-00001B7C  2800                     999          MOVE.L  D0, D4          ; Store the dst reg in D4
-00001B7E  0244 0E00               1000          ANDI.W  #dst_reg, D4    ; get the bits at 2-0
-00001B82  4EF8 1AB4               1001          JMP     EA_FINISH       ; Go to function
-00001B86                          1002  
-00001B86                          1003  
-00001B86                          1004  EA_MOVE         ; 1: ea_move
-00001B86                          1005          
-00001B86  2200                    1006          MOVE.L  D0, D1
-00001B88  0241 F000               1007          ANDI.W  #first_nibble, D1
-00001B8C  143C 000C               1008          MOVE.B  #right12, D2 
-00001B90  E469                    1009          LSR.W   D2, D1
-00001B92  0201 0003               1010          ANDI.B  #3, D1
-00001B96  1401                    1011          MOVE.B  D1, D2
-00001B98  4EB8 1B16               1012          JSR     EA_SIZE_MOVE
-00001B9C                          1013          
-00001B9C  14FC 0020               1014          MOVE.B  #$20, (A2)+     ; Print out a space after the size
-00001BA0                          1015          
-00001BA0  2800                    1016          MOVE.L  D0, D4          ; Store the src reg in D4
-00001BA2  0244 0007               1017          ANDI.W  #src_reg, D4    ; Get the bits at 2-0
-00001BA6                          1018          
-00001BA6  2600                    1019          MOVE.L  D0, D3          ; Store the src mode in D3
-00001BA8  0243 0038               1020          ANDI.W  #src_mode, D3   ; Get bits 5-3
-00001BAC  143C 0003               1021          MOVE.B  #right3, D2     ; Shift the bits 5-3 to the LSB
-00001BB0  E46B                    1022          LSR.W   D2, D3          ; Do the actual shift 
-00001BB2  4EB9 00001C4C           1023          JSR     EA_GEN_SRC
-00001BB8                          1024          
-00001BB8  14FC 002C               1025          MOVE.B  #$2C,(A2)+      ; Add comma after size print
-00001BBC  14FC 0020               1026          MOVE.B  #$20, (A2)+     ; Add space after comma
-00001BC0                          1027          
-00001BC0  2800                    1028          MOVE.L  D0, D4          ; Store the dest reg in D4
-00001BC2  0244 0E00               1029          ANDI.W  #dst_reg, D4    ; Get the bits at 11-9
-00001BC6  143C 0009               1030          MOVE.B  #right9, D2     ; Shift the bits 11-9 to the LSB
-00001BCA  E46C                    1031          LSR.W   D2, D4          ; Do the actual shift
-00001BCC                          1032          
-00001BCC  2600                    1033          MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode 
-00001BCE  0243 01C0               1034          ANDI.W  #dst_mode, D3   ; Get bits 8-6
-00001BD2  143C 0006               1035          MOVE.B  #right6, D2     ; Shift the bits 8-6 to the LSB
-00001BD6  E46B                    1036          LSR.W   D2, D3          ; Do the actual shift 
-00001BD8  4EB9 00001C4C           1037          JSR     EA_GEN_SRC
-00001BDE  4EF8 1AB4               1038          JMP     EA_FINISH       ; Go to function
-00001BE2                          1039  
-00001BE2                          1040             
-00001BE2                          1041  EA_MOVEA        ; 2: ea_movea
-00001BE2                          1042  
-00001BE2                          1043  
-00001BE2                          1044  EA_LEA          ; 3: ea_lea
-00001BE2  14FC 0020               1045          MOVE.B  #$20, (A2)+     ; print out a space after the LEA
-00001BE6                          1046          
-00001BE6  2800                    1047          MOVE.L  D0, D4          ; Store the src reg in D4
-00001BE8  0244 0007               1048          ANDI.W  #src_reg, D4    ; get the bits at 2-0
-00001BEC                          1049          
-00001BEC  2600                    1050          MOVE.L  D0, D3          ; Store the src mode in D3
-00001BEE  0243 0038               1051          ANDI.W  #src_mode, D3   ; get bits 5-3
-00001BF2  143C 0003               1052          MOVE.B  #right3, D2     ; shift the bits 5-3 to the LSB
-00001BF6  E46B                    1053          LSR.W   D2, D3          ; do the actual shift 
-00001BF8  B67C 0002               1054          CMP     #2, D3          ; If D3 (src mode) is 010 (An)
-00001BFC  6700 000E               1055          BEQ     LEA_SRC_VALID
-00001C00  B67C 0007               1056          CMP     #7, D3          ; If D3 (src mode) is 111 (W or L)
-00001C04  6700 0006               1057          BEQ     LEA_SRC_VALID
-00001C08  6000 017A               1058          BRA     SRC_INVALID     ; when src mode is not 010 or 111, branch to error message
-00001C0C                          1059          
-00001C0C                          1060  LEA_SRC_VALID        
-00001C0C  4EB9 00001C4C           1061          JSR     EA_GEN_SRC      ; Go to function 
-00001C12                          1062   
-00001C12  14FC 002C               1063          MOVE.B  #$2C,(A2)+      ; Add comma after size print
-00001C16  14FC 0020               1064          MOVE.B  #$20, (A2)+     ; Add space after comma
-00001C1A                          1065  
-00001C1A  2600                    1066          MOVE.L  D0, D3          ; D0 does not change, D3 is used to store the dst mode and src mode 
-00001C1C  0243 01C0               1067          ANDI.W  #dst_mode, D3   ; Get bits 8-6
-00001C20  143C 0006               1068          MOVE.B  #right6, D2     ; Shift the bits 8-6 to the LSB
-00001C24  E46B                    1069          LSR.W   D2, D3          ; Do the actual shift
-00001C26  B63C 0007               1070          CMP.B   #7, D3          ; Check if D3 is 111
-00001C2A  6700 0006               1071          BEQ     CHANGE_TO_001   ; change the D3 bits to 001 
-00001C2E  6000 0144               1072          BRA     DST_INVALID     ; Print out an error message if bits 8-6 (dst mode) are not 111
-00001C32                          1073    
-00001C32                          1074  CHANGE_TO_001
-00001C32  163C 0001               1075          MOVE.B  #%001, D3       ; set D3 to 001 to ensure the print out A 
-00001C36                          1076          
-00001C36  2800                    1077          MOVE.L  D0, D4          ; Store the dest reg in D4 to get the Address register number
-00001C38  0244 0E00               1078          ANDI.W  #dst_reg, D4    ; get the bits at 11-9
-00001C3C  143C 0009               1079          MOVE.B  #right9, D2     ; shift the bits 11-9 to the LSB
-00001C40  E46C                    1080          LSR.W   D2, D4          ; do the actual shift
-00001C42  4EB9 00001C4C           1081          JSR     EA_GEN_SRC      ; Print out the address register
-00001C48  4EF8 1AB4               1082          JMP     EA_FINISH       ; Go to function
-00001C4C                          1083  
-00001C4C                          1084  EA_DSTONLY      ; 4: ea_dstonly
-00001C4C                          1085  EA_EXT          ; 5: ea_ext
-00001C4C                          1086  EA_MOVEM        ; 6: ea_movem
-00001C4C                          1087  EA_TRAP         ; 7: ea_trap
-00001C4C                          1088  EA_QUICK        ; 8: ea_quick
-00001C4C                          1089  EA_BRANCH       ; 9: ea_branch
-00001C4C                          1090  
-00001C4C                          1091  EA_REG
-00001C4C                          1092  
-00001C4C                          1093  EA_GEN_SRC
-00001C4C  41F9 00001C5A           1094          LEA     EA_GEN_TABLE_SRC, A0
-00001C52  C6FC 0006               1095          MULU    #6, D3              ; use D3 to jump to the proper src mode and dst mode. 
-00001C56  4EF0 3000               1096          JMP     0(A0,D3)            ; jump to each ea src generation table entry 
-00001C5A                          1097  
-00001C5A                          1098  EA_GEN_TABLE_SRC
-00001C5A  4EF9 00001C8A           1099          JMP     EA_Dn                       ; 000: Dn
-00001C60  4EF9 00001C96           1100          JMP     EA_An                       ; 001: An
-00001C66  4EF9 00001CA2           1101          JMP     EA_An_Indirect              ; 010: (An)
-00001C6C  4EF9 00001CB6           1102          JMP     EA_An_Indirect_Inc          ; 011: (An)+
-00001C72  4EF9 00001CCE           1103          JMP     EA_An_Indirect_Dec          ; 100: -(An)
-00001C78  4EF9 00001CE6           1104          JMP     EA_UNSUPPORTED              ; 101: Unsupported EA
-00001C7E  4EF9 00001CE6           1105          JMP     EA_UNSUPPORTED              ; 110: Unsupported EA
-00001C84  4EF9 00001CF4           1106          JMP     EA_Absolute_And_Immediate   ; 111: (xxx).W,(xxx).L, or #<data>
-00001C8A                          1107  
-00001C8A                          1108  EA_Dn               ; 000: Dn
-00001C8A  14FC 0044               1109          MOVE.B  #'D',(A2)+
-00001C8E  0604 0030               1110          ADDI.B  #$30, D4
-00001C92  14C4                    1111          MOVE.B  D4, (A2)+
-00001C94  4E75                    1112          RTS
-00001C96                          1113  
-00001C96                          1114  EA_An               ; 001: An
-00001C96  14FC 0041               1115          MOVE.B  #'A',(A2)+
-00001C9A  0604 0030               1116          ADDI.B  #$30,D4
-00001C9E  14C4                    1117          MOVE.B  D4, (A2)+
-00001CA0  4E75                    1118          RTS
-00001CA2                          1119  
-00001CA2                          1120  EA_An_Indirect      ; 010: (An)
-00001CA2  14FC 0028               1121          MOVE.B  #'(',(A2)+
-00001CA6  14FC 0041               1122          MOVE.B  #'A',(A2)+
-00001CAA  0604 0030               1123          ADDI.B  #$30, D4
-00001CAE  14C4                    1124          MOVE.B  D4, (A2)+
-00001CB0  14FC 0029               1125          MOVE.B  #')',(A2)+
-00001CB4  4E75                    1126          RTS
-00001CB6                          1127          
-00001CB6                          1128  EA_An_Indirect_Inc  ; 011: (An)+
-00001CB6  14FC 0028               1129          MOVE.B  #'(',(A2)+
-00001CBA  14FC 0041               1130          MOVE.B  #'A',(A2)+
-00001CBE  0604 0030               1131          ADDI.B  #$30, D4
-00001CC2  14C4                    1132          MOVE.B  D4, (A2)+
-00001CC4  14FC 0029               1133          MOVE.B  #')',(A2)+
-00001CC8  14FC 002B               1134          MOVE.B  #'+',(A2)+
-00001CCC  4E75                    1135          RTS
-00001CCE                          1136          
-00001CCE                          1137  EA_An_Indirect_Dec  ; 100: -(An)
-00001CCE  14FC 002D               1138          MOVE.B  #'-',(A2)+
-00001CD2  14FC 0028               1139          MOVE.B  #'(',(A2)+
-00001CD6  14FC 0041               1140          MOVE.B  #'A',(A2)+
-00001CDA  0604 0030               1141          ADDI.B  #$30, D4
-00001CDE  14C4                    1142          MOVE.B  D4,(A2)+
-00001CE0  14FC 0029               1143          MOVE.B  #')',(A2)+
-00001CE4  4E75                    1144          RTS
-00001CE6                          1145  
-00001CE6                          1146  EA_UNSUPPORTED
-00001CE6  43F9 00001DE4           1147          LEA     EA_TYPE_ERROR, A1
-00001CEC  103C 000E               1148          MOVE.B  #14, D0
-00001CF0  4E4F                    1149          TRAP    #15  
-00001CF2  4E75                    1150          RTS 
-00001CF4                          1151          
-00001CF4                          1152  EA_Absolute_And_Immediate           ; 111: (xxx).W,(xxx).L, or #<data>
-00001CF4  B83C 0000               1153          CMP.B   #0, D4              ; If D4 is (xxx).W
-00001CF8  6700 0016               1154          BEQ     ABSOLUTE_WORD
-00001CFC                          1155          
-00001CFC  B83C 0001               1156          CMP.B   #1, D4              ; If D4 is (xxx).L
-00001D00  6700 001A               1157          BEQ     ABSOLUTE_LONG
-00001D04                          1158          
-00001D04  B83C 0004               1159          CMP.B   #4, D4              ; If D4 is #<data>  
-00001D08  6700 001E               1160          BEQ     IMMEDIATE
-00001D0C                          1161          
-00001D0C  6000 0056               1162          BRA     ABSOLUTE_IMMEDIATE_ERROR    
-00001D10                          1163  
-00001D10                          1164  ABSOLUTE_WORD
-00001D10  14FC 0024               1165          MOVE.B  #$24, (A2)+         ; Add $ symbol
-00001D14  7401                    1166          MOVE.L  #$0001, D2          ; Insert 1 to D2 
-00001D16  4EB8 1114               1167          JSR      ITOA               ; Convert word hex values to ITOA
-00001D1A  4E75                    1168          RTS
-00001D1C                          1169          
-00001D1C                          1170  ABSOLUTE_LONG
-00001D1C  14FC 0024               1171          MOVE.B  #$24, (A2)+         ; Add $ symbol
-00001D20  7402                    1172          MOVE.L  #$0002, D2          ; Insert 2 to D2
-00001D22  4EB8 1114               1173          JSR      ITOA               ; Convert long hex values to ITOA
-00001D26  4E75                    1174          RTS
-00001D28                          1175  
-00001D28                          1176  IMMEDIATE
-00001D28  14FC 0023               1177          MOVE.B  #$23, (A2)+         ; Add # symbol
-00001D2C  14FC 0024               1178          MOVE.B  #$24, (A2)+         ; Add $ symbol
-00001D30                          1179  
-00001D30  BC3C 0001               1180          CMP.B    #1, D6             ; If MOVE.b (code0001)
-00001D34  6700 0018               1181          BEQ DO_ITOA_MOVE
-00001D38  BC3C 0002               1182          CMP.B    #2, D6             ; If MOVE.l / MOVEA.l (code0010)
-00001D3C  6700 0010               1183          BEQ DO_ITOA_MOVE
-00001D40  BC3C 0003               1184          CMP.B    #3, D6             ; If  MOVE.w / MOVEA.w (code0011)
-00001D44  6700 0008               1185          BEQ DO_ITOA_MOVE
-00001D48                          1186          
-00001D48  4EB8 1114               1187          JSR ITOA                    ; Go to ITOA when not a move instruction
-00001D4C  4E75                    1188          RTS
-00001D4E                          1189          
-00001D4E                          1190  DO_ITOA_MOVE
-00001D4E  4EB8 1136               1191          JSR ITOA_MOVE
-00001D52  4E75                    1192          RTS
-00001D54                          1193                
-00001D54                          1194  EA_WRONG_SIZE 
-00001D54  43F9 00001D99           1195          LEA     WRONG_SIZE_MESSAGE, A1 
-00001D5A  103C 000E               1196          MOVE.B  #14, D0
-00001D5E  4E4F                    1197          TRAP    #15
-00001D60  6000 0032               1198          BRA     DONE
-00001D64                          1199          
-00001D64                          1200  ABSOLUTE_IMMEDIATE_ERROR  
-00001D64  43F9 00001DA7           1201          LEA     ABSOLUTE_WRONGREG, A1 
-00001D6A  103C 000E               1202          MOVE.B  #14, D0
-00001D6E  4E4F                    1203          TRAP    #15
-00001D70  6000 0022               1204          BRA     DONE
-00001D74                          1205          
-00001D74                          1206  DST_INVALID
-00001D74  43F9 00001E07           1207          LEA     DST_INVALID_MSG, A1 
-00001D7A  103C 000E               1208          MOVE.B  #14, D0
-00001D7E  4E4F                    1209          TRAP    #15
-00001D80  6000 0012               1210          BRA     DONE
-00001D84                          1211          
-00001D84                          1212  SRC_INVALID 
-00001D84  43F9 00001E3A           1213          LEA     SRC_INVALID_MSG, A1 
-00001D8A  103C 000E               1214          MOVE.B  #14, D0
-00001D8E  4E4F                    1215          TRAP    #15
-00001D90  6000 0002               1216          BRA     DONE
-00001D94                          1217          
-00001D94  FFFF FFFF               1218  DONE    SIMHALT             ; halt simulator
-00001D98                          1219  
-00001D98                          1220  * Put variables and constants here
-00001D98                          1221     
-00001D98                          1222         
-00001D98  =00000040               1223  buffer_size         EQU         64 
-00001D98  =00005000               1224  decoded_buffer      EQU         $5000
-00001D98                          1225     
-00001D98  =0000000D               1226  CR                  EQU         $0D
-00001D98  =0000000A               1227  LF                  EQU         $0A
-00001D98  =0000A000               1228  stack               EQU         $0000A000
-00001D98  =00000014               1229  lines_p_screen      EQU         20
-00001D98  =00000003               1230  right3              EQU         3
-00001D98  =00000004               1231  right4              EQU         4
-00001D98  =00000006               1232  right6              EQU         6
-00001D98  =00000008               1233  right8              EQU         8
-00001D98  =00000009               1234  right9              EQU         9
-00001D98  =0000000C               1235  right12             EQU         12
-00001D98  =00000010               1236  right16             EQU         16
-00001D98  =00000018               1237  right24             EQU         24
-00001D98= 20                      1238  ascii_y_n           DC.B        32
-00001D99  =00000059               1239  y_uppercase         EQU         $59         
-00001D99  =00000079               1240  y_lowercase         EQU         $79
-00001D99  =0000004E               1241  n_uppercase         EQU         $4E
-00001D99  =0000006E               1242  n_lowercase         EQU         $6E
-00001D99  =00000002               1243  task2               EQU         $02
-00001D99  =00000005               1244  task5               EQU         $05
-00001D99  =00000009               1245  task9               EQU         $09
-00001D99  =0000000D               1246  task13              EQU         $0D
-00001D99  =0000000E               1247  task14              EQU         $0E
-00001D99  =0000F000               1248  first_nibble        EQU         $F000
-00001D99  =00000F00               1249  second_nibble       EQU         $0F00   
-00001D99  =000000F0               1250  third_nibble        EQU         $00F0
-00001D99  =0000000F               1251  fourth_nibble       EQU         $000F
-00001D99  =000001C0               1252  dst_mode            EQU         $01C0
-00001D99  =00000E00               1253  dst_reg             EQU         $0E00
-00001D99  =00000038               1254  src_mode            EQU         $0038
-00001D99  =00000007               1255  src_reg             EQU         $0007
-00001D99  =00000100               1256  bit8                EQU         $0100
-00001D99                          1257  
-00001D99  =00000000               1258  ea_type_immediate   EQU     0       ; EA Type = immediate
-00001D99  =00000001               1259  ea_type_move        EQU     1       ; EA Type = move
-00001D99  =00000002               1260  ea_type_movea       EQU     2       ; EA Type = movea
-00001D99  =0000000C               1261  ea_type_movea6      EQU     12      ; EA Type = movea * 6
-00001D99  =00000003               1262  ea_type_lea         EQU     3       ; EA Type = lea
-00001D99  =00000004               1263  ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
-00001D99  =00000005               1264  ea_type_ext         EQU     5       ; EA Type = ext
-00001D99  =00000006               1265  ea_type_movem       EQU     6       ; EA Type = movem
-00001D99  =00000007               1266  ea_type_trap        EQU     7       ; EA Type = trap
-00001D99  =00000008               1267  ea_type_quick       EQU     8       ; EA Type = addq, subq
-00001D99  =00000009               1268  ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
-00001D99  =00000000               1269  ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
-00001D99  =00000001               1270  ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
-00001D99  =00000002               1271  ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
-00001D99= 57 72 6F 6E 67 20 ...   1272  WRONG_SIZE_MESSAGE  DC.B    'Wrong size.',CR,LF,0
-00001DA7= 45 72 72 6F 72 2E ...   1273  ABSOLUTE_WRONGREG   DC.B    'Error. Register does not exist for Absolute and immediate.',CR,LF,0
-00001DE4= 45 72 72 6F 72 2E ...   1274  EA_TYPE_ERROR       DC.B    'Error. EA type is not supported.',CR,LF,0
-00001E07= 45 72 72 6F 72 2E ...   1275  DST_INVALID_MSG     DC.B    'Error. Destination effective address is invalid.',CR,LF,0
-00001E3A= 45 72 72 6F 72 2E ...   1276  SRC_INVALID_MSG     DC.B    'Error. Source effective address is invalid.',CR,LF,0
-00001E68= 45 72 72 6F 72 2E ...   1277  OPCODE_INVALID      DC.B    'Error. Opcode is invalid.',CR,LF,0
-00001E84= 45 72 72 6F 72 2C ...   1278  ERROR_MESSAGE       DC.B    'Error, the input is invalid.',CR,LF,0  
-00001EA3= 45 72 72 6F 72 2C ...   1279  ODD_ERROR_MESSAGE   DC.B    'Error, the last digit of the address is odd, which is invalid.',CR,LF,0  
-00001EE4                          1280               
-00001EE4= 57 65 6C 63 6F 6D ...   1281  WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
-00001F1A                          1282  
-00001F1A= 50 6C 65 61 73 65 ...   1283  USER_INST           DC.B        'Please follow the proper input instructions below: ',CR,LF
-00001F4F= 2D 20 53 74 61 72 ...   1284                      DC.B        '- Starting address must be lower than ending address.',CR,LF
-00001F86= 2D 20 54 68 65 20 ...   1285                      DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
-00001FCF= 2D 20 53 74 61 72 ...   1286                      DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
-00002015= 2D 20 44 6F 20 6E ...   1287                      DC.B        '- Do not put spaces in between input characters.',CR,LF
-00002047= 2D 20 56 61 6C 69 ...   1288                      DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
-00002094                          1289                  
-00002094= 50 72 65 73 73 20 ...   1290  ENTER_PROMPT        DC.B        'Press enter to continue...',CR,LF,0
-000020B1= 50 72 65 73 73 20 ...   1291  PROMPT_AGAIN        DC.B        'Press Y to continue / N to exit.',CR,LF,0
-000020D4= 50 72 6F 67 72 61 ...   1292  EXIT_PROMPT         DC.B        'Program has execution has stopped.',CR,LF,0
-000020F9                          1293        
-000020F9= 45 6E 74 65 72 20 ...   1294  START_IN            DC.B        'Enter a starting address: ',CR,LF,0 
-00002116= 45 6E 74 65 72 20 ...   1295  END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
-00002132                          1296  START_ADDRESS       DS.B        32     
-00002152                          1297  END_ADDRESS         DS.B        32 
-00002172                          1298       
-00002172                          1299  
-00002172                          1300  
-00002172                          1301      END    START        ; last line of source
+00001B32                           969  EA_SIZE_MOVEA     
+00001B32  B43C 0003                970          CMP.B   #%11,D2         ; .w
+00001B36  6700 0018                971          BEQ     EA_SIZE_W       
+00001B3A  B43C 0002                972          CMP.B   #%10,D2         ; .l
+00001B3E  6700 001A                973          BEQ     EA_SIZE_L
+00001B42  6000 02BC                974          BRA     EA_WRONG_SIZE   ; wrong size
+00001B46                           975  
+00001B46                           976  EA_SIZE_B
+00001B46  14FC 002E                977          MOVE.B  #'.',(A2)+
+00001B4A  14FC 0042                978          MOVE.B  #'B',(A2)+
+00001B4E  4E75                     979          RTS
+00001B50                           980  EA_SIZE_W
+00001B50  14FC 002E                981          MOVE.B  #'.',(A2)+
+00001B54  14FC 0057                982          MOVE.B  #'W',(A2)+
+00001B58  4E75                     983          RTS
+00001B5A                           984  EA_SIZE_L
+00001B5A  14FC 002E                985          MOVE.B  #'.',(A2)+
+00001B5E  14FC 004C                986          MOVE.B  #'L',(A2)+
+00001B62  4E75                     987          RTS
+00001B64                           988  EA_SIZE_DONE
+00001B64  4E75                     989          RTS
+00001B66                           990          
+00001B66                           991  EA_IMMEDIATE    ; 0 ea_immediate
+00001B66  2200                     992          MOVE.L  D0,D1
+00001B68  0241 01C0                993          ANDI.W  #dst_mode,D1        ; Get bits 8-6 from D1
+00001B6C  1A3C 0006                994          MOVE.B  #right6,D5          ; Store 6 into D5
+00001B70  EA69                     995          LSR.W   D5,D1               ; Shift D1 six times to the LSB position
+00001B72  0201 0003                996          ANDI.B  #3,D1               ; Remove the front bit from D1
+00001B76  1401                     997          MOVE.B  D1,D2               ; Store D1 into D2 (D2 is used to check size)
+00001B78  4EB8 1AFA                998          JSR     EA_SIZE_IMMEDIATE   ; Get size 
+00001B7C                           999          
+00001B7C  14FC 0020               1000          MOVE.B  #$20,(A2)+          ; Add space after size
+00001B80                          1001  
+00001B80                          1002          ; Get source and store into decode buffer
+00001B80  7804                    1003          MOVE.L  #4,D4               ; Store 100 into D4 (Used to jump to immediate)
+00001B82  7607                    1004          MOVE.L  #7,D3               ; Store 111 into D3 (Go to absolute and immediate)
+00001B84  4EB9 00001CF8           1005          JSR     EA_GEN_SRC          ; Get EA src print 
+00001B8A                          1006  
+00001B8A  14FC 002C               1007          MOVE.B  #$2C,(A2)+          ; Add comma after size print
+00001B8E  14FC 0020               1008          MOVE.B  #$20,(A2)+          ; Add space after comma
+00001B92                          1009  
+00001B92                          1010          ; Get desination and store into decode buffer
+00001B92  2800                    1011          MOVE.L  D0,D4               ; Store the current address into D4 
+00001B94  0244 0007               1012          ANDI.W  #src_reg,D4         ; get the bits at 2-0 (D4 stores EA reg)
+00001B98                          1013          
+00001B98  2600                    1014          MOVE.L  D0,D3               ; Store the current address into D3 
+00001B9A  0243 0038               1015          ANDI.W  #src_mode,D3        ; get bits 5-3 (D3 stores EA mode)
+00001B9E  1A3C 0003               1016          MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
+00001BA2  EA6B                    1017          LSR.W   D5,D3               ; do the actual shift 
+00001BA4  B63C 0001               1018          CMP.B   #1,D3               ; If dest mode is 001 (An)
+00001BA8  6700 0276               1019          BEQ     DST_INVALID         ; Go to invalid message 
+00001BAC  4EB9 00001CF8           1020          JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
+00001BB2                          1021  
+00001BB2  4EF8 1AB4               1022          JMP     EA_FINISH           ; Go to function
+00001BB6                          1023  
+00001BB6                          1024  
+00001BB6                          1025  EA_MOVE         ; 1: ea_move
+00001BB6  2200                    1026          MOVE.L  D0,D1
+00001BB8  0241 F000               1027          ANDI.W  #first_nibble,D1
+00001BBC  1A3C 000C               1028          MOVE.B  #right12,D5 
+00001BC0  EA69                    1029          LSR.W   D5,D1
+00001BC2  0201 0003               1030          ANDI.B  #3,D1
+00001BC6  1401                    1031          MOVE.B  D1,D2
+00001BC8  4EB8 1B16               1032          JSR     EA_SIZE_MOVE
+00001BCC                          1033          
+00001BCC  14FC 0020               1034          MOVE.B  #$20,(A2)+      ; Print out a space after the size
+00001BD0                          1035          
+00001BD0                          1036          ; Get source and store into decode buffer
+00001BD0  2800                    1037          MOVE.L  D0,D4           ; Store the src reg in D4
+00001BD2  0244 0007               1038          ANDI.W  #src_reg,D4     ; Get the bits at 2-0
+00001BD6                          1039          
+00001BD6  2600                    1040          MOVE.L  D0,D3           ; Store the src mode in D3
+00001BD8  0243 0038               1041          ANDI.W  #src_mode,D3    ; Get bits 5-3
+00001BDC  1A3C 0003               1042          MOVE.B  #right3,D5      ; Shift the bits 5-3 to the LSB
+00001BE0  EA6B                    1043          LSR.W   D5,D3           ; Do the actual shift 
+00001BE2  4EB9 00001CF8           1044          JSR     EA_GEN_SRC
+00001BE8                          1045          
+00001BE8  14FC 002C               1046          MOVE.B  #$2C,(A2)+      ; Add comma after size print
+00001BEC  14FC 0020               1047          MOVE.B  #$20,(A2)+      ; Add space after comma
+00001BF0                          1048          
+00001BF0                          1049          ; Get desination and store into decode buffer
+00001BF0  2800                    1050          MOVE.L  D0,D4           ; Store the dest reg in D4
+00001BF2  0244 0E00               1051          ANDI.W  #dst_reg,D4     ; Get the bits at 11-9
+00001BF6  1A3C 0009               1052          MOVE.B  #right9,D5      ; Shift the bits 11-9 to the LSB
+00001BFA  EA6C                    1053          LSR.W   D5,D4           ; Do the actual shift
+00001BFC                          1054          
+00001BFC  2600                    1055          MOVE.L  D0,D3           ; D0 does not change, D3 is used to store the dst mode and src mode 
+00001BFE  0243 01C0               1056          ANDI.W  #dst_mode,D3    ; Get bits 8-6
+00001C02  1A3C 0006               1057          MOVE.B  #right6,D5      ; Shift the bits 8-6 to the LSB
+00001C06  EA6B                    1058          LSR.W   D5,D3           ; Do the actual shift 
+00001C08  B63C 0001               1059          CMP.B   #1,D3           ; If dest mode is 001 (An)
+00001C0C  6700 0212               1060          BEQ     DST_INVALID     ; Go to invalid message 
+00001C10  4EB9 00001CF8           1061          JSR     EA_GEN_SRC      ; Get EA print
+00001C16                          1062          
+00001C16  4EF8 1AB4               1063          JMP     EA_FINISH       ; Go to function
+00001C1A                          1064  
+00001C1A                          1065             
+00001C1A                          1066  EA_MOVEA        ; 2: ea_movea
+00001C1A  2200                    1067          MOVE.L  D0,D1
+00001C1C  0241 F000               1068          ANDI.W  #first_nibble,D1
+00001C20  1A3C 000C               1069          MOVE.B  #right12,D5 
+00001C24  EA69                    1070          LSR.W   D5,D1
+00001C26  0201 0003               1071          ANDI.B  #3,D1
+00001C2A  1401                    1072          MOVE.B  D1,D2
+00001C2C  4EB8 1B32               1073          JSR     EA_SIZE_MOVEA 
+00001C30                          1074          
+00001C30  14FC 0020               1075          MOVE.B  #$20,(A2)+      ; Print out a space after the size
+00001C34                          1076          
+00001C34                          1077          ; Get source and store into decode buffer
+00001C34  2800                    1078          MOVE.L  D0,D4           ; Store the src reg in D4
+00001C36  0244 0007               1079          ANDI.W  #src_reg,D4     ; Get the bits at 2-0
+00001C3A                          1080          
+00001C3A  2600                    1081          MOVE.L  D0,D3           ; Store the src mode in D3
+00001C3C  0243 0038               1082          ANDI.W  #src_mode,D3    ; Get bits 5-3
+00001C40  1A3C 0003               1083          MOVE.B  #right3,D5      ; Shift the bits 5-3 to the LSB
+00001C44  EA6B                    1084          LSR.W   D5,D3           ; Do the actual shift 
+00001C46  4EB9 00001CF8           1085          JSR     EA_GEN_SRC
+00001C4C                          1086          
+00001C4C  14FC 002C               1087          MOVE.B  #$2C,(A2)+      ; Add comma after size print
+00001C50  14FC 0020               1088          MOVE.B  #$20,(A2)+      ; Add space after comma
+00001C54                          1089          
+00001C54                          1090          ; Get desination and store into decode buffer
+00001C54  2800                    1091          MOVE.L  D0,D4           ; Store the dest reg in D4
+00001C56  0244 0E00               1092          ANDI.W  #dst_reg,D4     ; Get the bits at 11-9
+00001C5A  1A3C 0009               1093          MOVE.B  #right9,D5      ; Shift the bits 11-9 to the LSB
+00001C5E  EA6C                    1094          LSR.W   D5,D4           ; Do the actual shift
+00001C60                          1095          
+00001C60  2600                    1096          MOVE.L  D0,D3           ; D0 does not change, D3 is used to store the dst mode and src mode 
+00001C62  0243 01C0               1097          ANDI.W  #dst_mode,D3    ; Get bits 8-6
+00001C66  1A3C 0006               1098          MOVE.B  #right6,D5      ; Shift the bits 8-6 to the LSB
+00001C6A  EA6B                    1099          LSR.W   D5,D3           ; Do the actual shift 
+00001C6C  B63C 0001               1100          CMP.B   #1,D3           ; If dst mode is 001 (An) 
+00001C70  6700 0006               1101          BEQ     MOVEA_DST_VALID ; dst is valid, so branch 
+00001C74  6000 01AA               1102          BRA     DST_INVALID     ; Otherwise, go to invalid message 
+00001C78                          1103          
+00001C78                          1104  MOVEA_DST_VALID
+00001C78  4EB9 00001CF8           1105          JSR     EA_GEN_SRC      ; Get EA print
+00001C7E  4EF8 1AB4               1106          JMP     EA_FINISH       ; Go to function
+00001C82                          1107  
+00001C82                          1108  EA_LEA          ; 3: ea_lea
+00001C82  14FC 0020               1109          MOVE.B  #$20,(A2)+      ; print out a space after the LEA
+00001C86  14FC 0020               1110          MOVE.B  #$20,(A2)+      ; print out a space after the LEA
+00001C8A  14FC 0020               1111          MOVE.B  #$20,(A2)+      ; print out a space after the LEA
+00001C8E  14FC 0020               1112          MOVE.B  #$20,(A2)+      ; print out a space after the LEA
+00001C92                          1113          
+00001C92  2800                    1114          MOVE.L  D0,D4           ; Store the src reg in D4
+00001C94  0244 0007               1115          ANDI.W  #src_reg,D4     ; get the bits at 2-0
+00001C98                          1116          
+00001C98  2600                    1117          MOVE.L  D0,D3           ; Store the src mode in D3
+00001C9A  0243 0038               1118          ANDI.W  #src_mode,D3    ; get bits 5-3
+00001C9E  1A3C 0003               1119          MOVE.B  #right3,D5      ; shift the bits 5-3 to the LSB
+00001CA2  EA6B                    1120          LSR.W   D5,D3           ; do the actual shift 
+00001CA4  B67C 0002               1121          CMP     #2,D3           ; If D3 (src mode) is 010 (An)
+00001CA8  6700 000E               1122          BEQ     LEA_SRC_VALID
+00001CAC  B67C 0007               1123          CMP     #7,D3           ; If D3 (src mode) is 111 (W or L)
+00001CB0  6700 0006               1124          BEQ     LEA_SRC_VALID
+00001CB4  6000 017A               1125          BRA     SRC_INVALID     ; when src mode is not 010 or 111, branch to error message
+00001CB8                          1126          
+00001CB8                          1127  LEA_SRC_VALID        
+00001CB8  4EB9 00001CF8           1128          JSR     EA_GEN_SRC      ; Go to function 
+00001CBE                          1129   
+00001CBE  14FC 002C               1130          MOVE.B  #$2C,(A2)+      ; Add comma after size print
+00001CC2  14FC 0020               1131          MOVE.B  #$20,(A2)+      ; Add space after comma
+00001CC6                          1132  
+00001CC6  2600                    1133          MOVE.L  D0,D3           ; D0 does not change, D3 is used to store the dst mode and src mode 
+00001CC8  0243 01C0               1134          ANDI.W  #dst_mode,D3    ; Get bits 8-6
+00001CCC  1A3C 0006               1135          MOVE.B  #right6,D5      ; Shift the bits 8-6 to the LSB
+00001CD0  EA6B                    1136          LSR.W   D5,D3           ; Do the actual shift
+00001CD2  B63C 0007               1137          CMP.B   #7,D3           ; Check if D3 is 111
+00001CD6  6700 0006               1138          BEQ     CHANGE_TO_001   ; change the D3 bits to 001 
+00001CDA  6000 0144               1139          BRA     DST_INVALID     ; Print out an error message if bits 8-6 (dst mode) are not 111
+00001CDE                          1140    
+00001CDE                          1141  CHANGE_TO_001
+00001CDE  163C 0001               1142          MOVE.B  #%001,D3        ; set D3 to 001 to ensure the print out A 
+00001CE2                          1143          
+00001CE2  2800                    1144          MOVE.L  D0,D4           ; Store the dest reg in D4 to get the Address register number
+00001CE4  0244 0E00               1145          ANDI.W  #dst_reg,D4     ; get the bits at 11-9
+00001CE8  1A3C 0009               1146          MOVE.B  #right9,D5      ; shift the bits 11-9 to the LSB
+00001CEC  EA6C                    1147          LSR.W   D5,D4           ; do the actual shift
+00001CEE  4EB9 00001CF8           1148          JSR     EA_GEN_SRC      ; Print out the address register
+00001CF4  4EF8 1AB4               1149          JMP     EA_FINISH       ; Go to function
+00001CF8                          1150  
+00001CF8                          1151  EA_DSTONLY      ; 4: ea_dstonly
+00001CF8                          1152  EA_EXT          ; 5: ea_ext
+00001CF8                          1153  EA_MOVEM        ; 6: ea_movem
+00001CF8                          1154  EA_TRAP         ; 7: ea_trap
+00001CF8                          1155  EA_QUICK        ; 8: ea_quick
+00001CF8                          1156  EA_BRANCH       ; 9: ea_branch
+00001CF8                          1157  
+00001CF8                          1158  EA_REG
+00001CF8                          1159  
+00001CF8                          1160  EA_GEN_SRC
+00001CF8  41F9 00001D06           1161          LEA     EA_GEN_TABLE_SRC, A0
+00001CFE  C6FC 0006               1162          MULU    #6, D3              ; use D3 to jump to the proper src mode and dst mode. 
+00001D02  4EF0 3000               1163          JMP     0(A0,D3)            ; jump to each ea src generation table entry 
+00001D06                          1164  
+00001D06                          1165  EA_GEN_TABLE_SRC
+00001D06  4EF9 00001D36           1166          JMP     EA_Dn                       ; 000: Dn
+00001D0C  4EF9 00001D42           1167          JMP     EA_An                       ; 001: An
+00001D12  4EF9 00001D4E           1168          JMP     EA_An_Indirect              ; 010: (An)
+00001D18  4EF9 00001D62           1169          JMP     EA_An_Indirect_Inc          ; 011: (An)+
+00001D1E  4EF9 00001D7A           1170          JMP     EA_An_Indirect_Dec          ; 100: -(An)
+00001D24  4EF9 00001D92           1171          JMP     EA_UNSUPPORTED              ; 101: Unsupported EA
+00001D2A  4EF9 00001D92           1172          JMP     EA_UNSUPPORTED              ; 110: Unsupported EA
+00001D30  4EF9 00001DA0           1173          JMP     EA_Absolute_And_Immediate   ; 111: (xxx).W,(xxx).L, or #<data>
+00001D36                          1174  
+00001D36                          1175  EA_Dn               ; 000: Dn
+00001D36  14FC 0044               1176          MOVE.B  #'D',(A2)+
+00001D3A  0604 0030               1177          ADDI.B  #$30,D4
+00001D3E  14C4                    1178          MOVE.B  D4,(A2)+
+00001D40  4E75                    1179          RTS
+00001D42                          1180  
+00001D42                          1181  EA_An               ; 001: An
+00001D42  14FC 0041               1182          MOVE.B  #'A',(A2)+
+00001D46  0604 0030               1183          ADDI.B  #$30,D4
+00001D4A  14C4                    1184          MOVE.B  D4,(A2)+
+00001D4C  4E75                    1185          RTS
+00001D4E                          1186  
+00001D4E                          1187  EA_An_Indirect      ; 010: (An)
+00001D4E  14FC 0028               1188          MOVE.B  #'(',(A2)+
+00001D52  14FC 0041               1189          MOVE.B  #'A',(A2)+
+00001D56  0604 0030               1190          ADDI.B  #$30,D4
+00001D5A  14C4                    1191          MOVE.B  D4,(A2)+
+00001D5C  14FC 0029               1192          MOVE.B  #')',(A2)+
+00001D60  4E75                    1193          RTS
+00001D62                          1194          
+00001D62                          1195  EA_An_Indirect_Inc  ; 011: (An)+
+00001D62  14FC 0028               1196          MOVE.B  #'(',(A2)+
+00001D66  14FC 0041               1197          MOVE.B  #'A',(A2)+
+00001D6A  0604 0030               1198          ADDI.B  #$30, D4
+00001D6E  14C4                    1199          MOVE.B  D4,(A2)+
+00001D70  14FC 0029               1200          MOVE.B  #')',(A2)+
+00001D74  14FC 002B               1201          MOVE.B  #'+',(A2)+
+00001D78  4E75                    1202          RTS
+00001D7A                          1203          
+00001D7A                          1204  EA_An_Indirect_Dec  ; 100: -(An)
+00001D7A  14FC 002D               1205          MOVE.B  #'-',(A2)+
+00001D7E  14FC 0028               1206          MOVE.B  #'(',(A2)+
+00001D82  14FC 0041               1207          MOVE.B  #'A',(A2)+
+00001D86  0604 0030               1208          ADDI.B  #$30,D4
+00001D8A  14C4                    1209          MOVE.B  D4,(A2)+
+00001D8C  14FC 0029               1210          MOVE.B  #')',(A2)+
+00001D90  4E75                    1211          RTS
+00001D92                          1212  
+00001D92                          1213  EA_UNSUPPORTED
+00001D92  43F9 00001E90           1214          LEA     EA_TYPE_ERROR,A1
+00001D98  103C 000E               1215          MOVE.B  #14,D0
+00001D9C  4E4F                    1216          TRAP    #15  
+00001D9E  4E75                    1217          RTS 
+00001DA0                          1218          
+00001DA0                          1219  EA_Absolute_And_Immediate           ; 111: (xxx).W,(xxx).L, or #<data>
+00001DA0  B83C 0000               1220          CMP.B   #0,D4               ; If D4 is (xxx).W
+00001DA4  6700 0016               1221          BEQ     ABSOLUTE_WORD
+00001DA8                          1222          
+00001DA8  B83C 0001               1223          CMP.B   #1,D4               ; If D4 is (xxx).L
+00001DAC  6700 001A               1224          BEQ     ABSOLUTE_LONG
+00001DB0                          1225          
+00001DB0  B83C 0004               1226          CMP.B   #4,D4               ; If D4 is #<data>  
+00001DB4  6700 001E               1227          BEQ     IMMEDIATE
+00001DB8                          1228          
+00001DB8  6000 0056               1229          BRA     ABSOLUTE_IMMEDIATE_ERROR    
+00001DBC                          1230  
+00001DBC                          1231  ABSOLUTE_WORD
+00001DBC  14FC 0024               1232          MOVE.B  #$24,(A2)+          ; Add $ symbol
+00001DC0  7401                    1233          MOVE.L  #1,D2               ; Insert 1 to D2 
+00001DC2  4EB8 1114               1234          JSR     ITOA                ; Convert word hex values to ITOA
+00001DC6  4E75                    1235          RTS
+00001DC8                          1236          
+00001DC8                          1237  ABSOLUTE_LONG
+00001DC8  14FC 0024               1238          MOVE.B  #$24,(A2)+          ; Add $ symbol
+00001DCC  7402                    1239          MOVE.L  #2,D2               ; Insert 2 to D2
+00001DCE  4EB8 1114               1240          JSR     ITOA                ; Convert long hex values to ITOA
+00001DD2  4E75                    1241          RTS
+00001DD4                          1242  
+00001DD4                          1243  IMMEDIATE
+00001DD4  14FC 0023               1244          MOVE.B  #$23,(A2)+          ; Add # symbol
+00001DD8  14FC 0024               1245          MOVE.B  #$24,(A2)+          ; Add $ symbol
+00001DDC                          1246  
+00001DDC  BC3C 0001               1247          CMP.B   #1,D6               ; If MOVE.b (code0001)
+00001DE0  6700 0018               1248          BEQ     DO_ITOA_MOVE
+00001DE4  BC3C 0002               1249          CMP.B   #2, D6              ; If MOVE.l / MOVEA.l (code0010)
+00001DE8  6700 0010               1250          BEQ     DO_ITOA_MOVE
+00001DEC  BC3C 0003               1251          CMP.B   #3, D6              ; If  MOVE.w / MOVEA.w (code0011)
+00001DF0  6700 0008               1252          BEQ     DO_ITOA_MOVE
+00001DF4                          1253          
+00001DF4  4EB8 1114               1254          JSR     ITOA                ; Go to ITOA when not a move instruction
+00001DF8  4E75                    1255          RTS
+00001DFA                          1256          
+00001DFA                          1257  DO_ITOA_MOVE
+00001DFA  4EB8 1136               1258          JSR ITOA_MOVE
+00001DFE  4E75                    1259          RTS
+00001E00                          1260                
+00001E00                          1261  EA_WRONG_SIZE 
+00001E00  43F9 00001E45           1262          LEA     WRONG_SIZE_MESSAGE, A1 
+00001E06  103C 000E               1263          MOVE.B  #14, D0
+00001E0A  4E4F                    1264          TRAP    #15
+00001E0C  6000 0032               1265          BRA     DONE
+00001E10                          1266          
+00001E10                          1267  ABSOLUTE_IMMEDIATE_ERROR  
+00001E10  43F9 00001E53           1268          LEA     ABSOLUTE_WRONGREG, A1 
+00001E16  103C 000E               1269          MOVE.B  #14, D0
+00001E1A  4E4F                    1270          TRAP    #15
+00001E1C  6000 0022               1271          BRA     DONE
+00001E20                          1272          
+00001E20                          1273  DST_INVALID
+00001E20  43F9 00001EB3           1274          LEA     DST_INVALID_MSG, A1 
+00001E26  103C 000E               1275          MOVE.B  #14, D0
+00001E2A  4E4F                    1276          TRAP    #15
+00001E2C  6000 0012               1277          BRA     DONE
+00001E30                          1278          
+00001E30                          1279  SRC_INVALID 
+00001E30  43F9 00001EE6           1280          LEA     SRC_INVALID_MSG, A1 
+00001E36  103C 000E               1281          MOVE.B  #14, D0
+00001E3A  4E4F                    1282          TRAP    #15
+00001E3C  6000 0002               1283          BRA     DONE
+00001E40                          1284          
+00001E40  FFFF FFFF               1285  DONE    SIMHALT             ; halt simulator
+00001E44                          1286  
+00001E44                          1287  * Put variables and constants here
+00001E44                          1288     
+00001E44                          1289         
+00001E44  =00000040               1290  buffer_size         EQU         64 
+00001E44  =00005000               1291  decoded_buffer      EQU         $5000
+00001E44                          1292     
+00001E44  =0000000D               1293  CR                  EQU         $0D
+00001E44  =0000000A               1294  LF                  EQU         $0A
+00001E44  =0000A000               1295  stack               EQU         $0000A000
+00001E44  =00000014               1296  lines_p_screen      EQU         20
+00001E44  =00000003               1297  right3              EQU         3
+00001E44  =00000004               1298  right4              EQU         4
+00001E44  =00000006               1299  right6              EQU         6
+00001E44  =00000008               1300  right8              EQU         8
+00001E44  =00000009               1301  right9              EQU         9
+00001E44  =0000000C               1302  right12             EQU         12
+00001E44  =00000010               1303  right16             EQU         16
+00001E44  =00000018               1304  right24             EQU         24
+00001E44= 20                      1305  ascii_y_n           DC.B        32
+00001E45  =00000059               1306  y_uppercase         EQU         $59         
+00001E45  =00000079               1307  y_lowercase         EQU         $79
+00001E45  =0000004E               1308  n_uppercase         EQU         $4E
+00001E45  =0000006E               1309  n_lowercase         EQU         $6E
+00001E45  =00000002               1310  task2               EQU         $02
+00001E45  =00000005               1311  task5               EQU         $05
+00001E45  =00000009               1312  task9               EQU         $09
+00001E45  =0000000D               1313  task13              EQU         $0D
+00001E45  =0000000E               1314  task14              EQU         $0E
+00001E45  =0000F000               1315  first_nibble        EQU         $F000
+00001E45  =00000F00               1316  second_nibble       EQU         $0F00   
+00001E45  =000000F0               1317  third_nibble        EQU         $00F0
+00001E45  =0000000F               1318  fourth_nibble       EQU         $000F
+00001E45  =000001C0               1319  dst_mode            EQU         $01C0
+00001E45  =00000E00               1320  dst_reg             EQU         $0E00
+00001E45  =00000038               1321  src_mode            EQU         $0038
+00001E45  =00000007               1322  src_reg             EQU         $0007
+00001E45  =00000100               1323  bit8                EQU         $0100
+00001E45                          1324  
+00001E45  =00000000               1325  ea_type_immediate   EQU     0       ; EA Type = immediate
+00001E45  =00000001               1326  ea_type_move        EQU     1       ; EA Type = move
+00001E45  =00000002               1327  ea_type_movea       EQU     2       ; EA Type = movea
+00001E45  =0000000C               1328  ea_type_movea6      EQU     12      ; EA Type = movea * 6
+00001E45  =00000003               1329  ea_type_lea         EQU     3       ; EA Type = lea
+00001E45  =00000004               1330  ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
+00001E45  =00000005               1331  ea_type_ext         EQU     5       ; EA Type = ext
+00001E45  =00000006               1332  ea_type_movem       EQU     6       ; EA Type = movem
+00001E45  =00000007               1333  ea_type_trap        EQU     7       ; EA Type = trap
+00001E45  =00000008               1334  ea_type_quick       EQU     8       ; EA Type = addq, subq
+00001E45  =00000009               1335  ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
+00001E45  =00000000               1336  ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
+00001E45  =00000001               1337  ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
+00001E45  =00000002               1338  ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
+00001E45= 57 72 6F 6E 67 20 ...   1339  WRONG_SIZE_MESSAGE  DC.B    'Wrong size.',CR,LF,0
+00001E53= 45 72 72 6F 72 2E ...   1340  ABSOLUTE_WRONGREG   DC.B    'Error. Register does not exist for Absolute and immediate.',CR,LF,0
+00001E90= 45 72 72 6F 72 2E ...   1341  EA_TYPE_ERROR       DC.B    'Error. EA type is not supported.',CR,LF,0
+00001EB3= 45 72 72 6F 72 2E ...   1342  DST_INVALID_MSG     DC.B    'Error. Destination effective address is invalid.',CR,LF,0
+00001EE6= 45 72 72 6F 72 2E ...   1343  SRC_INVALID_MSG     DC.B    'Error. Source effective address is invalid.',CR,LF,0
+00001F14= 45 72 72 6F 72 2E ...   1344  OPCODE_INVALID      DC.B    'Error. Opcode is invalid.',CR,LF,0
+00001F30= 45 72 72 6F 72 2C ...   1345  ERROR_MESSAGE       DC.B    'Error, the input is invalid.',CR,LF,0  
+00001F4F= 45 72 72 6F 72 2C ...   1346  ODD_ERROR_MESSAGE   DC.B    'Error, the last digit of the address is odd, which is invalid.',CR,LF,0  
+00001F90                          1347               
+00001F90= 57 65 6C 63 6F 6D ...   1348  WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
+00001FC6                          1349  
+00001FC6= 50 6C 65 61 73 65 ...   1350  USER_INST           DC.B        'Please follow the proper input instructions below: ',CR,LF
+00001FFB= 2D 20 53 74 61 72 ...   1351                      DC.B        '- Starting address must be lower than ending address.',CR,LF
+00002032= 2D 20 54 68 65 20 ...   1352                      DC.B        '- The values for the starting and ending address must be an even value.',CR,LF
+0000207B= 2D 20 53 74 61 72 ...   1353                      DC.B        '- Starting and ending address must be inputted as hexadecimal value.',CR,LF
+000020C1= 2D 20 44 6F 20 6E ...   1354                      DC.B        '- Do not put spaces in between input characters.',CR,LF
+000020F3= 2D 20 56 61 6C 69 ...   1355                      DC.B        '- Valid characters include: 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F',CR,LF,0
+00002140                          1356                  
+00002140= 50 72 65 73 73 20 ...   1357  ENTER_PROMPT        DC.B        'Press enter to continue...',CR,LF,0
+0000215D= 50 72 65 73 73 20 ...   1358  PROMPT_AGAIN        DC.B        'Press Y to continue / N to exit.',CR,LF,0
+00002180= 50 72 6F 67 72 61 ...   1359  EXIT_PROMPT         DC.B        'Program has execution has stopped.',CR,LF,0
+000021A5                          1360        
+000021A5= 45 6E 74 65 72 20 ...   1361  START_IN            DC.B        'Enter a starting address: ',CR,LF,0 
+000021C2= 45 6E 74 65 72 20 ...   1362  END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
+000021DE                          1363  START_ADDRESS       DS.B        32     
+000021FE                          1364  END_ADDRESS         DS.B        32 
+0000221E                          1365       
+0000221E                          1366  
+0000221E                          1367  
+0000221E                          1368      END    START        ; last line of source
 
 No errors detected
 No warnings generated
@@ -1311,16 +1378,16 @@ No warnings generated
 SYMBOL TABLE INFORMATION
 Symbol-name         Value
 -------------------------
-ABSOLUTE_IMMEDIATE_ERROR  1D64
-ABSOLUTE_LONG       1D1C
-ABSOLUTE_WORD       1D10
-ABSOLUTE_WRONGREG   1DA7
+ABSOLUTE_IMMEDIATE_ERROR  1E10
+ABSOLUTE_LONG       1DC8
+ABSOLUTE_WORD       1DBC
+ABSOLUTE_WRONGREG   1E53
 ASCII_TO_HEX_LETTER  1084
-ASCII_Y_N           1D98
+ASCII_Y_N           1E44
 ATOI                105E
 BIT8                100
 BUFFER_SIZE         40
-CHANGE_TO_001       1C32
+CHANGE_TO_001       1CDE
 CODE0000            136A
 CODE0001            1384
 CODE0010            1388
@@ -1347,45 +1414,46 @@ DECODE_PAUSE        1254
 DECODING_ITERATION  1230
 DISP_UI             100C
 DISP_W              1000
-DONE                1D94
-DO_ITOA_MOVE        1D4E
-DST_INVALID         1D74
-DST_INVALID_MSG     1E07
+DONE                1E40
+DO_ITOA_MOVE        1DFA
+DST_INVALID         1E20
+DST_INVALID_MSG     1EB3
 DST_MODE            1C0
 DST_REG             E00
-EA_ABSOLUTE_AND_IMMEDIATE  1CF4
-EA_AN               1C96
-EA_AN_INDIRECT      1CA2
-EA_AN_INDIRECT_DEC  1CCE
-EA_AN_INDIRECT_INC  1CB6
+EA_ABSOLUTE_AND_IMMEDIATE  1DA0
+EA_AN               1D42
+EA_AN_INDIRECT      1D4E
+EA_AN_INDIRECT_DEC  1D7A
+EA_AN_INDIRECT_INC  1D62
 EA_BCC_FLAG         0
-EA_BRANCH           1C4C
+EA_BRANCH           1CF8
 EA_DBCC_FLAG        1
-EA_DN               1C8A
-EA_DSTONLY          1C4C
-EA_EXT              1C4C
+EA_DN               1D36
+EA_DSTONLY          1CF8
+EA_EXT              1CF8
 EA_FINISH           1AB4
-EA_GEN_SRC          1C4C
-EA_GEN_TABLE_SRC    1C5A
-EA_IMMEDIATE        1B52
-EA_LEA              1BE2
-EA_MOVE             1B86
-EA_MOVEA            1BE2
-EA_MOVEM            1C4C
-EA_QUICK            1C4C
-EA_REG              1C4C
+EA_GEN_SRC          1CF8
+EA_GEN_TABLE_SRC    1D06
+EA_IMMEDIATE        1B66
+EA_LEA              1C82
+EA_MOVE             1BB6
+EA_MOVEA            1C1A
+EA_MOVEM            1CF8
+EA_QUICK            1CF8
+EA_REG              1CF8
 EA_SCC_FLAG         2
-EA_SIZE_B           1B32
-EA_SIZE_DONE        1B50
+EA_SIZE_B           1B46
+EA_SIZE_DONE        1B64
 EA_SIZE_IMMEDIATE   1AFA
-EA_SIZE_L           1B46
+EA_SIZE_L           1B5A
 EA_SIZE_MOVE        1B16
-EA_SIZE_W           1B3C
+EA_SIZE_MOVEA       1B32
+EA_SIZE_W           1B50
 EA_START            1AA2
-EA_TRAP             1C4C
+EA_TRAP             1CF8
 EA_TYPE_BRANCH      9
 EA_TYPE_DSTONLY     4
-EA_TYPE_ERROR       1DE4
+EA_TYPE_ERROR       1E90
 EA_TYPE_EXT         5
 EA_TYPE_IMMEDIATE   0
 EA_TYPE_LEA         3
@@ -1396,17 +1464,17 @@ EA_TYPE_MOVEM       6
 EA_TYPE_QUICK       8
 EA_TYPE_TABLE       1ABA
 EA_TYPE_TRAP        7
-EA_UNSUPPORTED      1CE6
-EA_WRONG_SIZE       1D54
-END_ADDRESS         2152
-END_IN              2116
-ENTER_PROMPT        2094
-ERROR_MESSAGE       1E84
+EA_UNSUPPORTED      1D92
+EA_WRONG_SIZE       1E00
+END_ADDRESS         21FE
+END_IN              21C2
+ENTER_PROMPT        2140
+ERROR_MESSAGE       1F30
 EXIT                12A8
-EXIT_PROMPT         20D4
+EXIT_PROMPT         2180
 FIRST_NIBBLE        F000
 FOURTH_NIBBLE       F
-IMMEDIATE           1D28
+IMMEDIATE           1DD4
 INPUT_INVALID       10A6
 ITOA                1114
 ITOA_BYTE           1158
@@ -1421,15 +1489,16 @@ ITOA_WORD           1166
 JSR_NOP_RTS         16AC
 LAST_DIGIT_CHECK    10C4
 LAST_DIGIT_ODD      10F8
-LEA_SRC_VALID       1C0C
+LEA_SRC_VALID       1CB8
 LF                  A
 LINES_P_SCREEN      14
 MEMORY_1110_LEFT    1480
 MEMORY_1110_RIGHT   14A4
+MOVEA_DST_VALID     1C78
 N_LOWERCASE         6E
 N_UPPERCASE         4E
-ODD_ERROR_MESSAGE   1EA3
-OPCODE_INVALID      1E68
+ODD_ERROR_MESSAGE   1F4F
+OPCODE_INVALID      1F14
 OP_0000_TABLE       14CC
 OP_0100_TABLE       152C
 OP_1100_TABLE       158C
@@ -1472,7 +1541,7 @@ OP_SUB              192A
 OP_SUBI             16EA
 OP_TABLE            130A
 OP_UNSUPPORTED      16DA
-PROMPT_AGAIN        20B1
+PROMPT_AGAIN        215D
 PROMPT_END          103E
 PROMPT_START        1018
 READ_END            104A
@@ -1486,25 +1555,25 @@ RIGHT6              6
 RIGHT8              8
 RIGHT9              9
 SECOND_NIBBLE       F00
-SRC_INVALID         1D84
-SRC_INVALID_MSG     1E3A
+SRC_INVALID         1E30
+SRC_INVALID_MSG     1EE6
 SRC_MODE            38
 SRC_REG             7
 STACK               A000
 START               1000
-START_ADDRESS       2132
+START_ADDRESS       21DE
 START_DECODING      122E
-START_IN            20F9
+START_IN            21A5
 TASK13              D
 TASK14              E
 TASK2               2
 TASK5               5
 TASK9               9
 THIRD_NIBBLE        F0
-USER_INST           1F1A
+USER_INST           1FC6
 VALIDATE_END        105A
 VALIDATE_START      103A
-WELCOME             1EE4
-WRONG_SIZE_MESSAGE  1D99
+WELCOME             1F90
+WRONG_SIZE_MESSAGE  1E45
 Y_LOWERCASE         79
 Y_UPPERCASE         59
