@@ -133,26 +133,45 @@ LAST_DIGIT_ODD      LEA     ODD_ERROR_MESSAGE, A1
 * D7 long data to convert into ASCII
 * }
         
-ITOA    
-        MOVEM.L D0-D1,-(SP) ; convert integer to ASCII
-        CMP.B   #%00, D2    ; byte
+ITOA                                ; convert integer to ASCII  
+        MOVEM.L D0-D1,-(SP) 
+        CMP.B   #%00, D2            ; byte
         BEQ     ITOA_BYTE
-        CMP.B   #%01, D2    ; word
+        CMP.B   #%01, D2            ; word
         BEQ     ITOA_WORD
-        CMP.B   #%10, D2    ; long
+        CMP.B   #%10, D2            ; long
         BEQ     ITOA_LONG
         JMP     ITOA_LONGADDRESS    ; long address
         
-ITOA_MOVE
-        MOVEM.L D0-D1,-(SP) ; convert integer to ASCII
-        CMP.B   #%01, D2    ; byte
+ITOA_MOVE                           ; convert integer to ASCII
+        MOVEM.L D0-D1,-(SP) 
+        CMP.B   #%01, D2            ; byte
         BEQ     ITOA_BYTE
-        CMP.B   #%11, D2    ; word
+        CMP.B   #%11, D2            ; word
         BEQ     ITOA_WORD
-        CMP.B   #%10,D2     ; long
+        CMP.B   #%10,D2             ; long
         BEQ     ITOA_LONG
-        JMP     ITOA_LONGADDRESS ; long address
-
+        JMP     ITOA_LONGADDRESS    ; long address
+        
+ITOA_OPMODE                         ; convert integer to ASCII
+        MOVEM.L D0-D1,-(SP) 
+        CMP.B   #%000,D2            ; When 0 then byte
+        BEQ     ITOA_BYTE
+        CMP.B   #%100,D2            ; When 4 then byte
+        BEQ     ITOA_BYTE 
+        CMP.B   #%001,D2            ; When 1 then word
+        BEQ     ITOA_WORD
+        CMP.B   #%011,D2            ; When 3 then word
+        BEQ     ITOA_WORD
+        CMP.B   #%101,D2            ; When 5 then word
+        BEQ     ITOA_WORD 
+        CMP.B   #%010,D2            ; When 2 then long
+        BEQ     ITOA_LONG
+        CMP.B   #%110,D2            ; When 6 then long
+        BEQ     ITOA_LONG
+        CMP.B   #%111,D2            ; When 7 then long
+        BEQ     ITOA_LONG
+        
 ITOA_BYTE
         MOVE.W  (A5)+,D7
         JSR     ITOA_BYTE_CONVERT
@@ -283,9 +302,7 @@ EXIT
         MOVE.B  #task14, D0
         LEA     EXIT_PROMPT, A1
         TRAP    #15  
-        BRA     DONE
-
-               
+        BRA     DONE             
 *---------------------------------------------------------------------------------*
 * D0: the current instruction. 
 * D1: used as temp storage
@@ -636,7 +653,7 @@ OP_SUBI
         MOVE.B  #'U',(A2)+
         MOVE.B  #'B',(A2)+
         MOVE.B  #'I',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -645,7 +662,7 @@ OP_ADDI
         MOVE.B  #'D',(A2)+
         MOVE.B  #'D',(A2)+
         MOVE.B  #'I',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -657,7 +674,7 @@ OP_MOVEA
         MOVE.B  #'V',(A2)+
         MOVE.B  #'E',(A2)+
         MOVE.B  #'A',(A2)+
-        MOVE.L  #ea_type_movea, D1
+        MOVE.L  #ea_type_movea,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -668,7 +685,7 @@ OP_MOVE
         MOVE.B  #'O',(A2)+
         MOVE.B  #'V',(A2)+
         MOVE.B  #'E',(A2)+
-        MOVE.L  #ea_type_move, D1
+        MOVE.L  #ea_type_move,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -678,7 +695,7 @@ OP_CLR
         MOVE.B  #'C',(A2)+
         MOVE.B  #'L',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_dstonly,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -686,7 +703,7 @@ OP_NOP
         MOVE.B  #'N',(A2)+
         MOVE.B  #'O',(A2)+
         MOVE.B  #'P',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -694,15 +711,13 @@ OP_RTS
         MOVE.B  #'R',(A2)+
         MOVE.B  #'T',(A2)+
         MOVE.B  #'S',(A2)+
-        MOVE.L  #ea_type_immediate, D1
-        JSR     EA_START
         JMP     OP_FINISH
         
 OP_JSR
         MOVE.B  #'J',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_dstonly,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -712,7 +727,7 @@ OP_MOVEM
         MOVE.B  #'V',(A2)+
         MOVE.B  #'E',(A2)+
         MOVE.B  #'M',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -720,7 +735,7 @@ OP_LEA
         MOVE.B  #'L',(A2)+
         MOVE.B  #'E',(A2)+
         MOVE.B  #'A',(A2)+
-        MOVE.L  #ea_type_lea, D1
+        MOVE.L  #ea_type_lea,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -731,7 +746,7 @@ OP_ADDQ
         MOVE.B  #'D',(A2)+
         MOVE.B  #'D',(A2)+
         MOVE.B  #'Q',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -741,7 +756,7 @@ OP_BRA
         MOVE.B  #'B',(A2)+
         MOVE.B  #'R',(A2)+
         MOVE.B  #'A',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -749,7 +764,7 @@ OP_BCC
         MOVE.B  #'B',(A2)+
         MOVE.B  #'C',(A2)+
         MOVE.B  #'C',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -757,7 +772,7 @@ OP_BGT
         MOVE.B  #'B',(A2)+
         MOVE.B  #'G',(A2)+
         MOVE.B  #'T',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -765,7 +780,7 @@ OP_BLE
         MOVE.B  #'B',(A2)+
         MOVE.B  #'L',(A2)+
         MOVE.B  #'E',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -773,7 +788,7 @@ OP_BSR
         MOVE.B  #'B',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
 *------------------------------------------------------------------------------------------------*
@@ -785,7 +800,7 @@ OP_MOVEQ
         MOVE.B  #'V',(A2)+
         MOVE.B  #'E',(A2)+
         MOVE.B  #'Q',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -796,14 +811,14 @@ OP_DIVU
         MOVE.B  #'I',(A2)+
         MOVE.B  #'V',(A2)+
         MOVE.B  #'U',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
   
 OP_OR
         MOVE.B  #'O',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_ext,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -813,7 +828,7 @@ OP_SUB
         MOVE.B  #'S',(A2)+
         MOVE.B  #'U',(A2)+
         MOVE.B  #'B',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_ext,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -823,7 +838,7 @@ OP_CMP
         MOVE.B  #'C',(A2)+
         MOVE.B  #'M',(A2)+
         MOVE.B  #'P',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_ext,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -834,7 +849,7 @@ OP_MULU
         MOVE.B  #'U',(A2)+
         MOVE.B  #'L',(A2)+
         MOVE.B  #'U',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -843,7 +858,7 @@ OP_MULS
         MOVE.B  #'U',(A2)+
         MOVE.B  #'L',(A2)+
         MOVE.B  #'S',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -851,7 +866,7 @@ OP_AND
         MOVE.B  #'A',(A2)+
         MOVE.B  #'N',(A2)+
         MOVE.B  #'D',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_ext,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -861,7 +876,7 @@ OP_ADD
         MOVE.B  #'A',(A2)+
         MOVE.B  #'D',(A2)+
         MOVE.B  #'D',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_ext,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -870,7 +885,7 @@ OP_ADDA
         MOVE.B  #'D',(A2)+
         MOVE.B  #'D',(A2)+
         MOVE.B  #'A',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_ext,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -880,14 +895,14 @@ OP_ASR
         MOVE.B  #'A',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
 OP_ASL
         MOVE.B  #'A',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'L',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -895,7 +910,7 @@ OP_LSR
         MOVE.B  #'L',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
        
@@ -903,7 +918,7 @@ OP_LSL
         MOVE.B  #'L',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'L',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -911,7 +926,7 @@ OP_ROR
         MOVE.B  #'R',(A2)+
         MOVE.B  #'O',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -919,7 +934,7 @@ OP_ROL
         MOVE.B  #'R',(A2)+
         MOVE.B  #'O',(A2)+
         MOVE.B  #'L',(A2)+
-        MOVE.L  #ea_type_immediate, D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -936,42 +951,64 @@ EA_FINISH
         RTS
         
 EA_TYPE_TABLE
-        JMP     EA_IMMEDIATE    ; 0: ea_immediate
-        JMP     EA_MOVE         ; 1: ea_move
-        JMP     EA_MOVEA        ; 2: ea_movea
-        JMP     EA_LEA          ; 3: ea_lea
-        JMP     EA_DSTONLY      ; 4: ea_dstonly
-        JMP     EA_EXT          ; 5: ea_ext
-        JMP     EA_MOVEM        ; 6: ea_movem
-        JMP     EA_TRAP         ; 7: ea_trap
-        JMP     EA_QUICK        ; 8: ea_quick
-        JMP     EA_branch       ; 9: ea_branch
+        JMP     EA_IMMEDIATE        ; 0: ea_immediate
+        JMP     EA_MOVE             ; 1: ea_move
+        JMP     EA_MOVEA            ; 2: ea_movea
+        JMP     EA_LEA              ; 3: ea_lea
+        JMP     EA_DSTONLY          ; 4: ea_dstonly
+        JMP     EA_EXT              ; 5: ea_ext
+        JMP     EA_MOVEM            ; 6: ea_movem
+        JMP     EA_TRAP             ; 7: ea_trap
+        JMP     EA_QUICK            ; 8: ea_quick
+        JMP     EA_branch           ; 9: ea_branch
         JMP     EA_FINISH
         
-EA_SIZE_IMMEDIATE
-        CMP.B   #%00,D2         ; .b
+EA_SIZE_GENERAL
+        CMP.B   #%00,D2             ; .b
         BEQ     EA_SIZE_B       
-        CMP.B   #%01,D2         ; .w
+        CMP.B   #%01,D2             ; .w
         BEQ     EA_SIZE_W       
-        CMP.B   #%10,D2         ; .l
+        CMP.B   #%10,D2             ; .l
         BEQ     EA_SIZE_L
-        BRA     EA_WRONG_SIZE    ; wrong size
+        BRA     EA_WRONG_SIZE       ; wrong size
 
 EA_SIZE_MOVE
-        CMP.B   #%01,D2         ; .b
+        CMP.B   #%01,D2             ; .b
         BEQ     EA_SIZE_B       
-        CMP.B   #%11,D2         ; .w
+        CMP.B   #%11,D2             ; .w
         BEQ     EA_SIZE_W       
-        CMP.B   #%10,D2         ; .l
+        CMP.B   #%10,D2             ; .l
         BEQ     EA_SIZE_L
-        BRA     EA_WRONG_SIZE   ; wrong size
+        BRA     EA_WRONG_SIZE       ; wrong size
 
 EA_SIZE_MOVEA     
-        CMP.B   #%11,D2         ; .w
+        CMP.B   #%11,D2             ; .w
         BEQ     EA_SIZE_W       
-        CMP.B   #%10,D2         ; .l
+        CMP.B   #%10,D2             ; .l
         BEQ     EA_SIZE_L
-        BRA     EA_WRONG_SIZE   ; wrong size
+        BRA     EA_WRONG_SIZE       ; wrong size
+
+EA_SIZE_OPMODE_012456               ; Check opmode field for size
+        CMP.B   #%000,D2            ; When 0 then .b
+        BEQ     EA_SIZE_B
+        CMP.B   #%100,D2            ; When 4 then .b
+        BEQ     EA_SIZE_B  
+        CMP.B   #%001,D2            ; When 1 then .w
+        BEQ     EA_SIZE_W
+        CMP.B   #%101,D2            ; When 5 then .w
+        BEQ     EA_SIZE_W 
+        CMP.B   #%010,D2            ; When 2 then .l
+        BEQ     EA_SIZE_L
+        CMP.B   #%110,D2            ; When 6 then .l
+        BEQ     EA_SIZE_L
+        BRA     EA_WRONG_SIZE       ; wrong size
+
+EA_SIZE_ADDA                        ; Check opmode field for size
+        CMP.B   #%011,D2            ; When 3 then .w
+        BEQ     EA_SIZE_W       
+        CMP.B   #%111,D2            ; When 7 then .l
+        BEQ     EA_SIZE_L
+        BRA     EA_WRONG_SIZE       ; wrong size
 
 EA_SIZE_B
         MOVE.B  #'.',(A2)+
@@ -988,16 +1025,17 @@ EA_SIZE_L
 EA_SIZE_DONE
         RTS
         
-EA_IMMEDIATE    ; 0 ea_immediate
+EA_IMMEDIATE                        ; 0 ea_immediate
         MOVE.L  D0,D1
         ANDI.W  #dst_mode,D1        ; Get bits 8-6 from D1
         MOVE.B  #right6,D5          ; Store 6 into D5
         LSR.W   D5,D1               ; Shift D1 six times to the LSB position
         ANDI.B  #3,D1               ; Remove the front bit from D1
         MOVE.B  D1,D2               ; Store D1 into D2 (D2 is used to check size)
-        JSR     EA_SIZE_IMMEDIATE   ; Get size 
+        JSR     EA_SIZE_GENERAL     ; Get size 
         
         MOVE.B  #$20,(A2)+          ; Add space after size
+        MOVE.B  #$20,(A2)+          ; Add space 
 
         ; Get source and store into decode buffer
         MOVE.L  #4,D4               ; Store 100 into D4 (Used to jump to immediate)
@@ -1015,14 +1053,14 @@ EA_IMMEDIATE    ; 0 ea_immediate
         ANDI.W  #src_mode,D3        ; get bits 5-3 (D3 stores EA mode)
         MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
         LSR.W   D5,D3               ; do the actual shift 
-        CMP.B   #1,D3               ; If dest mode is 001 (An)
+        CMP.B   #1,D3               ; If dest mode is 001: An
         BEQ     DST_INVALID         ; Go to invalid message 
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
 
-        JMP     EA_FINISH           ; Go to function
+        JMP     EA_FINISH           ; Opcode is finish
 
 
-EA_MOVE         ; 1: ea_move
+EA_MOVE                             ; 1: ea_move
         MOVE.L  D0,D1
         ANDI.W  #first_nibble,D1
         MOVE.B  #right12,D5 
@@ -1031,39 +1069,39 @@ EA_MOVE         ; 1: ea_move
         MOVE.B  D1,D2
         JSR     EA_SIZE_MOVE
         
-        MOVE.B  #$20,(A2)+      ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space after the size
         
         ; Get source and store into decode buffer
-        MOVE.L  D0,D4           ; Store the src reg in D4
-        ANDI.W  #src_reg,D4     ; Get the bits at 2-0
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
         
-        MOVE.L  D0,D3           ; Store the src mode in D3
-        ANDI.W  #src_mode,D3    ; Get bits 5-3
-        MOVE.B  #right3,D5      ; Shift the bits 5-3 to the LSB
-        LSR.W   D5,D3           ; Do the actual shift 
+        MOVE.L  D0,D3               ; Store the src mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift 
         JSR     EA_GEN_SRC
         
-        MOVE.B  #$2C,(A2)+      ; Add comma after size print
-        MOVE.B  #$20,(A2)+      ; Add space after comma
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
         
         ; Get desination and store into decode buffer
-        MOVE.L  D0,D4           ; Store the dest reg in D4
-        ANDI.W  #dst_reg,D4     ; Get the bits at 11-9
-        MOVE.B  #right9,D5      ; Shift the bits 11-9 to the LSB
-        LSR.W   D5,D4           ; Do the actual shift
+        MOVE.L  D0,D4               ; Store the dest reg in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
         
-        MOVE.L  D0,D3           ; D0 does not change, D3 is used to store the dst mode and src mode 
-        ANDI.W  #dst_mode,D3    ; Get bits 8-6
-        MOVE.B  #right6,D5      ; Shift the bits 8-6 to the LSB
-        LSR.W   D5,D3           ; Do the actual shift 
-        CMP.B   #1,D3           ; If dest mode is 001 (An)
-        BEQ     DST_INVALID     ; Go to invalid message 
-        JSR     EA_GEN_SRC      ; Get EA print
+        MOVE.L  D0,D3               ; D0 does not change, D3 is used to store the dst mode and src mode 
+        ANDI.W  #dst_mode,D3        ; Get bits 8-6
+        MOVE.B  #right6,D5          ; Shift the bits 8-6 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift 
+        CMP.B   #1,D3               ; If dest mode is 001: An
+        BEQ     DST_INVALID         ; Go to invalid message 
+        JSR     EA_GEN_SRC          ; Get EA print
         
-        JMP     EA_FINISH       ; Go to function
+        JMP     EA_FINISH           ; Opcode is finish
 
            
-EA_MOVEA        ; 2: ea_movea
+EA_MOVEA                            ; 2: ea_movea
         MOVE.L  D0,D1
         ANDI.W  #first_nibble,D1
         MOVE.B  #right12,D5 
@@ -1072,87 +1110,294 @@ EA_MOVEA        ; 2: ea_movea
         MOVE.B  D1,D2
         JSR     EA_SIZE_MOVEA 
         
-        MOVE.B  #$20,(A2)+      ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space after the size
         
         ; Get source and store into decode buffer
-        MOVE.L  D0,D4           ; Store the src reg in D4
-        ANDI.W  #src_reg,D4     ; Get the bits at 2-0
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
         
-        MOVE.L  D0,D3           ; Store the src mode in D3
-        ANDI.W  #src_mode,D3    ; Get bits 5-3
-        MOVE.B  #right3,D5      ; Shift the bits 5-3 to the LSB
-        LSR.W   D5,D3           ; Do the actual shift 
+        MOVE.L  D0,D3               ; Store the src mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift 
         JSR     EA_GEN_SRC
         
-        MOVE.B  #$2C,(A2)+      ; Add comma after size print
-        MOVE.B  #$20,(A2)+      ; Add space after comma
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
         
         ; Get desination and store into decode buffer
-        MOVE.L  D0,D4           ; Store the dest reg in D4
-        ANDI.W  #dst_reg,D4     ; Get the bits at 11-9
-        MOVE.B  #right9,D5      ; Shift the bits 11-9 to the LSB
-        LSR.W   D5,D4           ; Do the actual shift
+        MOVE.L  D0,D4               ; Store the dest reg in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
         
-        MOVE.L  D0,D3           ; D0 does not change, D3 is used to store the dst mode and src mode 
-        ANDI.W  #dst_mode,D3    ; Get bits 8-6
-        MOVE.B  #right6,D5      ; Shift the bits 8-6 to the LSB
-        LSR.W   D5,D3           ; Do the actual shift 
-        CMP.B   #1,D3           ; If dst mode is 001 (An) 
-        BEQ     MOVEA_DST_VALID ; dst is valid, so branch 
-        BRA     DST_INVALID     ; Otherwise, go to invalid message 
+        MOVE.L  D0,D3               ; D0 does not change, D3 is used to store the dst mode and src mode 
+        ANDI.W  #dst_mode,D3        ; Get bits 8-6
+        MOVE.B  #right6,D5          ; Shift the bits 8-6 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift 
+        CMP.B   #1,D3               ; If dst mode is 001: An 
+        BEQ     MOVEA_DST_VALID     ; dst is valid, so branch 
+        BRA     DST_INVALID         ; Otherwise, go to invalid message 
         
 MOVEA_DST_VALID
-        JSR     EA_GEN_SRC      ; Get EA print
-        JMP     EA_FINISH       ; Go to function
+        JSR     EA_GEN_SRC          ; Get EA print
+        JMP     EA_FINISH           ; Opcode is finish
 
-EA_LEA          ; 3: ea_lea
-        MOVE.B  #$20,(A2)+      ; print out a space after the LEA
-        MOVE.B  #$20,(A2)+      ; print out a space after the LEA
-        MOVE.B  #$20,(A2)+      ; print out a space after the LEA
-        MOVE.B  #$20,(A2)+      ; print out a space after the LEA
+EA_LEA                              ; 3: ea_lea
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
         
-        MOVE.L  D0,D4           ; Store the src reg in D4
-        ANDI.W  #src_reg,D4     ; get the bits at 2-0
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; get the bits at 2-0
         
-        MOVE.L  D0,D3           ; Store the src mode in D3
-        ANDI.W  #src_mode,D3    ; get bits 5-3
-        MOVE.B  #right3,D5      ; shift the bits 5-3 to the LSB
-        LSR.W   D5,D3           ; do the actual shift 
-        CMP     #2,D3           ; If D3 (src mode) is 010 (An)
+        MOVE.L  D0,D3               ; Store the src mode in D3
+        ANDI.W  #src_mode,D3        ; get bits 5-3
+        MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; do the actual shift 
+        CMP     #2,D3               ; If D3 (src mode) is 010 (An)
         BEQ     LEA_SRC_VALID
-        CMP     #7,D3           ; If D3 (src mode) is 111 (W or L)
+        CMP     #7,D3               ; If D3 (src mode) is 111 (W or L)
         BEQ     LEA_SRC_VALID
-        BRA     SRC_INVALID     ; when src mode is not 010 or 111, branch to error message
+        BRA     SRC_INVALID         ; when src mode is not 010 or 111, branch to error message
         
 LEA_SRC_VALID        
-        JSR     EA_GEN_SRC      ; Go to function 
+        JSR     EA_GEN_SRC          ; Go to function 
  
-        MOVE.B  #$2C,(A2)+      ; Add comma after size print
-        MOVE.B  #$20,(A2)+      ; Add space after comma
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
 
-        MOVE.L  D0,D3           ; D0 does not change, D3 is used to store the dst mode and src mode 
-        ANDI.W  #dst_mode,D3    ; Get bits 8-6
-        MOVE.B  #right6,D5      ; Shift the bits 8-6 to the LSB
-        LSR.W   D5,D3           ; Do the actual shift
-        CMP.B   #7,D3           ; Check if D3 is 111
-        BEQ     CHANGE_TO_001   ; change the D3 bits to 001 
-        BRA     DST_INVALID     ; Print out an error message if bits 8-6 (dst mode) are not 111
+        MOVE.L  D0,D3               ; D0 does not change, D3 is used to store the dst mode and src mode 
+        ANDI.W  #dst_mode,D3        ; Get bits 8-6
+        MOVE.B  #right6,D5          ; Shift the bits 8-6 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift
+        CMP.B   #7,D3               ; Check if D3 is 111
+        BEQ     CHANGE_TO_001       ; change the D3 bits to 001 
+        BRA     DST_INVALID         ; Print out an error message if bits 8-6 (dst mode) are not 111
   
 CHANGE_TO_001
-        MOVE.B  #%001,D3        ; set D3 to 001 to ensure the print out A 
+        MOVE.B  #%001,D3            ; set D3 to 001 to ensure the print out A 
         
-        MOVE.L  D0,D4           ; Store the dest reg in D4 to get the Address register number
-        ANDI.W  #dst_reg,D4     ; get the bits at 11-9
-        MOVE.B  #right9,D5      ; shift the bits 11-9 to the LSB
-        LSR.W   D5,D4           ; do the actual shift
-        JSR     EA_GEN_SRC      ; Print out the address register
-        JMP     EA_FINISH       ; Go to function
+        MOVE.L  D0,D4               ; Store the dest reg in D4 to get the Address register number
+        ANDI.W  #dst_reg,D4         ; get the bits at 11-9
+        MOVE.B  #right9,D5          ; shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; do the actual shift
+        JSR     EA_GEN_SRC          ; Print out the address register
+        JMP     EA_FINISH           ; Opcode is finish
 
-EA_DSTONLY      ; 4: ea_dstonly
-EA_EXT          ; 5: ea_ext
+EA_DSTONLY                          ; 4: ea_dstonly
+        MOVE.L  D0,D1
+        ANDI.W  #second_nibble,D1   ; get second nibble from D1
+        MOVE.B  #right8,D5 
+        LSR.W   D5,D1     
+        CMP.B   #2, D1              ; When 0010 for second nibble
+        BEQ     EA_CLEAR            ; Then do EA_CLEAR
+        CMP.B   #$E, D1             ; When 1110 for second nibble
+        BEQ     EA_JSR              ; Then do EA_JSR
+        BRA     DST_INVALID     
+        
+EA_CLEAR
+        MOVE.L  D0,D1
+        ANDI.W  #dst_mode,D1        ; Get bits 8-6 from D1
+        MOVE.B  #right6,D5          ; Store 6 into D5
+        LSR.W   D5,D1               ; Shift D1 six times to the LSB position
+        ANDI.B  #3,D1               ; Remove the front bit from D1
+        MOVE.B  D1,D2               ; Store D1 into D2 (D2 is used to check size)
+        JSR     EA_SIZE_GENERAL     ; Get size 
+        
+        MOVE.B  #$20,(A2)+          ; Add space after size
+        MOVE.B  #$20,(A2)+          ; Add space 
+        MOVE.B  #$20,(A2)+          ; Add space 
+        
+        ; Get desination and store into decode buffer
+        MOVE.L  D0,D4               ; Store the current address into D4 
+        ANDI.W  #src_reg,D4         ; get the bits at 2-0 (D4 stores EA reg)
+        
+        MOVE.L  D0,D3               ; Store the current address into D3 
+        ANDI.W  #src_mode,D3        ; get bits 5-3 (D3 stores EA mode)
+        MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
+        LSR.W   D5,D3               ; do the actual shift 
+        CMP.B   #1,D3               ; If dest mode is 001: An
+        BEQ     DST_INVALID         ; Go to invalid message 
+        JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
+        JMP     EA_FINISH           ; Opcode is finish
+        
+EA_JSR  MOVE.B  #$20,(A2)+          ; Add space 
+        MOVE.B  #$20,(A2)+          ; Add space 
+        MOVE.B  #$20,(A2)+          ; Add space 
+        MOVE.B  #$20,(A2)+          ; Add space 
+        MOVE.B  #$20,(A2)+          ; Add space 
+
+        ; Get EA and store into decode buffer   
+        MOVE.L  D0,D4               ; Store the current address into D4 
+        ANDI.W  #src_reg,D4         ; get the bits at 2-0 (D4 stores EA reg)
+        
+        MOVE.L  D0,D3               ; Store the current address into D3 
+        ANDI.W  #src_mode,D3        ; get bits 5-3 (D3 stores EA mode)
+        MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
+        LSR.W   D5,D3               ; do the actual shift 
+        CMP     #2,D3               ; If D3 (src mode) is 010: (An)
+        BEQ     JSR_EA_VALID
+        CMP     #7,D3               ; If D3 (src mode) is 111: (W or L)
+        BEQ     JSR_EA_VALID
+        BRA     EA_INVALID          ; Otherwise, branch to invalid message
+        
+JSR_EA_VALID
+        JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
+        JMP     EA_FINISH           ; Opcode is finish
+
+EA_EXT                              ; 5: ea_ext
+        MOVE.L  D0,D1
+        ANDI.W  #dst_mode,D1        ; Get bits 8-6 from D1 (get opmode)
+        MOVE.B  #right6,D5          ; Store 6 into D5
+        LSR.W   D5,D1               ; Shift D1 six times to the LSB position
+        MOVE.B  D1,D2               ; Store D1 into D2 (D2 is used to check size)
+        MULU    #6, D1              ; Multiply 6 to D1 
+        LEA     EA_EXT_TABLE,A0     ; Load table into A0
+        JMP     0(A0,D1)            ; go to displacement (A0 + D1 * 6)
+
+EA_EXT_TABLE
+        JMP     EA_OPMODE_012456    ; 000: ADD/SUB/CMP/OR/AND
+        JMP     EA_OPMODE_012456    ; 001: ADD/SUB/CMP/OR/AND
+        JMP     EA_OPMODE_012456    ; 010: ADD/SUB/CMP/OR/AND
+        JMP     EA_ADDA             ; 011: ADDA
+        JMP     EA_OPMODE_012456    ; 100: ADD/SUB/CMP/OR/AND
+        JMP     EA_OPMODE_012456    ; 101: ADD/SUB/CMP/OR/AND
+        JMP     EA_OPMODE_012456    ; 110: ADD/SUB/CMP/OR/AND
+        JMP     EA_ADDA             ; 111: ADDA
+
+EA_OPMODE_012456
+        JSR     EA_SIZE_OPMODE_012456    
+        
+        MOVE.B  #$20,(A2)+          ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space 
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        
+        ; Operation: <ea> + Dn -> Dn
+        CMP.B   #%000,D2            ; When 0 then Dn is destination
+        BEQ     Dn_DST
+        CMP.B   #%001,D2            ; When 1 then Dn is destination
+        BEQ     Dn_DST
+        CMP.B   #%010,D2            ; When 2 then Dn is destination
+        BEQ     Dn_DST
+        
+        ; Operation: Dn + <ea> -> <ea>
+        CMP.B   #%100,D2            ; When 4 then Dn is source
+        BEQ     Dn_SRC  
+        CMP.B   #%101,D2            ; When 5 then Dn is source
+        BEQ     Dn_SRC 
+        CMP.B   #%110,D2            ; When 6 then Dn is source
+        BEQ     Dn_SRC 
+        
+        BRA     EA_INVALID
+
+Dn_DST
+        ; Get source and store into decode buffer
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
+        
+        MOVE.L  D0,D3               ; Store the src mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift 
+        JSR     AND_OR_CHECK        ; Check if opcode is AND/OR   
+        JSR     EA_GEN_SRC          ; Get EA print
+        
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
+        
+        ; Get desination and store into decode buffer
+        MOVE.L  D0,D4               ; Store the dest reg in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
+        
+        MOVE.L  #0,D3               ; Store 000 into D3, so it can jump to Dn 
+        JSR     EA_GEN_SRC          ; Get the Dn print
+        JMP     EA_FINISH           ; Opcode is finish
+          
+Dn_SRC  
+        CMP.B   #11,D6              ; If first nibble is 1011 (indicates CMP opcode)
+        BEQ     EA_INVALID          ; Then branch to error message
+     
+        ; Get source and store into decode buffer
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
+        
+        MOVE.L  #0,D3               ; Store 000 into D3, so it can jump to Dn 
+        JSR     EA_GEN_SRC          ; Get the Dn print
+        
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
+
+        ; Get destination and store into decode buffer
+        MOVE.L  D0,D4               ; Store the dst reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
+        
+        MOVE.L  D0,D3               ; Store the dest mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift
+        JSR     An_CHECK            ; Check if mode is An
+       
+        JSR     EA_GEN_SRC          ; Get EA print
+        JMP     EA_FINISH           ; Opcode is finish
+        
+AND_OR_CHECK
+        CMP.B   #12,D6              ; If first nibble is 1100 (indicates AND opcode)
+        BEQ     An_CHECK            ; Go check if mode is An 
+        CMP.B   #8,D6               ; If first nibble is 1000 (indicates OR opcode)
+        BEQ     OR_SPACE            ; Go to OR_SPACE  
+        RTS
+        
+OR_SPACE
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        BEQ     An_CHECK            ; Check if mode is An
+        
+An_CHECK 
+        CMP.B   #1,D3               ; If mode is An     
+        BEQ     EA_INVALID          ; Then branch to error message
+        RTS   
+
+EA_ADDA
+        JSR     EA_SIZE_ADDA        ; Get size    
+
+        MOVE.B  #$20,(A2)+          ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        
+        ; Get source and store into decode buffer
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
+        
+        MOVE.L  D0,D3               ; Store the src mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift 
+        JSR     EA_GEN_SRC
+        
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
+        
+        ; Get desination and store into decode buffer
+        MOVE.L  D0,D4               ; Store the dest reg in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
+        
+        MOVE.L  #1,D3               ; Store 001 into D3, so it can jump to An 
+        JSR     EA_GEN_SRC          ; Go get EA print
+        JMP     EA_FINISH           ; Opcode is finish
+
 EA_MOVEM        ; 6: ea_movem
+
 EA_TRAP         ; 7: ea_trap
+
 EA_QUICK        ; 8: ea_quick
+
+
 EA_BRANCH       ; 9: ea_branch
 
 EA_REG
@@ -1248,14 +1493,20 @@ IMMEDIATE
         BEQ     DO_ITOA_MOVE
         CMP.B   #2, D6              ; If MOVE.l / MOVEA.l (code0010)
         BEQ     DO_ITOA_MOVE
-        CMP.B   #3, D6              ; If  MOVE.w / MOVEA.w (code0011)
-        BEQ     DO_ITOA_MOVE
+        CMP.B   #3, D6              ; If MOVE.w / MOVEA.w (code0011)
+        BEQ     DO_ITOA_MOVE        
+        CMP.B   #13, D6             ; If ADD / ADDA (code1101)
+        BEQ     DO_ITOA_OPMODE
         
         JSR     ITOA                ; Go to ITOA when not a move instruction
         RTS
         
 DO_ITOA_MOVE
         JSR ITOA_MOVE
+        RTS
+              
+DO_ITOA_OPMODE
+        JSR ITOA_OPMODE
         RTS
               
 EA_WRONG_SIZE 
@@ -1282,6 +1533,12 @@ SRC_INVALID
         TRAP    #15
         BRA     DONE
         
+EA_INVALID  
+        LEA     EA_INVALID_MSG, A1 
+        MOVE.B  #14, D0
+        TRAP    #15
+        BRA     DONE
+    
 DONE    SIMHALT             ; halt simulator
 
 * Put variables and constants here
@@ -1328,7 +1585,7 @@ ea_type_movea       EQU     2       ; EA Type = movea
 ea_type_movea6      EQU     12      ; EA Type = movea * 6
 ea_type_lea         EQU     3       ; EA Type = lea
 ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
-ea_type_ext         EQU     5       ; EA Type = ext
+ea_type_ext         EQU     5       ; EA Type = ext, add, adda
 ea_type_movem       EQU     6       ; EA Type = movem
 ea_type_trap        EQU     7       ; EA Type = trap
 ea_type_quick       EQU     8       ; EA Type = addq, subq
@@ -1336,14 +1593,16 @@ ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
 ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
 ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
 ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
+
 WRONG_SIZE_MESSAGE  DC.B    'Wrong size.',CR,LF,0
-ABSOLUTE_WRONGREG   DC.B    'Error. Register does not exist for Absolute and immediate.',CR,LF,0
-EA_TYPE_ERROR       DC.B    'Error. EA type is not supported.',CR,LF,0
-DST_INVALID_MSG     DC.B    'Error. Destination effective address is invalid.',CR,LF,0
-SRC_INVALID_MSG     DC.B    'Error. Source effective address is invalid.',CR,LF,0
-OPCODE_INVALID      DC.B    'Error. Opcode is invalid.',CR,LF,0
-ERROR_MESSAGE       DC.B    'Error, the input is invalid.',CR,LF,0  
-ODD_ERROR_MESSAGE   DC.B    'Error, the last digit of the address is odd, which is invalid.',CR,LF,0  
+ABSOLUTE_WRONGREG   DC.B    'ERROR: Register does not exist for Absolute and immediate',CR,LF,0
+EA_TYPE_ERROR       DC.B    'ERROR: EA type is not supported',CR,LF,0
+DST_INVALID_MSG     DC.B    'ERROR: Destination effective address is invalid',CR,LF,0
+SRC_INVALID_MSG     DC.B    'ERROR: Source effective address is invalid',CR,LF,0
+EA_INVALID_MSG      DC.B    'ERROR: Invalid addressing mode',CR,LF,0
+OPCODE_INVALID      DC.B    'ERROR: Opcode is invalid',CR,LF,0
+ERROR_MESSAGE       DC.B    'ERROR: The input is invalid',CR,LF,0  
+ODD_ERROR_MESSAGE   DC.B    'ERROR: The last digit of the address is odd, which is invalid',CR,LF,0  
              
 WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 
@@ -1363,7 +1622,6 @@ END_IN              DC.B        'Enter an ending address: ',CR,LF,0
 START_ADDRESS       DS.B        32     
 END_ADDRESS         DS.B        32 
      
-
 
     END    START        ; last line of source
 
