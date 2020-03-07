@@ -1397,7 +1397,6 @@ EA_TRAP         ; 7: ea_trap
 
 EA_QUICK        ; 8: ea_quick
 
-
 EA_BRANCH       ; 9: ea_branch
 
 EA_REG
