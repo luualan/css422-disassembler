@@ -811,7 +811,7 @@ OP_DIVU
         MOVE.B  #'I',(A2)+
         MOVE.B  #'V',(A2)+
         MOVE.B  #'U',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_ext,D1
         JSR     EA_START
         JMP     OP_FINISH
   
@@ -849,7 +849,7 @@ OP_MULU
         MOVE.B  #'U',(A2)+
         MOVE.B  #'L',(A2)+
         MOVE.B  #'U',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_ext,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -858,7 +858,7 @@ OP_MULS
         MOVE.B  #'U',(A2)+
         MOVE.B  #'L',(A2)+
         MOVE.B  #'S',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_ext,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -1009,6 +1009,13 @@ EA_SIZE_ADDA                        ; Check opmode field for size
         CMP.B   #%111,D2            ; When 7 then .l
         BEQ     EA_SIZE_L
         BRA     EA_WRONG_SIZE       ; wrong size
+        
+EA_SIZE_MULS_MULU_DIV               ; Check opmode field for size
+        CMP.B   #%011,D2            ; When 3 then .w MULU, DIVU
+        BEQ     EA_SIZE_W       
+        CMP.B   #%111,D2            ; When 7 then .l MULS
+        BEQ     EA_SIZE_W
+        BRA     EA_WRONG_SIZE       ; wrong size
 
 EA_SIZE_B
         MOVE.B  #'.',(A2)+
@@ -1070,6 +1077,7 @@ EA_MOVE                             ; 1: ea_move
         JSR     EA_SIZE_MOVE
         
         MOVE.B  #$20,(A2)+          ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space
         
         ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
@@ -1261,11 +1269,11 @@ EA_EXT_TABLE
         JMP     EA_OPMODE_012456    ; 000: ADD/SUB/CMP/OR/AND
         JMP     EA_OPMODE_012456    ; 001: ADD/SUB/CMP/OR/AND
         JMP     EA_OPMODE_012456    ; 010: ADD/SUB/CMP/OR/AND
-        JMP     EA_ADDA             ; 011: ADDA
+        JMP     EA_OPMODE_37        ; 011: ADDA/MULS/MULU/DIVU
         JMP     EA_OPMODE_012456    ; 100: ADD/SUB/CMP/OR/AND
         JMP     EA_OPMODE_012456    ; 101: ADD/SUB/CMP/OR/AND
         JMP     EA_OPMODE_012456    ; 110: ADD/SUB/CMP/OR/AND
-        JMP     EA_ADDA             ; 111: ADDA
+        JMP     EA_OPMODE_37        ; 111: ADDA/MULS/MULU/DIVU
 
 EA_OPMODE_012456
         JSR     EA_SIZE_OPMODE_012456    
@@ -1361,6 +1369,45 @@ An_CHECK
         CMP.B   #1,D3               ; If mode is An     
         BEQ     EA_INVALID          ; Then branch to error message
         RTS   
+
+EA_OPMODE_37
+        CMP.B   #8,D6               ; If first nibble 1000: DIVU
+        BEQ     EA_MULS_MULU_DIV
+        CMP.B   #12,D6              ; If first nibble 1100: MULS/MULU
+        BEQ     EA_MULS_MULU_DIV
+        CMP.B   #13,D6              ; If first nibble 1101: ADDA
+        BEQ     EA_ADDA                
+
+EA_MULS_MULU_DIV
+        JSR     EA_SIZE_MULS_MULU_DIV 
+        MOVe.B  #1,D2               ; Set D2 to 1, since we know size is word   
+
+        MOVE.B  #$20,(A2)+          ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        
+        ; Get source and store into decode buffer
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
+        
+        MOVE.L  D0,D3               ; Store the src mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift
+        JSR     An_CHECK            ; Check if mode is An 
+        JSR     EA_GEN_SRC          ; Go get EA print
+        
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
+        
+        ; Get desination and store into decode buffer
+        MOVE.L  D0,D4               ; Store the dest reg in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
+        
+        MOVE.L  #0,D3               ; Store 000 into D3, so it can jump to Dn 
+        JSR     EA_GEN_SRC          ; Go get EA print
+        JMP     EA_FINISH           ; Opcode is finish
 
 EA_ADDA
         JSR     EA_SIZE_ADDA        ; Get size    
@@ -1630,6 +1677,7 @@ END_ADDRESS         DS.B        32
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
 
 
 
