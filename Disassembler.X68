@@ -600,7 +600,7 @@ OP_0100_TABLE
         JMP     OP_LEA              ; B Go to opcode LEA
         JMP     OP_MOVEM            ; C Go to opcode MOVEM
         JMP     OP_LEA              ; D Go to opcode LEA
-        JMP     JSR_NOP_RTS         ; E Go to opcode JSR, NOP, or RTS
+        JMP     JSR_OR_RTS          ; E Go to opcode JSR, NOP, or RTS
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
 OP_1100_TABLE
@@ -696,7 +696,7 @@ OP_RO_CHECK
         CMP.B   #0,D1               ; Go right
         BEQ     OP_ROR              ; 0 Go to opcode ROR
         
-JSR_NOP_RTS
+JSR_OR_RTS
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D5          ; Used to shift 6 times to right
@@ -705,8 +705,6 @@ JSR_NOP_RTS
         BEQ     OP_JSR              ; Go to opcode JSR
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #src_reg,D1         ; Extract src reg position from instruction word
-        CMP.B   #1,D1               ; When 001 in src register
-        BEQ     OP_NOP              ; Go to opcode NOP
         CMP.B   #5,D1               ; When 005 in src register
         BEQ     OP_RTS              ; Go to opcode RTS
         BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported 
@@ -715,7 +713,7 @@ OP_UNSUPPORTED
         LEA     OPCODE_INVALID,A1 
         MOVE.B  #14,D0
         TRAP    #15
-        BRA     DONE
+        JMP     OP_FINISH
         
 *----------------------------------------------------------------------------------------------*
 * param D0 the current instruction in word
@@ -784,15 +782,7 @@ OP_CLR
         MOVE.L  #ea_type_dstonly,D1
         JSR     EA_START
         JMP     OP_FINISH
-        
-OP_NOP
-        MOVE.B  #'N',(A2)+
-        MOVE.B  #'O',(A2)+
-        MOVE.B  #'P',(A2)+
-        MOVE.L  #ea_type_immediate,D1
-        JSR     EA_START
-        JMP     OP_FINISH
-        
+                
 OP_RTS
         MOVE.B  #'R',(A2)+
         MOVE.B  #'T',(A2)+
