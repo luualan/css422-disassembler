@@ -2833,7 +2833,7 @@ An_CHECK
         RTS   
       
 Dn_CHECK 
-        CMP.B   #0,D3               ; If mode is An     
+        CMP.B   #0,D3               ; If mode is Dn     
         BEQ     EA_INVALID          ; Then branch to error message
         RTS    
      
@@ -2843,7 +2843,7 @@ IMMEDIATE_CHECK
         RTS
         
 REGISTER_CHECK
-        CMP.B   #4,D3               ; If 100 in register
+        CMP.B   #4,D4               ; If 100 in register
         BEQ     EA_INVALID          ; Branch to invalid
         RTS   
               
