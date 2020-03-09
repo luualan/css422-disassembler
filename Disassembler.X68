@@ -122,7 +122,6 @@ LAST_DIGIT_ODD      LEA     ODD_ERROR_MESSAGE, A1
                     BEQ     PROMPT_START    ; Go back to start prompt
                     CMP.B   #1,D6           ; When D6 is 1
                     BEQ     PROMPT_END      ; Go back to end prompt
-
 *--------------------------------------------------------------------------------------
 * param D2 data size to convert into ASCII
 * param A2 a pointer to decode_buf
@@ -264,7 +263,6 @@ ITOA_CONVERT_A_TO_F
 ITOA_DONE
         MOVEM.L (SP)+, D0-D1
         RTS
-
 *-------------------------------------------------------------------------------*
 START_DECODING
         CLR.L   D2
@@ -364,7 +362,6 @@ DECODE_MEMORY
 OP_FINISH
         MOVEM.L (SP)+, D2/A6,
         RTS
-
 *------------------------------------------------------------------------------------*
 *Clear the 32 bits within the decoded_buffer       
 OP_CLEAR_DATA
@@ -703,10 +700,13 @@ JSR_NOP_RTS
         LSR.W   D5,D1               ; Shift dst mode into LSB position
         CMP.B   #2, D1              ; When 010 in destination mode
         BEQ     OP_JSR              ; Go to opcode JSR
+        
         MOVE.L  D0,D1               ; D0 is current instruction word
-        ANDI.W  #src_reg,D1         ; Extract src reg position from instruction word
-        JSR     NOP_CHECK
-        JSR     RTS_CHECK
+        ANDI.W  #fourth_nibble,D1   ; Extract dst mode position from instruction word
+        CMP.B   #1, D1  
+        BEQ     NOP_CHECK
+        CMP.B   #5, D1  
+        BEQ     RTS_CHECK
         BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
         
 NOP_CHECK
@@ -714,67 +714,54 @@ NOP_CHECK
         ANDI.W  #first_nibble,D1    ; Extract dst mode position from instruction word
         MOVE.B  #right12,D5         ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #4, D1              ; When 010 in destination mode
+        CMP.B   #4, D1              
         BEQ     NOP_CHECK_TWO
-        RTS
+        BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
         
 NOP_CHECK_TWO
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #second_nibble,D1   ; Extract dst mode position from instruction word
         MOVE.B  #right8,D5          ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #14, D1             ; When 010 in destination mode
+        CMP.B   #14, D1            
         BEQ     NOP_CHECK_THREE
-        RTS
+        BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
 
 NOP_CHECK_THREE
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #third_nibble,D1    ; Extract dst mode position from instruction word
         MOVE.B  #right4,D5          ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #7, D1              ; When 010 in destination mode
-        BEQ     NOP_CHECK_FOUR
-        RTS
-
-NOP_CHECK_FOUR
-        MOVE.L  D0,D1               ; D0 is current instruction word
-        ANDI.W  #fourth_nibble,D1   ; Extract dst mode position from instruction word
-        CMP.B   #1, D1              ; When 010 in destination mode
+        CMP.B   #7, D1              
         BEQ     OP_NOP
-        RTS
-
+        BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
+     
 RTS_CHECK
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #first_nibble,D1    ; Extract dst mode position from instruction word
         MOVE.B  #right12,D5         ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #4, D1              ; When 010 in destination mode
+        CMP.B   #4, D1              
         BEQ     RTS_CHECK_TWO
-        RTS
+        BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
         
 RTS_CHECK_TWO
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #second_nibble,D1   ; Extract dst mode position from instruction word
         MOVE.B  #right8,D5          ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #14, D1             ; When 010 in destination mode
+        CMP.B   #14, D1             
         BEQ     RTS_CHECK_THREE
-        RTS
+        BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
 
 RTS_CHECK_THREE
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #third_nibble,D1    ; Extract dst mode position from instruction word
         MOVE.B  #right4,D5          ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #7, D1              ; When 010 in destination mode
-        BEQ     NOP_CHECK_FOUR
-        RTS
-
-RTS_CHECK_FOUR
-        MOVE.L  D0,D1               ; D0 is current instruction word
-        ANDI.W  #fourth_nibble,D1   ; Extract dst mode position from instruction word
-        CMP.B   #5, D1              ; When 010 in destination mode
+        CMP.B   #7, D1             
         BEQ     OP_RTS
+        BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
 
 OP_UNSUPPORTED
         LEA     OPCODE_INVALID,A1 
