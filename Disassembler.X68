@@ -294,6 +294,21 @@ DECODE_PAUSE
         BRA     START_DECODING
 
 CONTINUE_OR_END
+        CLR.L   D0
+        CLR.L   D1
+        CLR.L   D2
+        CLR.L   D3
+        CLR.L   D4
+        CLR.L   D5
+        CLR.L   D6
+        CLR.L   D7
+        MOVEA   #0,A1
+        MOVEA   #0,A2
+        MOVEA   #0,A3
+        MOVEA   #0,A4
+        MOVEA   #0,A5
+        MOVEA   #0,A6
+
         MOVE.B  #task14, D0
         LEA     PROMPT_AGAIN, A1
         TRAP    #15
@@ -2951,6 +2966,7 @@ END_ADDRESS         DS.B        32
      
 
     END    START        ; last line of source
+
 
 
 
