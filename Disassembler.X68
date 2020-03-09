@@ -600,7 +600,7 @@ OP_0100_TABLE
         JMP     OP_LEA              ; B Go to opcode LEA
         JMP     OP_MOVEM            ; C Go to opcode MOVEM
         JMP     OP_LEA              ; D Go to opcode LEA
-        JMP     JSR_OR_RTS          ; E Go to opcode JSR, NOP, or RTS
+        JMP     JSR_NOP_RTS         ; E Go to opcode JSR, NOP, or RTS
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
 OP_1100_TABLE
@@ -696,7 +696,7 @@ OP_RO_CHECK
         CMP.B   #0,D1               ; Go right
         BEQ     OP_ROR              ; 0 Go to opcode ROR
         
-JSR_OR_RTS
+JSR_NOP_RTS
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D5          ; Used to shift 6 times to right
@@ -705,9 +705,76 @@ JSR_OR_RTS
         BEQ     OP_JSR              ; Go to opcode JSR
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #src_reg,D1         ; Extract src reg position from instruction word
-        CMP.B   #5,D1               ; When 005 in src register
-        BEQ     OP_RTS              ; Go to opcode RTS
-        BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported 
+        JSR     NOP_CHECK
+        JSR     RTS_CHECK
+        BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
+        
+NOP_CHECK
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #first_nibble,D1    ; Extract dst mode position from instruction word
+        MOVE.B  #right12,D5         ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        CMP.B   #4, D1              ; When 010 in destination mode
+        BEQ     NOP_CHECK_TWO
+        RTS
+        
+NOP_CHECK_TWO
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #second_nibble,D1   ; Extract dst mode position from instruction word
+        MOVE.B  #right8,D5          ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        CMP.B   #14, D1             ; When 010 in destination mode
+        BEQ     NOP_CHECK_THREE
+        RTS
+
+NOP_CHECK_THREE
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #third_nibble,D1    ; Extract dst mode position from instruction word
+        MOVE.B  #right4,D5          ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        CMP.B   #7, D1              ; When 010 in destination mode
+        BEQ     NOP_CHECK_FOUR
+        RTS
+
+NOP_CHECK_FOUR
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #fourth_nibble,D1   ; Extract dst mode position from instruction word
+        CMP.B   #1, D1              ; When 010 in destination mode
+        BEQ     OP_NOP
+        RTS
+
+RTS_CHECK
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #first_nibble,D1    ; Extract dst mode position from instruction word
+        MOVE.B  #right12,D5         ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        CMP.B   #4, D1              ; When 010 in destination mode
+        BEQ     RTS_CHECK_TWO
+        RTS
+        
+RTS_CHECK_TWO
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #second_nibble,D1   ; Extract dst mode position from instruction word
+        MOVE.B  #right8,D5          ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        CMP.B   #14, D1             ; When 010 in destination mode
+        BEQ     RTS_CHECK_THREE
+        RTS
+
+RTS_CHECK_THREE
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #third_nibble,D1    ; Extract dst mode position from instruction word
+        MOVE.B  #right4,D5          ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        CMP.B   #7, D1              ; When 010 in destination mode
+        BEQ     NOP_CHECK_FOUR
+        RTS
+
+RTS_CHECK_FOUR
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #fourth_nibble,D1   ; Extract dst mode position from instruction word
+        CMP.B   #5, D1              ; When 010 in destination mode
+        BEQ     OP_RTS
 
 OP_UNSUPPORTED
         LEA     OPCODE_INVALID,A1 
@@ -782,7 +849,13 @@ OP_CLR
         MOVE.L  #ea_type_dstonly,D1
         JSR     EA_START
         JMP     OP_FINISH
-                
+        
+OP_NOP
+        MOVE.B  #'N',(A2)+
+        MOVE.B  #'O',(A2)+
+        MOVE.B  #'P',(A2)+
+        JMP     OP_FINISH
+        
 OP_RTS
         MOVE.B  #'R',(A2)+
         MOVE.B  #'T',(A2)+
@@ -1102,7 +1175,7 @@ OP_ROL
         JSR     EA_START
         JMP     OP_FINISH
         
-*-----------------------------------------------------------------------*   
+*------------------------------------------------------------------------------------------------*
 EA_START
         MOVEM.L D2-D4/A0-A1, -(SP)
         
@@ -1180,14 +1253,7 @@ EA_SIZE_ADDA                        ; Check opmode field for size
         CMP.B   #%111,D2            ; When 7 then .l
         BEQ     EA_SIZE_L
         BRA     EA_WRONG_SIZE       ; wrong size
-        
-EA_SIZE_MULS_MULU_DIV               ; Check opmode field for size
-        CMP.B   #%011,D2            ; When 3 then .w MULU, DIVU
-        BEQ     EA_SIZE_W       
-        CMP.B   #%111,D2            ; When 7 then .l MULS
-        BEQ     EA_SIZE_W
-        BRA     EA_WRONG_SIZE       ; wrong size
-        
+                
 EA_SIZE_MEMORY_SHIFTS
         CMP.B   #%00,D2             ; .w
         BEQ     EA_SIZE_W_MEMORY      
@@ -1211,22 +1277,22 @@ EA_SIZE_L
         RTS
 EA_SIZE_DONE
         RTS
-        
+*------------------------------------------------------------------------------------------------*     
 EA_IMMEDIATE                        ; 0 ea_immediate
         MOVE.L  D0,D1
         ANDI.W  #dst_mode,D1        ; Get bits 8-6 from D1
         MOVE.B  #right6,D5          ; Store 6 into D5
-        LSR.W   D5,D1               ; Shift D1 six times to the LSB position
+        LSR.W   D5,D1               ; Shift D1 six times to LSB position
         ANDI.B  #3,D1               ; Remove the front bit from D1
-        MOVE.B  D1,D2               ; Store D1 into D2 (D2 is used to check size)
+        MOVE.B  D1,D2               ; Store D1 into D2 (used to check size)
         JSR     EA_SIZE_GENERAL     ; Get size 
         
         MOVE.B  #$20,(A2)+          ; Add space after size
         MOVE.B  #$20,(A2)+          ; Add space 
 
         ; Get source and store into decode buffer
-        MOVE.L  #4,D4               ; Store 100 into D4 (Used to jump to immediate)
-        MOVE.L  #7,D3               ; Store 111 into D3 (Go to absolute and immediate)
+        MOVE.L  #4,D4               ; Store 100 into D4 (jump to immed)
+        MOVE.L  #7,D3               ; Store 111 into D3 (Go abs and immed)
         JSR     EA_GEN_SRC          ; Get EA src print 
 
         MOVE.B  #$2C,(A2)+          ; Add comma after size print
@@ -1245,7 +1311,7 @@ EA_IMMEDIATE                        ; 0 ea_immediate
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
 
         JMP     EA_FINISH           ; Opcode is finish
-
+*------------------------------------------------------------------------------------------------*
 EA_MOVE                             ; 1: ea_move
         MOVE.L  D0,D1
         ANDI.W  #first_nibble,D1
@@ -1286,8 +1352,7 @@ EA_MOVE                             ; 1: ea_move
         JSR     EA_GEN_SRC          ; Get EA print
         
         JMP     EA_FINISH           ; Opcode is finish
-
-           
+*------------------------------------------------------------------------------------------------*          
 EA_MOVEA                            ; 2: ea_movea
         MOVE.L  D0,D1
         ANDI.W  #first_nibble,D1
@@ -1329,7 +1394,7 @@ EA_MOVEA                            ; 2: ea_movea
 MOVEA_DST_VALID
         JSR     EA_GEN_SRC          ; Get EA print
         JMP     EA_FINISH           ; Opcode is finish
-
+*------------------------------------------------------------------------------------------------*
 EA_LEA                              ; 3: ea_lea
         MOVE.B  #$20,(A2)+          ; print out a space after the LEA
         MOVE.B  #$20,(A2)+          ; print out a space after the LEA
@@ -1372,7 +1437,7 @@ CHANGE_TO_001
         LSR.W   D5,D4               ; do the actual shift
         JSR     EA_GEN_SRC          ; Print out the address register
         JMP     EA_FINISH           ; Opcode is finish
-
+*------------------------------------------------------------------------------------------------*
 EA_DSTONLY                          ; 4: ea_dstonly
         MOVE.L  D0,D1
         ANDI.W  #second_nibble,D1   ; get second nibble from D1
@@ -1433,7 +1498,7 @@ EA_JSR  MOVE.B  #$20,(A2)+          ; Add space
 JSR_EA_VALID
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
         JMP     EA_FINISH           ; Opcode is finish
-
+*------------------------------------------------------------------------------------------------*
 EA_EXT                              ; 5: ea_ext
         MOVE.L  D0,D1
         ANDI.W  #dst_mode,D1        ; Get bits 8-6 from D1 (get opmode)
@@ -1555,10 +1620,10 @@ EA_OPMODE_37
         BEQ     EA_ADDA                
 
 EA_MULS_MULU_DIV
-        JSR     EA_SIZE_MULS_MULU_DIV 
         MOVE.B  #1,D2               ; Set D2 to 1, since we know size is word   
 
-        MOVE.B  #$20,(A2)+          ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        MOVE.B  #$20,(A2)+          ; Print out a space
         MOVE.B  #$20,(A2)+          ; Print out a space
         
         ; Get source and store into decode buffer
@@ -1613,7 +1678,7 @@ EA_ADDA
         MOVE.L  #1,D3               ; Store 001 into D3, so it can jump to An 
         JSR     EA_GEN_SRC          ; Go get EA print
         JMP     EA_FINISH           ; Opcode is finish
-
+*------------------------------------------------------------------------------------------------*
 EA_MOVEM        ; 6: ea_movem
         MOVE.L  D0, D1
         ANDI.W  #third_nibble,D1
@@ -2380,8 +2445,7 @@ NORMAL_FINISH
         MOVE.W  (A5)+, D0
         
         JMP     EA_FINISH
-
-
+*------------------------------------------------------------------------------------------------*
 EA_SHIFTS       ; 7: ea_shifts
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
@@ -2516,7 +2580,7 @@ REGISTER_SRC
         ANDI.W  #src_reg,D4         ; Get the bits at 2-0
         JSR     EA_Dn               ; store Dn into decode buffer
         JMP     EA_FINISH           ; Opcode is finish
-
+*------------------------------------------------------------------------------------------------*
 EA_QUICK        ; 8: ea_quick
         CMP.B   #5, D6              ; check if the first nibble is 5 for ADDQ
         BEQ     ADDQ_EA_CALC
@@ -2594,7 +2658,7 @@ MOVEQ_EA_CALC
         JSR     EA_GEN_SRC
         
         JMP     EA_FINISH
-
+*------------------------------------------------------------------------------------------------*
 EA_BRANCH       ; 9: ea_branch
         MOVE.B  #$20,(A2)+          ; print out a space after the Branch
         MOVE.B  #$20,(A2)+          ; print out a space after the Branch
@@ -2636,8 +2700,6 @@ BRANCH_WORD_CHECK
         JSR     ITOA_BYTE_BRANCH    ; Print. 
 
         JMP     EA_FINISH
-
-EA_REG
 
 EA_GEN_SRC
         LEA     EA_GEN_TABLE_SRC, A0
@@ -2770,31 +2832,31 @@ EA_WRONG_SIZE
         LEA     WRONG_SIZE_MESSAGE, A1 
         MOVE.B  #14, D0
         TRAP    #15
-        BRA     DONE
+        JMP     OP_FINISH
         
 ABSOLUTE_IMMEDIATE_ERROR  
         LEA     ABSOLUTE_WRONGREG, A1 
         MOVE.B  #14, D0
         TRAP    #15
-        BRA     DONE
+        JMP     OP_FINISH
         
 DST_INVALID
         LEA     DST_INVALID_MSG, A1 
         MOVE.B  #14, D0
         TRAP    #15
-        BRA     DONE
+        JMP     OP_FINISH
         
 SRC_INVALID 
         LEA     SRC_INVALID_MSG, A1 
         MOVE.B  #14, D0
         TRAP    #15
-        BRA     DONE
+        JMP     OP_FINISH
         
 EA_INVALID  
         LEA     EA_INVALID_MSG, A1 
         MOVE.B  #14, D0
         TRAP    #15
-        BRA     DONE
+        JMP     OP_FINISH
          
 DONE    SIMHALT             ; halt simulator
 
@@ -2891,6 +2953,7 @@ END_ADDRESS         DS.B        32
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
 
 
 
