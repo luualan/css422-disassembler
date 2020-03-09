@@ -1021,7 +1021,6 @@ OP_MOVEQ
         MOVE.B  #'M',(A2)+
         MOVE.B  #'O',(A2)+
         MOVE.B  #'V',(A2)+
-        MOVE.B  #'V',(A2)+
         MOVE.B  #'E',(A2)+
         MOVE.B  #'Q',(A2)+
         MOVE.L  #ea_type_quick,D1
@@ -1276,6 +1275,7 @@ EA_IMMEDIATE                        ; 0 ea_immediate
         
         MOVE.B  #$20,(A2)+          ; Add space after size
         MOVE.B  #$20,(A2)+          ; Add space 
+        MOVE.B  #$20,(A2)+          ; Add space
 
         ; Get source and store into decode buffer
         MOVE.L  #4,D4               ; Store 100 into D4 (jump to immed)
@@ -1309,6 +1309,7 @@ EA_MOVE                             ; 1: ea_move
         JSR     EA_SIZE_MOVE
         
         MOVE.B  #$20,(A2)+          ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space
         MOVE.B  #$20,(A2)+          ; Print out a space
         
         ; Get source and store into decode buffer
@@ -1350,6 +1351,7 @@ EA_MOVEA                            ; 2: ea_movea
         JSR     EA_SIZE_MOVEA 
         
         MOVE.B  #$20,(A2)+          ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space after the size
         
         ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
@@ -1387,7 +1389,9 @@ EA_LEA                              ; 3: ea_lea
         MOVE.B  #$20,(A2)+          ; print out a space after the LEA
         MOVE.B  #$20,(A2)+          ; print out a space after the LEA
         MOVE.B  #$20,(A2)+          ; print out a space after the LEA
-        
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+
         MOVE.L  D0,D4               ; Store the src reg in D4
         ANDI.W  #src_reg,D4         ; get the bits at 2-0
         
@@ -1448,6 +1452,7 @@ EA_CLEAR
         MOVE.B  #$20,(A2)+          ; Add space after size
         MOVE.B  #$20,(A2)+          ; Add space 
         MOVE.B  #$20,(A2)+          ; Add space 
+        MOVE.B  #$20,(A2)+          ; Add space
         
         ; Get desination and store into decode buffer
         MOVE.L  D0,D4               ; Store the current address into D4 
@@ -1467,6 +1472,7 @@ EA_JSR  MOVE.B  #$20,(A2)+          ; Add space
         MOVE.B  #$20,(A2)+          ; Add space 
         MOVE.B  #$20,(A2)+          ; Add space 
         MOVE.B  #$20,(A2)+          ; Add space 
+        MOVE.B  #$20,(A2)+          ; Add space
 
         ; Get EA and store into decode buffer   
         MOVE.L  D0,D4               ; Store the current address into D4 
@@ -1512,6 +1518,7 @@ EA_OPMODE_012456
         MOVE.B  #$20,(A2)+          ; Print out a space after the size
         MOVE.B  #$20,(A2)+          ; Print out a space 
         MOVE.B  #$20,(A2)+          ; Print out a space
+        MOVE.B  #$20,(A2)+          ; Add space
         
         ; Operation: <ea> + Dn -> Dn
         CMP.B   #%000,D2            ; When 0 then Dn is destination
@@ -1595,7 +1602,7 @@ EA_AND
         JMP     An_CHECK            ; Go check if mode is An 
     
 EA_OR
-        MOVE.B  #$20,(A2)+          ; Print out a space
+        MOVE.B  #$20,(A2)+          ; Add space
         JMP     An_CHECK            ; Check if mode is An
         
 EA_OPMODE_37
@@ -1612,7 +1619,9 @@ EA_MULS_MULU_DIV
         MOVE.B  #$20,(A2)+          ; Print out a space
         MOVE.B  #$20,(A2)+          ; Print out a space
         MOVE.B  #$20,(A2)+          ; Print out a space
-        
+        MOVE.B  #$20,(A2)+          ; Add space
+        MOVE.B  #$20,(A2)+          ; Add space
+
         ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
         ANDI.W  #src_reg,D4         ; Get the bits at 2-0
@@ -1642,6 +1651,8 @@ EA_ADDA
 
         MOVE.B  #$20,(A2)+          ; Print out a space after the size
         MOVE.B  #$20,(A2)+          ; Print out a space
+        MOVE.B  #$20,(A2)+          ; Add space        
+        
         
         ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
@@ -2469,6 +2480,7 @@ EA_MEMORY_SHIFTS
         MOVE.B  #$20,(A2)+          ; Print out a space
         MOVE.B  #$20,(A2)+          ; Print out a space
         MOVE.B  #$20,(A2)+          ; Print out a space
+        MOVE.B  #$20,(A2)+          ; Add space
         
         JSR     FRONT_FORMAT
         JSR     EA_GEN_SRC          ; Go get EA print
@@ -2517,6 +2529,7 @@ IMMEDIATE_SRC
         MOVE.B  #$20,(A2)+          ; Add space
         MOVE.B  #$20,(A2)+          ; Add space
         MOVE.B  #$20,(A2)+          ; Add space
+        MOVE.B  #$20,(A2)+          ; Add space
         
         ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
@@ -2551,7 +2564,8 @@ REGISTER_SRC
         MOVE.B  #$20,(A2)+          ; Add space
         MOVE.B  #$20,(A2)+          ; Add space
         MOVE.B  #$20,(A2)+          ; Add space
-        
+        MOVE.B  #$20,(A2)+          ; Add space
+
         ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
         ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
@@ -2585,6 +2599,7 @@ ADDQ_EA_CALC
         JSR     EA_SIZE_GENERAL     ; Get size and print size.
         
         MOVE.B  #$20,(A2)+          ; Add space after size
+        MOVE.B  #$20,(A2)+          ; Add space
         MOVE.B  #$20,(A2)+          ; Add space
         
         MOVE.B  #$23,(A2)+          ; Add # symbol
@@ -2622,10 +2637,11 @@ DONT_CHANGE
         JMP     EA_FINISH
 
 MOVEQ_EA_CALC
-        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
-        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
-        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
-        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+        MOVE.B  #$20,(A2)+          ; print out a space after the MOVEQ
+        MOVE.B  #$20,(A2)+          ; print out a space after the MOVEQ
+        MOVE.B  #$20,(A2)+          ; Add space
+        MOVE.B  #$20,(A2)+          ; Add space
+
         MOVE.B  #$23,(A2)+          ; Add # symbol
         MOVE.B  #$24,(A2)+          ; Add $ symbol
         
@@ -2647,6 +2663,8 @@ MOVEQ_EA_CALC
         JMP     EA_FINISH
 *------------------------------------------------------------------------------------------------*
 EA_BRANCH       ; 9: ea_branch
+        MOVE.B  #$20,(A2)+          ; print out a space after the Branch
+        MOVE.B  #$20,(A2)+          ; print out a space after the Branch
         MOVE.B  #$20,(A2)+          ; print out a space after the Branch
         MOVE.B  #$20,(A2)+          ; print out a space after the Branch
         MOVE.B  #$20,(A2)+          ; print out a space after the Branch
@@ -2933,18 +2951,6 @@ END_ADDRESS         DS.B        32
      
 
     END    START        ; last line of source
-
-
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
-
-
-
-
-
 
 
 
