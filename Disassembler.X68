@@ -18,7 +18,6 @@ START:
 * for the starting and ending address causes a bus error. 
 * A1: a pointer to the message to print out. 
 *------------------------------------------------------------*
-
 DISP_W      MOVE.B  #14,D0	                ; Display Welcome Message. 
             LEA	    WELCOME,A1
             TRAP    #15
@@ -2881,11 +2880,9 @@ EA_INVALID
 DONE    SIMHALT             ; halt simulator
 
 * Put variables and constants here
-   
-       
+    
 buffer_size         EQU         64 
-decoded_buffer      EQU         $5000
-   
+decoded_buffer      EQU         $5000  
 CR                  EQU         $0D
 LF                  EQU         $0A
 stack               EQU         $0000A000
@@ -2928,13 +2925,11 @@ ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
 ea_type_ext         EQU     5       ; EA Type = ext, add, adda
 ea_type_movem       EQU     6       ; EA Type = movem
 ea_type_shifts      EQU     7       ; EA Type = ASL/ASR/LSL/LSR/ROL/ROR
-; ea_type_trap        EQU     7       ; EA Type = trap
 ea_type_quick       EQU     8       ; EA Type = addq, subq
 ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
 ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
 ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
 ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
-ea_type_shifts      EQU     7
 
 WRONG_SIZE_MESSAGE  DC.B    'Wrong size.',CR,LF,0
 ABSOLUTE_WRONGREG   DC.B    'ERROR: Register does not exist for Absolute and immediate',CR,LF,0
@@ -2964,7 +2959,6 @@ END_IN              DC.B        'Enter an ending address: ',CR,LF,0
 START_ADDRESS       DS.B        32     
 END_ADDRESS         DS.B        32 
      
-
     END    START        ; last line of source
 
 
