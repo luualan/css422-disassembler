@@ -439,8 +439,10 @@ code1000                            ; Opcodes DIVU word and OR.B/W/L
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D5          ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #3, D1              ; When 011 in destination mode
+        CMP.B   #3,D1               ; When 011 in destination mode
         BEQ     OP_DIVU             ; Go to opcode DIVU word
+        CMP.B   #7,D1               ; When 111
+        BEQ     OP_UNSUPPORTED      ; Go to opcode unsupported
         BRA     OP_OR               ; Otherwise, go to opcode OR
 
 code1001                            ; Opcode SUB.B/W/L
@@ -488,9 +490,9 @@ code1110                            ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, L
         ANDI.W  #src_mode,D1                ; Extract 5-3 bits from instruction word
         MOVE.B  #right3,D5                  ; Used to shift 3 times to right
         LSR.W   D5,D1                       ; Shift 5-3 bits into LSB position
-        MULU    #6, D1                      ; Set displacement 
+        MULU    #6,D1                       ; Set displacement 
         LEA     OP_1110_TABLE_REGISTER,A0   ; Load table into A0
-        JMP     0(A0,D1)                    ; go to displacement (A0 + xxxx * 6)
+        JMP     0(A0,D1)                    ; go to displacement (A0 + D1 * 6)
 
 MEMORY_1110_LEFT    
         MOVE.L  D0,D1               ; D0 is current instruction word
@@ -592,14 +594,14 @@ OP_1101_TABLE
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
 OP_1110_TABLE_REGISTER
-        JMP     OP_ASR              ; 0 Go to opcode ASR
-        JMP     OP_LSR              ; 1 Go to opcode LSR
+        JMP     OP_AS_CHECK         ; 0 Check if AS is left or right
+        JMP     OP_LS_CHECK         ; 1 Check if LS is left or right
         JMP     OP_UNSUPPORTED      ; 2 Go to opcode unsupported  
-        JMP     OP_ROR              ; 3 Go to opcode ROR
-        JMP     OP_ASL              ; 4 Go to opcode ASL 
-        JMP     OP_LSL              ; 5 Go to opcode LSL
+        JMP     OP_RO_CHECK         ; 3 Check if RO is left or right
+        JMP     OP_AS_CHECK         ; 4 Check if AS is left or right
+        JMP     OP_LS_CHECK         ; 5 Check if LS is left or right
         JMP     OP_UNSUPPORTED      ; 6 Go to opcode unsupported 
-        JMP     OP_ROL              ; 7 Go to opcode ROL
+        JMP     OP_RO_CHECK         ; 7 Check if RO is left or right
         JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
         JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
         JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
@@ -609,6 +611,46 @@ OP_1110_TABLE_REGISTER
         JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
 
+OP_AS_CHECK
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
+        MOVE.B  #right6,D5          ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        ANDI.B  #4,D1               ; Get only bit 8 (dr)
+        LSR.W   #2,D1
+
+        CMP.B   #1,D1               ; Go left
+        BEQ     OP_ASL              ; 1 Go to opcode ASL
+        CMP.B   #0,D1               ; Go right
+        BEQ     OP_ASR              ; 0 Go to opcode ASR
+        
+OP_LS_CHECK
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
+        MOVE.B  #right6,D5          ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        ANDI.B  #4,D1               ; Get only bit 8 (dr)
+        LSR.W   #2,D1
+
+        CMP.B   #1,D1               ; Go left
+        BEQ     OP_LSL              ; 1 Go to opcode LSL
+        CMP.B   #0,D1               ; Go right
+        BEQ     OP_LSR              ; 0 Go to opcode LSR
+        
+
+OP_RO_CHECK
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
+        MOVE.B  #right6,D5          ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        ANDI.B  #4,D1               ; Get only bit 8 (dr)
+        LSR.W   #2,D1
+
+        CMP.B   #1,D1               ; Go left
+        BEQ     OP_ROL              ; 1 Go to opcode ROL
+        CMP.B   #0,D1               ; Go right
+        BEQ     OP_ROR              ; 0 Go to opcode ROR
+        
 JSR_NOP_RTS
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
@@ -647,7 +689,6 @@ OP_UNSUPPORTED
 
 *----------------------------------------------------------------------------------------------*
 * First 4 bits: 0000
-
 OP_SUBI
         MOVE.B  #'S',(A2)+
         MOVE.B  #'U',(A2)+
@@ -895,14 +936,14 @@ OP_ASR
         MOVE.B  #'A',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_shifts,D1
         JSR     EA_START
         JMP     OP_FINISH
 OP_ASL
         MOVE.B  #'A',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'L',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_shifts,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -910,7 +951,7 @@ OP_LSR
         MOVE.B  #'L',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_shifts,D1
         JSR     EA_START
         JMP     OP_FINISH
        
@@ -918,7 +959,7 @@ OP_LSL
         MOVE.B  #'L',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'L',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_shifts,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -926,7 +967,7 @@ OP_ROR
         MOVE.B  #'R',(A2)+
         MOVE.B  #'O',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_shifts,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -934,7 +975,7 @@ OP_ROL
         MOVE.B  #'R',(A2)+
         MOVE.B  #'O',(A2)+
         MOVE.B  #'L',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_shifts,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -958,7 +999,7 @@ EA_TYPE_TABLE
         JMP     EA_DSTONLY          ; 4: ea_dstonly
         JMP     EA_EXT              ; 5: ea_ext
         JMP     EA_MOVEM            ; 6: ea_movem
-        JMP     EA_TRAP             ; 7: ea_trap
+        JMP     EA_SHIFTS           ; 7: ea_shifts
         JMP     EA_QUICK            ; 8: ea_quick
         JMP     EA_branch           ; 9: ea_branch
         JMP     EA_FINISH
@@ -1016,6 +1057,13 @@ EA_SIZE_MULS_MULU_DIV               ; Check opmode field for size
         CMP.B   #%111,D2            ; When 7 then .l MULS
         BEQ     EA_SIZE_W
         BRA     EA_WRONG_SIZE       ; wrong size
+        
+EA_SIZE_MEMORY_SHIFTS
+        CMP.B   #%00,D2             ; .w
+        BEQ     EA_SIZE_W_MEMORY      
+        CMP.B   #%01,D2             ; .l
+        BEQ     EA_SIZE_L      
+        BRA     EA_WRONG_SIZE       ; wrong size
 
 EA_SIZE_B
         MOVE.B  #'.',(A2)+
@@ -1024,7 +1072,9 @@ EA_SIZE_B
 EA_SIZE_W
         MOVE.B  #'.',(A2)+
         MOVE.B  #'W',(A2)+
-        RTS
+        RTS     
+EA_SIZE_W_MEMORY
+        RTS        
 EA_SIZE_L
         MOVE.B  #'.',(A2)+
         MOVE.B  #'L',(A2)+
@@ -1309,7 +1359,7 @@ Dn_DST
         ANDI.W  #src_mode,D3        ; Get bits 5-3
         MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
         LSR.W   D5,D3               ; Do the actual shift 
-        JSR     AND_OR_CHECK        ; Check if opcode is AND/OR   
+        JSR     AND_OR_CHECK 
         JSR     EA_GEN_SRC          ; Get EA print
         
         MOVE.B  #$2C,(A2)+          ; Add comma after size print
@@ -1353,23 +1403,20 @@ Dn_SRC
        
         JSR     EA_GEN_SRC          ; Get EA print
         JMP     EA_FINISH           ; Opcode is finish
-        
+
 AND_OR_CHECK
         CMP.B   #12,D6              ; If first nibble is 1100 (indicates AND opcode)
-        BEQ     An_CHECK            ; Go check if mode is An 
+        BEQ     EA_AND              
         CMP.B   #8,D6               ; If first nibble is 1000 (indicates OR opcode)
-        BEQ     OR_SPACE            ; Go to OR_SPACE  
+        BEQ     EA_OR 
         RTS
-        
-OR_SPACE
+EA_AND
+        JMP     An_CHECK            ; Go check if mode is An 
+    
+EA_OR
         MOVE.B  #$20,(A2)+          ; Print out a space
-        BEQ     An_CHECK            ; Check if mode is An
+        JMP     An_CHECK            ; Check if mode is An
         
-An_CHECK 
-        CMP.B   #1,D3               ; If mode is An     
-        BEQ     EA_INVALID          ; Then branch to error message
-        RTS   
-
 EA_OPMODE_37
         CMP.B   #8,D6               ; If first nibble 1000: DIVU
         BEQ     EA_MULS_MULU_DIV
@@ -1440,7 +1487,140 @@ EA_ADDA
 
 EA_MOVEM        ; 6: ea_movem
 
-EA_TRAP         ; 7: ea_trap
+EA_SHIFTS       ; 7: ea_shifts
+        MOVE.L  D0,D1               ; D0 is current instruction word
+        ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
+        MOVE.B  #right6,D5          ; Used to shift 6 times to right
+        LSR.W   D5,D1               ; Shift dst mode into LSB position
+        MULU    #6, D1              ; Set displacement 
+        LEA     EA_SHIFTS_TABLE,A0  ; Load table into A0
+        JMP     0(A0,D1)            ; go to displacement (A0 + D1 * 6)
+
+EA_SHIFTS_TABLE
+        JMP     EA_REGISTER_SHIFTS  ; 000 Register
+        JMP     EA_REGISTER_SHIFTS  ; 001 Register
+        JMP     EA_REGISTER_SHIFTS  ; 010 Register
+        JMP     EA_MEMORY_SHIFTS    ; 011 Memory
+        JMP     EA_REGISTER_SHIFTS  ; 100 Register
+        JMP     EA_REGISTER_SHIFTS  ; 101 Register
+        JMP     EA_REGISTER_SHIFTS  ; 110 Register
+        JMP     EA_MEMORY_SHIFTS    ; 111 Memory
+        
+EA_MEMORY_SHIFTS
+        ; Get EA and store into decode buffer
+        MOVE.L  D0,D4               ; Store the EA reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
+        
+        MOVE.L  D0,D3               ; Store the EA mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift
+        JSR     An_CHECK            ; Check if mode is An 
+        JSR     Dn_CHECK            ; Check if mode is Dn
+        JSR     IMMEDIATE_CHECK     ; Check if mode is immediate
+        
+        MOVE.B  #$20,(A2)+          ; Print out a space 
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        
+        JSR     FRONT_FORMAT
+        JSR     EA_GEN_SRC          ; Go get EA print
+        CMP.B   #$2A,D3             ; When mode is 111 * 6 (2A)
+        BEQ     BACK_PARENTHESIS  
+        JMP     EA_FINISH           ; Opcode is finish
+
+FRONT_FORMAT
+        CMP.B   #7,D3               ; When mode is 111
+        BEQ     ADD_PARENTHESIS
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        RTS
+        
+ADD_PARENTHESIS
+        MOVE.B  #$20,(A2)+          ; Print out a space
+        MOVE.B  #'(',(A2)+
+        RTS
+        
+BACK_PARENTHESIS            
+        MOVE.B  #')',(A2)+
+        MOVE.B  D4,D2
+        JSR     EA_SIZE_MEMORY_SHIFTS
+        JMP     EA_FINISH           ; Opcode is finish
+    
+EA_REGISTER_SHIFTS
+        MOVE.L  D0,D1
+        ANDI.W  #dst_mode,D1
+        MOVE.B  #right6,D5 
+        LSR.W   D5,D1
+        ANDI.B  #3,D1               ; Remove bit 8 and get bits 7-6
+        MOVE.B  D1,D2
+        JSR     EA_SIZE_GENERAL
+        
+        MOVE.L  D0,D3               ; Store the instruction in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift 
+        ANDI.B  #4,D3               ; Get bit 5(ir) from bits 5-3
+        LSR.W   #2,D3
+
+        CMP.B   #0,D3               ; When D1 is 0 (immediate)
+        BEQ     IMMEDIATE_SRC
+        BRA     REGISTER_SRC        ; When D1 is 1 (register)
+        
+IMMEDIATE_SRC
+        MOVE.B  #$20,(A2)+          ; Add space
+        MOVE.B  #$20,(A2)+          ; Add space
+        MOVE.B  #$20,(A2)+          ; Add space
+        
+        ; Get source and store into decode buffer
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
+        JSR     CHECK_IF_ZERO       ; Check if register is 0
+        
+        MOVE.B  #$23,(A2)+          ; Add # symbol
+        ADDI.B  #$30,D4             ; Convert hex to ASCII
+        MOVE.B  D4,(A2)+            ; Store into buffer
+        
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
+
+        ; Get destination and store into decode buffer
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
+        JSR     EA_Dn               ; store Dn into decode buffer
+        JMP     EA_FINISH           ; Opcode is finish
+              
+CHECK_IF_ZERO
+        CMP.B   #0,D4               ; When D4 is 0 
+        BEQ     IMMEDIATE_EIGHT     ; Branch
+        RTS
+
+IMMEDIATE_EIGHT
+        MOVE.B  #8,D4               ; Store 8 into D4 
+        RTS
+
+REGISTER_SRC        
+        MOVE.B  #$20,(A2)+          ; Add space
+        MOVE.B  #$20,(A2)+          ; Add space
+        MOVE.B  #$20,(A2)+          ; Add space
+        
+        ; Get source and store into decode buffer
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
+        JSR     EA_Dn               ; store Dn into decode buffer
+        
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
+
+        ; Get destination and store into decode buffer
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
+        JSR     EA_Dn               ; store Dn into decode buffer
+        JMP     EA_FINISH           ; Opcode is finish
 
 EA_QUICK        ; 8: ea_quick
 
@@ -1530,7 +1710,7 @@ ABSOLUTE_LONG
         MOVE.L  #2,D2               ; Insert 2 to D2
         JSR     ITOA                ; Convert long hex values to ITOA
         RTS
-
+   
 IMMEDIATE
         MOVE.B  #$23,(A2)+          ; Add # symbol
         MOVE.B  #$24,(A2)+          ; Add $ symbol
@@ -1554,6 +1734,26 @@ DO_ITOA_MOVE
 DO_ITOA_OPMODE
         JSR ITOA_OPMODE
         RTS
+
+An_CHECK 
+        CMP.B   #1,D3               ; If mode is An     
+        BEQ     EA_INVALID          ; Then branch to error message
+        RTS   
+      
+Dn_CHECK 
+        CMP.B   #0,D3               ; If mode is An     
+        BEQ     EA_INVALID          ; Then branch to error message
+        RTS    
+     
+IMMEDIATE_CHECK
+        CMP.B   #7,D3
+        BEQ     REGISTER_CHECK
+        RTS
+        
+REGISTER_CHECK
+        CMP.B   #4,D3               ; If 100 in register
+        BEQ     EA_INVALID          ; Branch to invalid
+        RTS   
               
 EA_WRONG_SIZE 
         LEA     WRONG_SIZE_MESSAGE, A1 
@@ -1584,7 +1784,7 @@ EA_INVALID
         MOVE.B  #14, D0
         TRAP    #15
         BRA     DONE
-    
+         
 DONE    SIMHALT             ; halt simulator
 
 * Put variables and constants here
@@ -1633,12 +1833,14 @@ ea_type_lea         EQU     3       ; EA Type = lea
 ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
 ea_type_ext         EQU     5       ; EA Type = ext, add, adda
 ea_type_movem       EQU     6       ; EA Type = movem
-ea_type_trap        EQU     7       ; EA Type = trap
+ea_type_shifts      EQU     7       ; EA Type = ASL/ASR/LSL/LSR/ROL/ROR
+; ea_type_trap        EQU     7       ; EA Type = trap
 ea_type_quick       EQU     8       ; EA Type = addq, subq
 ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
 ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
 ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
 ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
+ea_type_shifts      EQU     7
 
 WRONG_SIZE_MESSAGE  DC.B    'Wrong size.',CR,LF,0
 ABSOLUTE_WRONGREG   DC.B    'ERROR: Register does not exist for Absolute and immediate',CR,LF,0
