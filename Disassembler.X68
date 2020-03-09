@@ -176,6 +176,13 @@ ITOA_BYTE
         MOVE.W  (A5)+,D7
         JSR     ITOA_BYTE_CONVERT
         JMP     ITOA_DONE
+
+ITOA_BYTE_BRANCH
+        MOVEM.L D0-D1,-(SP)
+        MOVE.W  D5,D7
+        JSR     ITOA_BYTE_CONVERT
+        JMP     ITOA_DONE
+
         
 ITOA_WORD
         MOVE.W  (A5),D7
@@ -186,6 +193,17 @@ ITOA_WORD
         JSR     ITOA_BYTE_CONVERT
         JMP     ITOA_DONE
         
+ITOA_WORD_BRANCH
+        MOVEM.L D0-D1,-(SP) 
+        MOVE.W  D5,D7
+        MOVE.B  #right8, D1
+        LSR.W   D1,D7
+        JSR     ITOA_BYTE_CONVERT
+        MOVE.W  D5, D7
+        MOVE.W  (A5)+, D3
+        JSR     ITOA_BYTE_CONVERT
+        JMP     ITOA_DONE
+
 ITOA_LONG
         MOVE.W  (A5),D7
         MOVE.B  #right8, D1
@@ -422,14 +440,43 @@ code0100                            ; Opcodes CLR, JSR, LEA, MOVEM, NOP, RTS
 code0101                            ; Opcode ADDQ.B/W/L
         BRA     OP_ADDQ             ; Go to opcode ADDQ
 
-code0110                            ; Opcodes BRA and BSR
+code0110                            ; Opcodes BRA / BSR / BHI
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #second_nibble,D1   ; Extract 2nd 4 bits from instruction word
         MOVE.B  #right8,D5          ; Used to shift 8 times to right
         LSR.W   D5,D1               ; Shift nibble into LSB position
-        CMP.B   #0, D1              ; When 0000 in destination mode
+        CMP.B   #0, D1              ; When 0000 in second nibble 
         BEQ     OP_BRA              ; Go to opcode BRA
-        BRA     OP_BSR              ; Otherwise, go to opcode BSR
+        CMP.B   #1, D1              ; When 0001 in second nibble 
+        BEQ     OP_BSR              ; Go to opcode BSR
+        CMP.B   #2, D1              ; When 0010 in second nibble 
+        BEQ     OP_BHI              ; Go to opcode BHI
+        CMP.B   #3, D1              ; When 0011 in second nibble
+        BEQ     OP_BLS              ; Go to opcode BLS
+        CMP.B   #4, D1              ; When 0100 in second nibble
+        BEQ     OP_BCC              ; Go to opcode BCC
+        CMP.B   #5, D1              ; When 0101 in second nibble
+        BEQ     OP_BCS              ; Go to opcode BCS
+        CMP.B   #6, D1              ; When 0110 in second nibble
+        BEQ     OP_BNE              ; Go to opcode BNE
+        CMP.B   #7, D1              ; When 0111 in second nibble
+        BEQ     OP_BEQ              ; Go to opcode BEQ
+        CMP.B   #8, D1              ; When 1000 in second nibble
+        BEQ     OP_BVC              ; Go to opcode BVC
+        CMP.B   #9, D1              ; When 1001 in second nibble
+        BEQ     OP_BVS              ; Go to opcode BVS
+        CMP.B   #10, D1             ; When 1010 in second nibble
+        BEQ     OP_BPL              ; Go to opcode BPL
+        CMP.B   #11, D1             ; When 1011 in second nibble
+        BEQ     OP_BMI              ; Go to opcode BMI
+        CMP.B   #12, D1             ; When 1100 in second nibble
+        BEQ     OP_BGE              ; Go to opcode BGE
+        CMP.B   #13, D1             ; When 1101 in second nibble
+        BEQ     OP_BLT              ; Go to opcode BLT
+        CMP.B   #14, D1             ; When 1110 in second nibble
+        BEQ     OP_BGT              ; Go to opcode BGT
+        CMP.B   #15, D1             ; When 1111 in second nibble
+        BEQ     OP_BLE              ; Go to opcode BLE
 
 code0111                            ; Opcode MOVEQ
         BRA     OP_MOVEQ            ; Go to opcode MOVEQ
@@ -439,10 +486,8 @@ code1000                            ; Opcodes DIVU word and OR.B/W/L
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D5          ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #3,D1               ; When 011 in destination mode
+        CMP.B   #3, D1              ; When 011 in destination mode
         BEQ     OP_DIVU             ; Go to opcode DIVU word
-        CMP.B   #7,D1               ; When 111
-        BEQ     OP_UNSUPPORTED      ; Go to opcode unsupported
         BRA     OP_OR               ; Otherwise, go to opcode OR
 
 code1001                            ; Opcode SUB.B/W/L
@@ -490,9 +535,9 @@ code1110                            ; Opcodes ASL.B/W/L, ASR.B/W/L, LSL.B/W/L, L
         ANDI.W  #src_mode,D1                ; Extract 5-3 bits from instruction word
         MOVE.B  #right3,D5                  ; Used to shift 3 times to right
         LSR.W   D5,D1                       ; Shift 5-3 bits into LSB position
-        MULU    #6,D1                       ; Set displacement 
+        MULU    #6, D1                      ; Set displacement 
         LEA     OP_1110_TABLE_REGISTER,A0   ; Load table into A0
-        JMP     0(A0,D1)                    ; go to displacement (A0 + D1 * 6)
+        JMP     0(A0,D1)                    ; go to displacement (A0 + xxxx * 6)
 
 MEMORY_1110_LEFT    
         MOVE.L  D0,D1               ; D0 is current instruction word
@@ -594,14 +639,14 @@ OP_1101_TABLE
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
     
 OP_1110_TABLE_REGISTER
-        JMP     OP_AS_CHECK         ; 0 Check if AS is left or right
-        JMP     OP_LS_CHECK         ; 1 Check if LS is left or right
+        JMP     OP_ASR              ; 0 Go to opcode ASR
+        JMP     OP_LSR              ; 1 Go to opcode LSR
         JMP     OP_UNSUPPORTED      ; 2 Go to opcode unsupported  
-        JMP     OP_RO_CHECK         ; 3 Check if RO is left or right
-        JMP     OP_AS_CHECK         ; 4 Check if AS is left or right
-        JMP     OP_LS_CHECK         ; 5 Check if LS is left or right
+        JMP     OP_ROR              ; 3 Go to opcode ROR
+        JMP     OP_ASL              ; 4 Go to opcode ASL 
+        JMP     OP_LSL              ; 5 Go to opcode LSL
         JMP     OP_UNSUPPORTED      ; 6 Go to opcode unsupported 
-        JMP     OP_RO_CHECK         ; 7 Check if RO is left or right
+        JMP     OP_ROL              ; 7 Go to opcode ROL
         JMP     OP_UNSUPPORTED      ; 8 Go to opcode unsupported  
         JMP     OP_UNSUPPORTED      ; 9 Go to opcode unsupported  
         JMP     OP_UNSUPPORTED      ; A Go to opcode unsupported  
@@ -611,46 +656,6 @@ OP_1110_TABLE_REGISTER
         JMP     OP_UNSUPPORTED      ; E Go to opcode unsupported  
         JMP     OP_UNSUPPORTED      ; F Go to opcode unsupported  
 
-OP_AS_CHECK
-        MOVE.L  D0,D1               ; D0 is current instruction word
-        ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
-        MOVE.B  #right6,D5          ; Used to shift 6 times to right
-        LSR.W   D5,D1               ; Shift dst mode into LSB position
-        ANDI.B  #4,D1               ; Get only bit 8 (dr)
-        LSR.W   #2,D1
-
-        CMP.B   #1,D1               ; Go left
-        BEQ     OP_ASL              ; 1 Go to opcode ASL
-        CMP.B   #0,D1               ; Go right
-        BEQ     OP_ASR              ; 0 Go to opcode ASR
-        
-OP_LS_CHECK
-        MOVE.L  D0,D1               ; D0 is current instruction word
-        ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
-        MOVE.B  #right6,D5          ; Used to shift 6 times to right
-        LSR.W   D5,D1               ; Shift dst mode into LSB position
-        ANDI.B  #4,D1               ; Get only bit 8 (dr)
-        LSR.W   #2,D1
-
-        CMP.B   #1,D1               ; Go left
-        BEQ     OP_LSL              ; 1 Go to opcode LSL
-        CMP.B   #0,D1               ; Go right
-        BEQ     OP_LSR              ; 0 Go to opcode LSR
-        
-
-OP_RO_CHECK
-        MOVE.L  D0,D1               ; D0 is current instruction word
-        ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
-        MOVE.B  #right6,D5          ; Used to shift 6 times to right
-        LSR.W   D5,D1               ; Shift dst mode into LSB position
-        ANDI.B  #4,D1               ; Get only bit 8 (dr)
-        LSR.W   #2,D1
-
-        CMP.B   #1,D1               ; Go left
-        BEQ     OP_ROL              ; 1 Go to opcode ROL
-        CMP.B   #0,D1               ; Go right
-        BEQ     OP_ROR              ; 0 Go to opcode ROR
-        
 JSR_NOP_RTS
         MOVE.L  D0,D1               ; D0 is current instruction word
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
@@ -689,6 +694,7 @@ OP_UNSUPPORTED
 
 *----------------------------------------------------------------------------------------------*
 * First 4 bits: 0000
+
 OP_SUBI
         MOVE.B  #'S',(A2)+
         MOVE.B  #'U',(A2)+
@@ -768,7 +774,7 @@ OP_MOVEM
         MOVE.B  #'V',(A2)+
         MOVE.B  #'E',(A2)+
         MOVE.B  #'M',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_movem,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -787,7 +793,7 @@ OP_ADDQ
         MOVE.B  #'D',(A2)+
         MOVE.B  #'D',(A2)+
         MOVE.B  #'Q',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_quick,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -797,7 +803,31 @@ OP_BRA
         MOVE.B  #'B',(A2)+
         MOVE.B  #'R',(A2)+
         MOVE.B  #'A',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BSR
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'S',(A2)+
+        MOVE.B  #'R',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+        
+OP_BHI
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'H',(A2)+
+        MOVE.B  #'I',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BLS
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'L',(A2)+
+        MOVE.B  #'S',(A2)+
+        MOVE.L  #ea_type_branch,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -805,15 +835,87 @@ OP_BCC
         MOVE.B  #'B',(A2)+
         MOVE.B  #'C',(A2)+
         MOVE.B  #'C',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_branch,D1
         JSR     EA_START
         JMP     OP_FINISH
         
+OP_BCS
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'C',(A2)+
+        MOVE.B  #'S',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BNE
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'N',(A2)+
+        MOVE.B  #'E',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BEQ
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'E',(A2)+
+        MOVE.B  #'Q',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BVC
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'V',(A2)+
+        MOVE.B  #'C',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BVS
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'V',(A2)+
+        MOVE.B  #'S',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BPL
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'P',(A2)+
+        MOVE.B  #'L',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BMI
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'M',(A2)+
+        MOVE.B  #'I',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BGE
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'G',(A2)+
+        MOVE.B  #'E',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
+OP_BLT
+        MOVE.B  #'B',(A2)+
+        MOVE.B  #'L',(A2)+
+        MOVE.B  #'T',(A2)+
+        MOVE.L  #ea_type_branch,D1
+        JSR     EA_START
+        JMP     OP_FINISH
+
 OP_BGT
         MOVE.B  #'B',(A2)+
         MOVE.B  #'G',(A2)+
         MOVE.B  #'T',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_branch,D1
         JSR     EA_START
         JMP     OP_FINISH
 
@@ -821,15 +923,7 @@ OP_BLE
         MOVE.B  #'B',(A2)+
         MOVE.B  #'L',(A2)+
         MOVE.B  #'E',(A2)+
-        MOVE.L  #ea_type_immediate,D1
-        JSR     EA_START
-        JMP     OP_FINISH
-        
-OP_BSR
-        MOVE.B  #'B',(A2)+
-        MOVE.B  #'S',(A2)+
-        MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_branch,D1
         JSR     EA_START
         JMP     OP_FINISH
 *------------------------------------------------------------------------------------------------*
@@ -838,10 +932,9 @@ OP_MOVEQ
         MOVE.B  #'M',(A2)+
         MOVE.B  #'O',(A2)+
         MOVE.B  #'V',(A2)+
-        MOVE.B  #'V',(A2)+
         MOVE.B  #'E',(A2)+
         MOVE.B  #'Q',(A2)+
-        MOVE.L  #ea_type_immediate,D1
+        MOVE.L  #ea_type_quick,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -852,7 +945,7 @@ OP_DIVU
         MOVE.B  #'I',(A2)+
         MOVE.B  #'V',(A2)+
         MOVE.B  #'U',(A2)+
-        MOVE.L  #ea_type_ext,D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
   
@@ -890,7 +983,7 @@ OP_MULU
         MOVE.B  #'U',(A2)+
         MOVE.B  #'L',(A2)+
         MOVE.B  #'U',(A2)+
-        MOVE.L  #ea_type_ext,D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -899,7 +992,7 @@ OP_MULS
         MOVE.B  #'U',(A2)+
         MOVE.B  #'L',(A2)+
         MOVE.B  #'S',(A2)+
-        MOVE.L  #ea_type_ext,D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -936,14 +1029,14 @@ OP_ASR
         MOVE.B  #'A',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_shifts,D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
 OP_ASL
         MOVE.B  #'A',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'L',(A2)+
-        MOVE.L  #ea_type_shifts,D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -951,7 +1044,7 @@ OP_LSR
         MOVE.B  #'L',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_shifts,D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
        
@@ -959,7 +1052,7 @@ OP_LSL
         MOVE.B  #'L',(A2)+
         MOVE.B  #'S',(A2)+
         MOVE.B  #'L',(A2)+
-        MOVE.L  #ea_type_shifts,D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -967,7 +1060,7 @@ OP_ROR
         MOVE.B  #'R',(A2)+
         MOVE.B  #'O',(A2)+
         MOVE.B  #'R',(A2)+
-        MOVE.L  #ea_type_shifts,D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -975,7 +1068,7 @@ OP_ROL
         MOVE.B  #'R',(A2)+
         MOVE.B  #'O',(A2)+
         MOVE.B  #'L',(A2)+
-        MOVE.L  #ea_type_shifts,D1
+        MOVE.L  #ea_type_immediate,D1
         JSR     EA_START
         JMP     OP_FINISH
         
@@ -999,7 +1092,7 @@ EA_TYPE_TABLE
         JMP     EA_DSTONLY          ; 4: ea_dstonly
         JMP     EA_EXT              ; 5: ea_ext
         JMP     EA_MOVEM            ; 6: ea_movem
-        JMP     EA_SHIFTS           ; 7: ea_shifts
+        JMP     EA_TRAP             ; 7: ea_trap
         JMP     EA_QUICK            ; 8: ea_quick
         JMP     EA_branch           ; 9: ea_branch
         JMP     EA_FINISH
@@ -1029,6 +1122,13 @@ EA_SIZE_MOVEA
         BEQ     EA_SIZE_L
         BRA     EA_WRONG_SIZE       ; wrong size
 
+EA_SIZE_MOVEM     
+        CMP.B   #%0000,D2              ; .w
+        BEQ     EA_SIZE_W       
+        CMP.B   #%0100,D2              ; .l
+        BEQ     EA_SIZE_L
+        BRA     EA_WRONG_SIZE       ; wrong size
+
 EA_SIZE_OPMODE_012456               ; Check opmode field for size
         CMP.B   #%000,D2            ; When 0 then .b
         BEQ     EA_SIZE_B
@@ -1050,20 +1150,6 @@ EA_SIZE_ADDA                        ; Check opmode field for size
         CMP.B   #%111,D2            ; When 7 then .l
         BEQ     EA_SIZE_L
         BRA     EA_WRONG_SIZE       ; wrong size
-        
-EA_SIZE_MULS_MULU_DIV               ; Check opmode field for size
-        CMP.B   #%011,D2            ; When 3 then .w MULU, DIVU
-        BEQ     EA_SIZE_W       
-        CMP.B   #%111,D2            ; When 7 then .l MULS
-        BEQ     EA_SIZE_W
-        BRA     EA_WRONG_SIZE       ; wrong size
-        
-EA_SIZE_MEMORY_SHIFTS
-        CMP.B   #%00,D2             ; .w
-        BEQ     EA_SIZE_W_MEMORY      
-        CMP.B   #%01,D2             ; .l
-        BEQ     EA_SIZE_L      
-        BRA     EA_WRONG_SIZE       ; wrong size
 
 EA_SIZE_B
         MOVE.B  #'.',(A2)+
@@ -1072,9 +1158,7 @@ EA_SIZE_B
 EA_SIZE_W
         MOVE.B  #'.',(A2)+
         MOVE.B  #'W',(A2)+
-        RTS     
-EA_SIZE_W_MEMORY
-        RTS        
+        RTS
 EA_SIZE_L
         MOVE.B  #'.',(A2)+
         MOVE.B  #'L',(A2)+
@@ -1127,7 +1211,6 @@ EA_MOVE                             ; 1: ea_move
         JSR     EA_SIZE_MOVE
         
         MOVE.B  #$20,(A2)+          ; Print out a space after the size
-        MOVE.B  #$20,(A2)+          ; Print out a space
         
         ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
@@ -1319,11 +1402,11 @@ EA_EXT_TABLE
         JMP     EA_OPMODE_012456    ; 000: ADD/SUB/CMP/OR/AND
         JMP     EA_OPMODE_012456    ; 001: ADD/SUB/CMP/OR/AND
         JMP     EA_OPMODE_012456    ; 010: ADD/SUB/CMP/OR/AND
-        JMP     EA_OPMODE_37        ; 011: ADDA/MULS/MULU/DIVU
+        JMP     EA_ADDA             ; 011: ADDA
         JMP     EA_OPMODE_012456    ; 100: ADD/SUB/CMP/OR/AND
         JMP     EA_OPMODE_012456    ; 101: ADD/SUB/CMP/OR/AND
         JMP     EA_OPMODE_012456    ; 110: ADD/SUB/CMP/OR/AND
-        JMP     EA_OPMODE_37        ; 111: ADDA/MULS/MULU/DIVU
+        JMP     EA_ADDA             ; 111: ADDA
 
 EA_OPMODE_012456
         JSR     EA_SIZE_OPMODE_012456    
@@ -1359,7 +1442,7 @@ Dn_DST
         ANDI.W  #src_mode,D3        ; Get bits 5-3
         MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
         LSR.W   D5,D3               ; Do the actual shift 
-        JSR     AND_OR_CHECK 
+        JSR     AND_OR_CHECK        ; Check if opcode is AND/OR   
         JSR     EA_GEN_SRC          ; Get EA print
         
         MOVE.B  #$2C,(A2)+          ; Add comma after size print
@@ -1403,58 +1486,22 @@ Dn_SRC
        
         JSR     EA_GEN_SRC          ; Get EA print
         JMP     EA_FINISH           ; Opcode is finish
-
+        
 AND_OR_CHECK
         CMP.B   #12,D6              ; If first nibble is 1100 (indicates AND opcode)
-        BEQ     EA_AND              
+        BEQ     An_CHECK            ; Go check if mode is An 
         CMP.B   #8,D6               ; If first nibble is 1000 (indicates OR opcode)
-        BEQ     EA_OR 
+        BEQ     OR_SPACE            ; Go to OR_SPACE  
         RTS
-EA_AND
-        JMP     An_CHECK            ; Go check if mode is An 
-    
-EA_OR
+        
+OR_SPACE
         MOVE.B  #$20,(A2)+          ; Print out a space
-        JMP     An_CHECK            ; Check if mode is An
+        BEQ     An_CHECK            ; Check if mode is An
         
-EA_OPMODE_37
-        CMP.B   #8,D6               ; If first nibble 1000: DIVU
-        BEQ     EA_MULS_MULU_DIV
-        CMP.B   #12,D6              ; If first nibble 1100: MULS/MULU
-        BEQ     EA_MULS_MULU_DIV
-        CMP.B   #13,D6              ; If first nibble 1101: ADDA
-        BEQ     EA_ADDA                
-
-EA_MULS_MULU_DIV
-        JSR     EA_SIZE_MULS_MULU_DIV 
-        MOVe.B  #1,D2               ; Set D2 to 1, since we know size is word   
-
-        MOVE.B  #$20,(A2)+          ; Print out a space after the size
-        MOVE.B  #$20,(A2)+          ; Print out a space
-        
-        ; Get source and store into decode buffer
-        MOVE.L  D0,D4               ; Store the src reg in D4
-        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
-        
-        MOVE.L  D0,D3               ; Store the src mode in D3
-        ANDI.W  #src_mode,D3        ; Get bits 5-3
-        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
-        LSR.W   D5,D3               ; Do the actual shift
-        JSR     An_CHECK            ; Check if mode is An 
-        JSR     EA_GEN_SRC          ; Go get EA print
-        
-        MOVE.B  #$2C,(A2)+          ; Add comma after size print
-        MOVE.B  #$20,(A2)+          ; Add space after comma
-        
-        ; Get desination and store into decode buffer
-        MOVE.L  D0,D4               ; Store the dest reg in D4
-        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
-        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
-        LSR.W   D5,D4               ; Do the actual shift
-        
-        MOVE.L  #0,D3               ; Store 000 into D3, so it can jump to Dn 
-        JSR     EA_GEN_SRC          ; Go get EA print
-        JMP     EA_FINISH           ; Opcode is finish
+An_CHECK 
+        CMP.B   #1,D3               ; If mode is An     
+        BEQ     EA_INVALID          ; Then branch to error message
+        RTS   
 
 EA_ADDA
         JSR     EA_SIZE_ADDA        ; Get size    
@@ -1486,145 +1533,929 @@ EA_ADDA
         JMP     EA_FINISH           ; Opcode is finish
 
 EA_MOVEM        ; 6: ea_movem
+        MOVE.L  D0, D1
+        ANDI.W  #third_nibble,D1
+        MOVE.B  #right4,D5 
+        LSR.W   D5,D1
+        ANDI.B  #4,D1
+        MOVE.B  D1,D2
+        JSR     EA_SIZE_MOVEM       ; get the size of the MOVEM as .W or .L 
 
-EA_SHIFTS       ; 7: ea_shifts
-        MOVE.L  D0,D1               ; D0 is current instruction word
-        ANDI.W  #dst_mode,D1        ; Extract 8-6 bits from instruction word
-        MOVE.B  #right6,D5          ; Used to shift 6 times to right
-        LSR.W   D5,D1               ; Shift dst mode into LSB position
-        MULU    #6, D1              ; Set displacement 
-        LEA     EA_SHIFTS_TABLE,A0  ; Load table into A0
-        JMP     0(A0,D1)            ; go to displacement (A0 + D1 * 6)
-
-EA_SHIFTS_TABLE
-        JMP     EA_REGISTER_SHIFTS  ; 000 Register
-        JMP     EA_REGISTER_SHIFTS  ; 001 Register
-        JMP     EA_REGISTER_SHIFTS  ; 010 Register
-        JMP     EA_MEMORY_SHIFTS    ; 011 Memory
-        JMP     EA_REGISTER_SHIFTS  ; 100 Register
-        JMP     EA_REGISTER_SHIFTS  ; 101 Register
-        JMP     EA_REGISTER_SHIFTS  ; 110 Register
-        JMP     EA_MEMORY_SHIFTS    ; 111 Memory
+        MOVE.B  #$20,(A2)+          ; Print out a space after the size
+        MOVE.B  #$20,(A2)+          ; Print out a space
         
-EA_MEMORY_SHIFTS
-        ; Get EA and store into decode buffer
-        MOVE.L  D0,D4               ; Store the EA reg in D4
-        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
-        
-        MOVE.L  D0,D3               ; Store the EA mode in D3
+*-----------------------------------------------------------------------------------*
+* HANDLE the case where src mode is 010. 
+        MOVE.L  D0,D3               ; Store the src mode in D3
         ANDI.W  #src_mode,D3        ; Get bits 5-3
         MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
-        LSR.W   D5,D3               ; Do the actual shift
-        JSR     An_CHECK            ; Check if mode is An 
-        JSR     Dn_CHECK            ; Check if mode is Dn
-        JSR     IMMEDIATE_CHECK     ; Check if mode is immediate
-        
-        MOVE.B  #$20,(A2)+          ; Print out a space 
-        MOVE.B  #$20,(A2)+          ; Print out a space
-        MOVE.B  #$20,(A2)+          ; Print out a space
-        MOVE.B  #$20,(A2)+          ; Print out a space
-        
-        JSR     FRONT_FORMAT
-        JSR     EA_GEN_SRC          ; Go get EA print
-        CMP.B   #$2A,D3             ; When mode is 111 * 6 (2A)
-        BEQ     BACK_PARENTHESIS  
-        JMP     EA_FINISH           ; Opcode is finish
+        LSR.W   D5,D3 
 
-FRONT_FORMAT
-        CMP.B   #7,D3               ; When mode is 111
-        BEQ     ADD_PARENTHESIS
-        MOVE.B  #$20,(A2)+          ; Print out a space
-        RTS
-        
-ADD_PARENTHESIS
-        MOVE.B  #$20,(A2)+          ; Print out a space
-        MOVE.B  #'(',(A2)+
-        RTS
-        
-BACK_PARENTHESIS            
-        MOVE.B  #')',(A2)+
-        MOVE.B  D4,D2
-        JSR     EA_SIZE_MEMORY_SHIFTS
-        JMP     EA_FINISH           ; Opcode is finish
-    
-EA_REGISTER_SHIFTS
-        MOVE.L  D0,D1
-        ANDI.W  #dst_mode,D1
-        MOVE.B  #right6,D5 
+        CMP.B   #2, D3
+        BEQ     MEM_TO_REG        
+
+*-----------------------------------------------------------------------------------*
+
+        MOVE.L  D0, D1
+        ANDI.W  #second_nibble,D1
+        MOVE.B  #right8,D5 
         LSR.W   D5,D1
-        ANDI.B  #3,D1               ; Remove bit 8 and get bits 7-6
-        MOVE.B  D1,D2
-        JSR     EA_SIZE_GENERAL
+        ANDI.B  #6, D1              ; Get the Dr field
         
-        MOVE.L  D0,D3               ; Store the instruction in D3
+        CMP.B   #0, D1              ; check if Dr field is 0. 
+        BEQ     REG_TO_MEM
+
+        CMP.B   #4, D1              ; check if Dr field is 1. 
+        BEQ     MEM_TO_REG
+
+REG_TO_MEM                          ; pre-decrement - D7-D0,A7-A0
+        MOVE.W  (A5), D6            ; store the register list mask field for REG to MEM
+        
+* Print out the proper data and address registers. 
+* FIRST NIBBLE CHECK D0 - D3
+*-----------------------------------------------------------------------------------*
+* Print out D0 if mask field states to. 
+
+        MOVE.W  D6, D3
+        ANDI.W  #first_nibble,D3
+        MOVE.B  #right12,D5 
+        LSR.W   D5,D3
+        ANDI.B  #8,D3
+        CMP.B   #8,D3
+        BEQ     D4_Dn_SETONE_0      ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_14
+D4_Dn_SETONE_0
+        MOVE.B  #$0, D4
+        
+        BRA     PRINT1_D0
+        
+PRINT1_D0
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+        
+*-----------------------------------------------------------------------------------*
+* Print out D1 if mask field states to. 
+
+CHECK1_BIT_14
+        MOVE.W  D6, D3
+        ANDI.W  #first_nibble,D3
+        MOVE.B  #right12,D5 
+        LSR.W   D5,D3
+        ANDI.B  #4,D3
+        CMP.B   #4,D3
+        BEQ     D4_Dn_SETONE_1      ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_13
+D4_Dn_SETONE_1
+        MOVE.B  #$1, D4
+        
+        BRA     PRINT1_D1
+        
+PRINT1_D1
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out D2 if mask field states to. 
+
+CHECK1_BIT_13
+        MOVE.W  D6, D3
+        ANDI.W  #first_nibble,D3
+        MOVE.B  #right12,D5 
+        LSR.W   D5,D3
+        ANDI.B  #2,D3
+        CMP.B   #2,D3
+        BEQ     D4_Dn_SETONE_2      ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_12
+D4_Dn_SETONE_2
+        MOVE.B  #$2, D4
+        
+        BRA     PRINT1_D2
+        
+PRINT1_D2
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+       
+
+*-----------------------------------------------------------------------------------*
+* Print out D3 if mask field states to. 
+
+CHECK1_BIT_12
+        MOVE.W  D6, D3
+        ANDI.W  #first_nibble,D3
+        MOVE.B  #right12,D5 
+        LSR.W   D5,D3
+        ANDI.B  #1,D3
+        CMP.B   #1,D3
+        BEQ     D4_Dn_SETONE_3      ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_11
+D4_Dn_SETONE_3
+        MOVE.B  #$3, D4
+        
+        BRA     PRINT1_D3
+        
+PRINT1_D3
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+ 
+        
+* SECOND NIBBLE CHECK D4 - D7
+*-----------------------------------------------------------------------------------*
+* Print out D4 if mask field states to. 
+
+
+CHECK1_BIT_11
+        MOVE.W  D6, D3
+        ANDI.W  #second_nibble,D3
+        MOVE.B  #right8,D5 
+        LSR.W   D5,D3
+        ANDI.B  #8,D3
+        CMP.B   #8,D3
+        BEQ     D4_Dn_SETONE_4       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_10
+D4_Dn_SETONE_4
+        MOVE.B  #$4, D4
+        
+        BRA     PRINT1_D4
+        
+PRINT1_D4
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+ 
+
+*-----------------------------------------------------------------------------------*
+* Print out D5 if mask field states to. 
+
+CHECK1_BIT_10
+        MOVE.W  D6, D3
+        ANDI.W  #second_nibble,D3
+        MOVE.B  #right8,D5 
+        LSR.W   D5,D3
+        ANDI.B  #4,D3
+        CMP.B   #4,D3
+        BEQ     D4_Dn_SETONE_5       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_9
+D4_Dn_SETONE_5
+        MOVE.B  #$5, D4
+        
+        BRA     PRINT1_D5
+        
+PRINT1_D5
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+ 
+
+*-----------------------------------------------------------------------------------*
+* Print out D6 if mask field states to. 
+
+CHECK1_BIT_9
+        MOVE.W  D6, D3
+        ANDI.W  #second_nibble,D3
+        MOVE.B  #right8,D5 
+        LSR.W   D5,D3
+        ANDI.B  #2,D3
+        CMP.B   #2,D3
+        BEQ     D4_Dn_SETONE_6       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_8
+D4_Dn_SETONE_6
+        MOVE.B  #$6, D4
+        
+        BRA     PRINT1_D6
+        
+PRINT1_D6
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+ 
+        
+*-----------------------------------------------------------------------------------*
+* Print out D7 if mask field states to. 
+
+CHECK1_BIT_8
+        MOVE.W  D6, D3
+        ANDI.W  #second_nibble,D3
+        MOVE.B  #right8,D5 
+        LSR.W   D5,D3
+        ANDI.B  #1,D3
+        CMP.B   #1,D3
+        BEQ     D4_Dn_SETONE_7       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_7
+D4_Dn_SETONE_7
+        MOVE.B  #$7, D4
+        
+        BRA     PRINT1_D7
+        
+PRINT1_D7
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+ 
+
+* THIRD NIBBLE CHECK - A0 / A3
+*-----------------------------------------------------------------------------------*
+* Print out A0 if mask field states to. 
+
+CHECK1_BIT_7
+        MOVE.W  D6, D3
+        ANDI.W  #third_nibble,D3
+        MOVE.B  #right4,D5 
+        LSR.W   D5,D3
+        ANDI.B  #8,D3
+        CMP.B   #8,D3
+        BEQ     D4_An_SETONE_0       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_6
+D4_An_SETONE_0
+        MOVE.B  #$0, D4
+        
+        BRA     PRINT1_A0
+        
+PRINT1_A0
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+ 
+        
+*-----------------------------------------------------------------------------------*
+* Print out A1 if mask field states to. 
+
+CHECK1_BIT_6
+        MOVE.W  D6, D3
+        ANDI.W  #third_nibble,D3
+        MOVE.B  #right4,D5 
+        LSR.W   D5,D3
+        ANDI.B  #4,D3
+        CMP.B   #4,D3
+        BEQ     D4_An_SETONE_1       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_5
+D4_An_SETONE_1
+        MOVE.B  #$1, D4
+        
+        BRA     PRINT1_A1
+        
+PRINT1_A1
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+ 
+
+*-----------------------------------------------------------------------------------*
+* Print out A2 if mask field states to. 
+
+CHECK1_BIT_5
+        MOVE.W  D6, D3
+        ANDI.W  #third_nibble,D3
+        MOVE.B  #right4,D5 
+        LSR.W   D5,D3
+        ANDI.B  #2,D3
+        CMP.B   #2,D3
+        BEQ     D4_An_SETONE_2       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_4
+D4_An_SETONE_2
+        MOVE.B  #$2, D4
+        
+        BRA     PRINT1_A2
+        
+PRINT1_A2
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+ 
+
+*-----------------------------------------------------------------------------------*
+* Print out A3 if mask field states to. 
+
+CHECK1_BIT_4
+        MOVE.W  D6, D3
+        ANDI.W  #third_nibble,D3
+        MOVE.B  #right4,D5 
+        LSR.W   D5,D3
+        ANDI.B  #1,D3
+        CMP.B   #1,D3
+        BEQ     D4_An_SETONE_3       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_3
+D4_An_SETONE_3
+        MOVE.B  #$3, D4
+        
+        BRA     PRINT1_A3
+        
+PRINT1_A3
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+ 
+
+* FOURTH NIBBLE CHECK A4 - A7 
+*-----------------------------------------------------------------------------------*
+* Print out A4 if mask field states to. 
+
+CHECK1_BIT_3
+        MOVE.W  D6, D3
+        ANDI.W  #fourth_nibble,D3
+        ANDI.B  #8,D3
+        CMP.B   #8,D3
+        BEQ     D4_An_SETONE_4       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_2
+D4_An_SETONE_4
+        MOVE.B  #$4, D4
+        
+        BRA     PRINT1_A4
+        
+PRINT1_A4
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+ 
+
+*-----------------------------------------------------------------------------------*
+* Print out A5 if mask field states to. 
+
+CHECK1_BIT_2
+        MOVE.W  D6, D3
+        ANDI.W  #fourth_nibble,D3
+        ANDI.B  #4,D3
+        CMP.B   #4,D3
+        BEQ     D4_An_SETONE_5       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_1
+D4_An_SETONE_5
+        MOVE.B  #$5, D4
+        
+        BRA     PRINT1_A5
+        
+PRINT1_A5
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+ 
+
+*-----------------------------------------------------------------------------------*
+* Print out A6 if mask field states to. 
+
+CHECK1_BIT_1
+        MOVE.W  D6, D3
+        ANDI.W  #fourth_nibble,D3
+        ANDI.B  #2,D3
+        CMP.B   #2,D3
+        BEQ     D4_An_SETONE_6       ; SETONE refers to the set for reg to mem branch. 
+        BRA     CHECK1_BIT_0
+D4_An_SETONE_6
+        MOVE.B  #$6, D4
+        
+        BRA     PRINT1_A6
+        
+PRINT1_A6
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+ 
+
+*-----------------------------------------------------------------------------------*
+* Print out A7 if mask field states to. 
+
+CHECK1_BIT_0
+        MOVE.W  D6, D3
+        ANDI.W  #fourth_nibble,D3
+        ANDI.B  #1,D3
+        CMP.B   #1,D3
+        BEQ     D4_An_SETONE_7       ; SETONE refers to the set for reg to mem branch. 
+        BRA     FINISH_REG_TO_MEM
+D4_An_SETONE_7
+        MOVE.B  #$7, D4
+        
+        BRA     PRINT1_A7
+        
+PRINT1_A7
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+ 
+
+FINISH_REG_TO_MEM
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
+
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
+        
+        MOVE.L  D0,D3               ; Store the src mode in D3
         ANDI.W  #src_mode,D3        ; Get bits 5-3
         MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
         LSR.W   D5,D3               ; Do the actual shift 
-        ANDI.B  #4,D3               ; Get bit 5(ir) from bits 5-3
-        LSR.W   #2,D3
+        JSR     EA_GEN_SRC
+        
+        MOVE.W  (A5)+, D0 
 
-        CMP.B   #0,D3               ; When D1 is 0 (immediate)
-        BEQ     IMMEDIATE_SRC
-        BRA     REGISTER_SRC        ; When D1 is 1 (register)
+        JMP     EA_FINISH
+
+MEM_TO_REG                          ; post-increment + A7-A0,D7-D0
+
+        CMP.B   #2, D3              ; check if the destination is (An)
+        BEQ     MEM_TO_REG_CONTINUE ; branch to print out the address and data registers. 
         
-IMMEDIATE_SRC
-        MOVE.B  #$20,(A2)+          ; Add space
-        MOVE.B  #$20,(A2)+          ; Add space
-        MOVE.B  #$20,(A2)+          ; Add space
-        
-        ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
-        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
-        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
-        LSR.W   D5,D4               ; Do the actual shift
-        JSR     CHECK_IF_ZERO       ; Check if register is 0
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
         
-        MOVE.B  #$23,(A2)+          ; Add # symbol
-        ADDI.B  #$30,D4             ; Convert hex to ASCII
-        MOVE.B  D4,(A2)+            ; Store into buffer
+        MOVE.L  D0,D3               ; Store the src mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift 
+        JSR     EA_GEN_SRC
         
         MOVE.B  #$2C,(A2)+          ; Add comma after size print
         MOVE.B  #$20,(A2)+          ; Add space after comma
 
-        ; Get destination and store into decode buffer
-        MOVE.L  D0,D4               ; Store the src reg in D4
+        
+* Print out the proper data and address registers. 
+* FIRST NIBBLE CHECK A7 - A4
+*-----------------------------------------------------------------------------------*
+* Print out A7 if mask field states to. 
+MEM_TO_REG_CONTINUE
+        MOVE.W  (A5), D6            ; store the register list mask field for MEM to REG
+        
+        MOVE.W  D6, D3
+        ANDI.W  #first_nibble,D3
+        MOVE.B  #right12,D5 
+        LSR.W   D5,D3
+        ANDI.B  #8,D3
+        CMP.B   #8,D3
+        BEQ     D4_An_SET_7
+        BRA     CHECK_BIT_14
+D4_An_SET_7
+        MOVE.B  #$7, D4
+        
+        BRA     PRINT_A7
+        
+PRINT_A7
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+
+        
+*-----------------------------------------------------------------------------------*
+* Print out A6 if mask field states to. 
+
+CHECK_BIT_14
+        MOVE.W  D6, D3
+        ANDI.W  #first_nibble,D3
+        MOVE.B  #right12,D5 
+        LSR.W   D5,D3
+        ANDI.B  #4,D3
+        CMP.B   #4,D3
+        BEQ     D4_An_SET_6
+        BRA     CHECK_BIT_13
+D4_An_SET_6
+        MOVE.B  #$6, D4
+        
+        BRA     PRINT_A6
+        
+PRINT_A6
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out A5 if mask field states to. 
+
+CHECK_BIT_13
+        MOVE.W  D6, D3
+        ANDI.W  #first_nibble,D3
+        MOVE.B  #right12,D5 
+        LSR.W   D5,D3
+        ANDI.B  #2,D3
+        CMP.B   #2,D3
+        BEQ     D4_An_SET_5
+        BRA     CHECK_BIT_12
+D4_An_SET_5
+        MOVE.B  #$5, D4
+        
+        BRA     PRINT_A5
+        
+PRINT_A5
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out A4 if mask field states to. 
+        
+CHECK_BIT_12
+        MOVE.W  D6, D3
+        ANDI.W  #first_nibble,D3
+        MOVE.B  #right12,D5 
+        LSR.W   D5,D3
+        ANDI.B  #1,D3
+        CMP.B   #1,D3
+        BEQ     D4_An_SET_4
+        BRA     CHECK_BIT_11
+D4_An_SET_4
+        MOVE.B  #$4, D4
+        
+        BRA     PRINT_A4
+        
+PRINT_A4
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out A3 if mask field states to. 
+* SECOND NIBBLE CHECK A7 - A4
+  
+CHECK_BIT_11
+        MOVE.W  D6, D3
+        ANDI.W  #second_nibble,D3
+        MOVE.B  #right8,D5 
+        LSR.W   D5,D3
+        ANDI.B  #8,D3
+        CMP.B   #8,D3
+        BEQ     D4_An_SET_3
+        BRA     CHECK_BIT_10
+D4_An_SET_3
+        MOVE.B  #$3, D4
+        
+        BRA     PRINT_A3
+        
+PRINT_A3
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+     
+
+*-----------------------------------------------------------------------------------*
+* Print out A2 if mask field states to. 
+  
+CHECK_BIT_10
+        MOVE.W  D6, D3
+        ANDI.W  #second_nibble,D3
+        MOVE.B  #right8,D5 
+        LSR.W   D5,D3
+        ANDI.B  #4,D3
+        CMP.B   #4,D3
+        BEQ     D4_An_SET_2
+        BRA     CHECK_BIT_9
+D4_An_SET_2
+        MOVE.B  #$2, D4
+        
+        BRA     PRINT_A2
+        
+PRINT_A2
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+  
+
+*-----------------------------------------------------------------------------------*
+* Print out A1 if mask field states to. 
+  
+CHECK_BIT_9
+        MOVE.W  D6, D3
+        ANDI.W  #second_nibble,D3
+        MOVE.B  #right8,D5 
+        LSR.W   D5,D3
+        ANDI.B  #2,D3
+        CMP.B   #2,D3
+        BEQ     D4_An_SET_1
+        BRA     CHECK_BIT_8
+D4_An_SET_1
+        MOVE.B  #$1, D4
+        
+        BRA     PRINT_A2
+        
+PRINT_A1
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+ 
+
+*-----------------------------------------------------------------------------------*
+* Print out A0 if mask field states to. 
+  
+CHECK_BIT_8
+        MOVE.W  D6, D3
+        ANDI.W  #second_nibble,D3
+        MOVE.B  #right8,D5 
+        LSR.W   D5,D3
+        ANDI.B  #1,D3
+        CMP.B   #1,D3
+        BEQ     D4_An_SET_0
+        BRA     CHECK_BIT_7
+D4_An_SET_0
+        MOVE.B  #$0, D4
+        
+        BRA     PRINT_A0
+        
+PRINT_A0
+        JSR     EA_An
+        MOVE.B  #$2F,(A2)+        
+
+*-----------------------------------------------------------------------------------*
+* Print out D7 if mask field states to. 
+* THIRD NIBBLE CHECK D7-D0
+
+CHECK_BIT_7
+        MOVE.W  D6, D3
+        ANDI.W  #third_nibble,D3
+        MOVE.B  #right4,D5 
+        LSR.W   D5,D3
+        ANDI.B  #8,D3
+        CMP.B   #8,D3
+        BEQ     D4_Dn_SET_7
+        BRA     CHECK_BIT_6
+D4_Dn_SET_7
+        MOVE.B  #$7, D4
+        
+        BRA     PRINT_D7
+        
+PRINT_D7
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out D6 if mask field states to. 
+
+CHECK_BIT_6
+        MOVE.W  D6, D3
+        ANDI.W  #third_nibble,D3
+        MOVE.B  #right4,D5 
+        LSR.W   D5,D3
+        ANDI.B  #4,D3
+        CMP.B   #4,D3
+        BEQ     D4_Dn_SET_6
+        BRA     CHECK_BIT_5
+D4_Dn_SET_6
+        MOVE.B  #$6, D4
+        
+        BRA     PRINT_D6
+        
+PRINT_D6
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out D5 if mask field states to. 
+
+CHECK_BIT_5
+        MOVE.W  D6, D3
+        ANDI.W  #third_nibble,D3
+        MOVE.B  #right4,D5 
+        LSR.W   D5,D3
+        ANDI.B  #2,D3
+        CMP.B   #2,D3
+        BEQ     D4_Dn_SET_5
+        BRA     CHECK_BIT_4
+D4_Dn_SET_5
+        MOVE.B  #$5, D4
+        
+        BRA     PRINT_D5
+        
+PRINT_D5
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out D4 if mask field states to. 
+
+CHECK_BIT_4
+        MOVE.W  D6, D3
+        ANDI.W  #third_nibble,D3
+        MOVE.B  #right4,D5 
+        LSR.W   D5,D3
+        ANDI.B  #1,D3
+        CMP.B   #1,D3
+        BEQ     D4_Dn_SET_4
+        BRA     CHECK_BIT_3
+D4_Dn_SET_4
+        MOVE.B  #$4, D4
+        
+        BRA     PRINT_D4
+        
+PRINT_D4
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out D3 if mask field states to. 
+* FOURTH NIBBLE CHECK / D3 - D0
+
+CHECK_BIT_3
+        MOVE.W  D6, D3
+        ANDI.W  #fourth_nibble,D3
+        ANDI.B  #8,D3
+        CMP.B   #8,D3
+        BEQ     D4_Dn_SET_3
+        BRA     CHECK_BIT_2
+D4_Dn_SET_3
+        MOVE.B  #$3, D4
+        
+        BRA     PRINT_D3
+        
+PRINT_D3
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out D2 if mask field states to. 
+
+CHECK_BIT_2
+        MOVE.W  D6, D3
+        ANDI.W  #fourth_nibble,D3
+        ANDI.B  #4,D3
+        CMP.B   #4,D3
+        BEQ     D4_Dn_SET_2
+        BRA     CHECK_BIT_1
+D4_Dn_SET_2
+        MOVE.B  #$2, D4
+        
+        BRA     PRINT_D2
+        
+PRINT_D2
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out D1 if mask field states to. 
+
+CHECK_BIT_1
+        MOVE.W  D6, D3
+        ANDI.W  #fourth_nibble,D3
+        ANDI.B  #2,D3
+        CMP.B   #2,D3
+        BEQ     D4_Dn_SET_1
+        BRA     CHECK_BIT_0
+D4_Dn_SET_1
+        MOVE.B  #$1, D4
+        
+        BRA     PRINT_D1
+        
+PRINT_D1
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+
+*-----------------------------------------------------------------------------------*
+* Print out D0 if mask field states to. 
+
+CHECK_BIT_0
+        MOVE.W  D6, D3
+        ANDI.W  #fourth_nibble,D3
+        ANDI.B  #1,D3
+        CMP.B   #1,D3
+        BEQ     D4_Dn_SET_0
+        BRA     FINISH_MOVEM_MEM_TO_REG
+D4_Dn_SET_0
+        MOVE.B  #$0, D4
+        
+        BRA     PRINT_D0
+        
+PRINT_D0
+        JSR     EA_Dn
+        MOVE.B  #$2F,(A2)+
+
+FINISH_MOVEM_MEM_TO_REG
+        
+        MOVE.L  D0,D3               ; Store the src mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift
+
+        MOVE.L  D0,D4               ; Store the dst reg in D4
         ANDI.W  #src_reg,D4         ; Get the bits at 2-0
-        JSR     EA_Dn               ; store Dn into decode buffer
-        JMP     EA_FINISH           ; Opcode is finish
-              
-CHECK_IF_ZERO
-        CMP.B   #0,D4               ; When D4 is 0 
-        BEQ     IMMEDIATE_EIGHT     ; Branch
-        RTS
+ 
+        CMP.B   #2, D3
+        BEQ     An_FINISH           ; branch to print out (An) 
+        BRA     NORMAL_FINISH       ; branch to the normal finish
 
-IMMEDIATE_EIGHT
-        MOVE.B  #8,D4               ; Store 8 into D4 
-        RTS
-
-REGISTER_SRC        
-        MOVE.B  #$20,(A2)+          ; Add space
-        MOVE.B  #$20,(A2)+          ; Add space
-        MOVE.B  #$20,(A2)+          ; Add space
-        
-        ; Get source and store into decode buffer
-        MOVE.L  D0,D4               ; Store the src reg in D4
-        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
-        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
-        LSR.W   D5,D4               ; Do the actual shift
-        JSR     EA_Dn               ; store Dn into decode buffer
-        
+An_FINISH
         MOVE.B  #$2C,(A2)+          ; Add comma after size print
         MOVE.B  #$20,(A2)+          ; Add space after comma
+        
+                    
+        JSR     EA_GEN_SRC
 
-        ; Get destination and store into decode buffer
-        MOVE.L  D0,D4               ; Store the src reg in D4
-        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
-        JSR     EA_Dn               ; store Dn into decode buffer
-        JMP     EA_FINISH           ; Opcode is finish
+NORMAL_FINISH
+        MOVE.W  (A5)+, D0
+        
+        JMP     EA_FINISH
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+ 
+
+EA_TRAP         ; 7: ea_trap
 
 EA_QUICK        ; 8: ea_quick
+        CMP.B   #5, D6              ; check if the first nibble is 5 for ADDQ
+        BEQ     ADDQ_EA_CALC
+        
+        CMP.B   #7, D6              ; check if the first nibble is 7 for MOVEQ
+        BEQ     MOVEQ_EA_CALC
+        
+ADDQ_EA_CALC
+        MOVE.L  D0,D1
+        ANDI.W  #dst_mode,D1        ; Get bits 8-6 from D1
+        MOVE.B  #right6,D5          ; Store 6 into D5
+        LSR.W   D5,D1               ; Shift D1 six times to the LSB position
+        ANDI.B  #3,D1               ; Remove the front bit from D1
+        MOVE.B  D1,D2               ; Store D1 into D2 (D2 is used to check size)
+        JSR     EA_SIZE_GENERAL     ; Get size and print size.
+        
+        MOVE.B  #$20,(A2)+          ; Add space after size
+        MOVE.B  #$20,(A2)+          ; Add space
+        
+        MOVE.B  #$23,(A2)+          ; Add # symbol
+        MOVE.B  #$24,(A2)+          ; Add $ symbol
+        
+        MOVE.L  D0,D4               ; Store the data in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
+        
+        CMP.B   #0, D4
+        BEQ     CHANGE_TO_EIGHT
+        
+        BRA     DONT_CHANGE
+
+CHANGE_TO_EIGHT
+        MOVE.B  #8, D4
+
+DONT_CHANGE        
+        ADDI.B  #$30, D4
+        MOVE.B  D4, (A2)+      
+        
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
+        
+        MOVE.L  D0,D4               ; Store the src reg in D4
+        ANDI.W  #src_reg,D4         ; Get the bits at 2-0
+        
+        MOVE.L  D0,D3               ; Store the src mode in D3
+        ANDI.W  #src_mode,D3        ; Get bits 5-3
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
+        LSR.W   D5,D3               ; Do the actual shift 
+        JSR     EA_GEN_SRC
+        
+        JMP     EA_FINISH
+
+MOVEQ_EA_CALC
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+        MOVE.B  #$20,(A2)+          ; print out a space after the LEA
+        MOVE.B  #$23,(A2)+          ; Add # symbol
+        MOVE.B  #$24,(A2)+          ; Add $ symbol
+        
+        MOVE.L  D0, D1              ; move D0 to D1
+        ANDI.W  #second_half, D1    ; get the second 8 bits of D1
+        MOVE.B  D1, D5              ; move D1 to D5 to convert it to ASCII
+        
+        JSR     ITOA_BYTE_BRANCH    ; print out the bit of data
+        
+        MOVE.B  #$2C,(A2)+          ; Add comma after size print
+        MOVE.B  #$20,(A2)+          ; Add space after comma
+        
+        MOVE.L  D0,D4               ; Store the data in D4
+        ANDI.W  #dst_reg,D4         ; Get the bits at 11-9
+        MOVE.B  #right9,D5          ; Shift the bits 11-9 to the LSB
+        LSR.W   D5,D4               ; Do the actual shift
+        JSR     EA_GEN_SRC
+        
+        JMP     EA_FINISH
 
 EA_BRANCH       ; 9: ea_branch
+        MOVE.B  #$20,(A2)+          ; print out a space after the Branch
+        MOVE.B  #$20,(A2)+          ; print out a space after the Branch
+        MOVE.B  #$20,(A2)+          ; print out a space after the Branch
+        MOVE.B  #$20,(A2)+          ; print out a space after the Branch
+
+        MOVE.L  D0,D3               ; D0 is current instruction word
+        ANDI.W  #third_nibble,D3   ; Extract 3rd nibble from instruction word
+        MOVE.B  #right4,D5
+        
+        MOVE.L  D0,D4               ; D0 is current instruction word
+        ANDI.W  #fourth_nibble,D4   ; Extract 4th nibble from instruction word
+         
+        CMP.B   #0,D3               ; check if 3rd nibble is 0. 
+        BEQ     FOURTH_NIBBLE_CHECK
+        
+        BRA     BRANCH_WORD_CHECK
+        
+FOURTH_NIBBLE_CHECK                 
+        CMP.B   #0,D4               ; check if the 4th nibble is 0. 
+        
+        MOVE.W  (A5), D5            ; store the 16-bit displacement into D5
+        
+        MOVE.L  A5, D3              ; Store A5 address into D3
+        
+        ADD.W   D3, D5              ; Add the address to D5 to get the displacement. 
+        
+        MOVE.B  #$24,(A2)+          ; Add $ symbol
+        
+        JSR     ITOA_WORD_BRANCH    ; Print. 
+
+        JMP     EA_FINISH
+
+BRANCH_WORD_CHECK
+        CLR     D5                  ; handles 8-bit displacement. 
+        ADD.B   D3,D5               ; add d3 and d4 to d5
+        ADD.B   D4,D5
+        
+        JSR     ITOA_BYTE_BRANCH    ; Print. 
+
+        JMP     EA_FINISH
 
 EA_REG
 
@@ -1710,7 +2541,7 @@ ABSOLUTE_LONG
         MOVE.L  #2,D2               ; Insert 2 to D2
         JSR     ITOA                ; Convert long hex values to ITOA
         RTS
-   
+
 IMMEDIATE
         MOVE.B  #$23,(A2)+          ; Add # symbol
         MOVE.B  #$24,(A2)+          ; Add $ symbol
@@ -1734,26 +2565,6 @@ DO_ITOA_MOVE
 DO_ITOA_OPMODE
         JSR ITOA_OPMODE
         RTS
-
-An_CHECK 
-        CMP.B   #1,D3               ; If mode is An     
-        BEQ     EA_INVALID          ; Then branch to error message
-        RTS   
-      
-Dn_CHECK 
-        CMP.B   #0,D3               ; If mode is An     
-        BEQ     EA_INVALID          ; Then branch to error message
-        RTS    
-     
-IMMEDIATE_CHECK
-        CMP.B   #7,D3
-        BEQ     REGISTER_CHECK
-        RTS
-        
-REGISTER_CHECK
-        CMP.B   #4,D3               ; If 100 in register
-        BEQ     EA_INVALID          ; Branch to invalid
-        RTS   
               
 EA_WRONG_SIZE 
         LEA     WRONG_SIZE_MESSAGE, A1 
@@ -1784,7 +2595,7 @@ EA_INVALID
         MOVE.B  #14, D0
         TRAP    #15
         BRA     DONE
-         
+    
 DONE    SIMHALT             ; halt simulator
 
 * Put variables and constants here
@@ -1819,6 +2630,7 @@ first_nibble        EQU         $F000
 second_nibble       EQU         $0F00   
 third_nibble        EQU         $00F0
 fourth_nibble       EQU         $000F
+second_half         EQU         $00FF
 dst_mode            EQU         $01C0
 dst_reg             EQU         $0E00
 src_mode            EQU         $0038
@@ -1833,14 +2645,12 @@ ea_type_lea         EQU     3       ; EA Type = lea
 ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
 ea_type_ext         EQU     5       ; EA Type = ext, add, adda
 ea_type_movem       EQU     6       ; EA Type = movem
-ea_type_shifts      EQU     7       ; EA Type = ASL/ASR/LSL/LSR/ROL/ROR
-; ea_type_trap        EQU     7       ; EA Type = trap
+ea_type_trap        EQU     7       ; EA Type = trap
 ea_type_quick       EQU     8       ; EA Type = addq, subq
 ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
 ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
 ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
 ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
-ea_type_shifts      EQU     7
 
 WRONG_SIZE_MESSAGE  DC.B    'Wrong size.',CR,LF,0
 ABSOLUTE_WRONGREG   DC.B    'ERROR: Register does not exist for Absolute and immediate',CR,LF,0
@@ -1872,16 +2682,6 @@ END_ADDRESS         DS.B        32
      
 
     END    START        ; last line of source
-
-
-
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
-
-
-
 
 
 
