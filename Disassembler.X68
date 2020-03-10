@@ -28,7 +28,8 @@ DISP_UI         MOVE.B  #14,D0              ; Display User Instructions.
                 LEA	    USER_INST,A1
                 TRAP    #15	   
 
-PROMPT_START    LEA     stack, SP           ; SP = stack ($A0000)
+PROMPT_START    CLR.L   D5
+                LEA     stack, SP           ; SP = stack ($A0000)
                 LEA     START_IN,A1         ; Display starting address message
                 MOVE.B  #14,D0
                 TRAP    #15       
@@ -40,9 +41,17 @@ READ_START      LEA     START_ADDRESS,A1    ; Store user's starting address inpu
 
 VALIDATE_START  BRA     ATOI
 
-PROMPT_END      LEA     END_IN,A1           ; Display starting address message
+PROMPT_END      CLR.L   D5
+                LEA     END_IN,A1           ; Display ending address message
                 MOVE.B  #14,D0
-                TRAP    #15            
+                TRAP    #15
+                BRA     READ_END
+
+PROMPT_VA_END   CLR.L   D5                  ; prompt a valid ending address
+                LEA     PROMPT_V_END,A1     ; Display ending address message
+                MOVE.B  #14,D0
+                TRAP    #15
+            
 READ_END        LEA     END_ADDRESS,A1      ; Store user's starting address input
                 MOVE.B  #2,D0               ; Read user's input into A1; length is stored into D1
                 TRAP    #15
@@ -104,6 +113,11 @@ COMPLETE_START      MOVEA.L D5, A4  ; A4 holds the starting address
                     BRA PROMPT_END
 
 COMPLETE_END        MOVEA.L D5, A6  ; A6 holds the ending address
+
+                    MOVE.W  A4, D5          ; move starting address to D5
+                    CMP.W   A6, D5          ; check if the ending address is less than starting address. 
+                    BGT     PROMPT_VA_END   ; branch to prompt new ending address if so. 
+            
                     MOVEA.L A4, A5  ; Store starting address into current address
                     
                     *Clear the data and address registers used to obtain the starting and ending address 
@@ -197,6 +211,17 @@ ITOA_WORD_BRANCH
         LSR.W   D1,D7
         JSR     ITOA_BYTE_CONVERT
         MOVE.W  D5, D7
+        MOVE.W  (A5)+, D3
+        JSR     ITOA_BYTE_CONVERT
+        JMP     ITOA_DONE
+        
+ITOA_WORD_ERROR
+        MOVEM.L D0-D1,-(SP) 
+        MOVE.W  D0,D7
+        MOVE.B  #right8, D1
+        LSR.W   D1,D7
+        JSR     ITOA_BYTE_CONVERT
+        MOVE.W  D0, D7
         MOVE.W  (A5)+, D3
         JSR     ITOA_BYTE_CONVERT
         JMP     ITOA_DONE
@@ -504,7 +529,7 @@ code1000                            ; Opcodes DIVU word and OR.B/W/L
 
 code1001                            ; Opcode SUB.B/W/L
         BRA     OP_SUB              ; Go to opcode SUB   
-
+        
 code1010                            ; Opcode not supported 
         BRA     OP_UNSUPPORTED      ; Go to opcode unsupported   
      
@@ -778,11 +803,7 @@ RTS_CHECK_THREE
         BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
 
 OP_UNSUPPORTED
-        LEA     OPCODE_INVALID,A1 
-        MOVE.B  #14,D0
-        TRAP    #15
-        JMP     OP_FINISH
-        
+     BRA DECODE_ERROR        
 *----------------------------------------------------------------------------------------------*
 * param D0 the current instruction in word
 * param D1 the EA type
@@ -1207,7 +1228,7 @@ EA_SIZE_GENERAL
         BEQ     EA_SIZE_W       
         CMP.B   #%10,D2             ; .l
         BEQ     EA_SIZE_L
-        BRA     EA_WRONG_SIZE       ; wrong size
+        BRA     DECODE_ERROR        ; wrong size
 
 EA_SIZE_MOVE
         CMP.B   #%01,D2             ; .b
@@ -1216,21 +1237,21 @@ EA_SIZE_MOVE
         BEQ     EA_SIZE_W       
         CMP.B   #%10,D2             ; .l
         BEQ     EA_SIZE_L
-        BRA     EA_WRONG_SIZE       ; wrong size
+        BRA     DECODE_ERROR        ; wrong size
 
 EA_SIZE_MOVEA     
         CMP.B   #%11,D2             ; .w
         BEQ     EA_SIZE_W       
         CMP.B   #%10,D2             ; .l
         BEQ     EA_SIZE_L
-        BRA     EA_WRONG_SIZE       ; wrong size
+        BRA     DECODE_ERROR        ; wrong size
         
 EA_SIZE_MOVEM     
-        CMP.B   #%0000,D2              ; .w
+        CMP.B   #%0000,D2           ; .w
         BEQ     EA_SIZE_W       
-        CMP.B   #%0100,D2              ; .l
+        CMP.B   #%0100,D2           ; .l
         BEQ     EA_SIZE_L
-        BRA     EA_WRONG_SIZE       ; wrong size
+        BRA     DECODE_ERROR        ; wrong size
 
 EA_SIZE_OPMODE_012456               ; Check opmode field for size
         CMP.B   #%000,D2            ; When 0 then .b
@@ -1245,21 +1266,21 @@ EA_SIZE_OPMODE_012456               ; Check opmode field for size
         BEQ     EA_SIZE_L
         CMP.B   #%110,D2            ; When 6 then .l
         BEQ     EA_SIZE_L
-        BRA     EA_WRONG_SIZE       ; wrong size
+        BRA     DECODE_ERROR        ; wrong size
 
 EA_SIZE_ADDA                        ; Check opmode field for size
         CMP.B   #%011,D2            ; When 3 then .w
         BEQ     EA_SIZE_W       
         CMP.B   #%111,D2            ; When 7 then .l
         BEQ     EA_SIZE_L
-        BRA     EA_WRONG_SIZE       ; wrong size
+        BRA     DECODE_ERROR        ; wrong size
                 
 EA_SIZE_MEMORY_SHIFTS
         CMP.B   #%00,D2             ; .w
         BEQ     EA_SIZE_W_MEMORY      
         CMP.B   #%01,D2             ; .l
         BEQ     EA_SIZE_L      
-        BRA     EA_WRONG_SIZE       ; wrong size
+        BRA     DECODE_ERROR        ; wrong size
 
 EA_SIZE_B
         MOVE.B  #'.',(A2)+
@@ -1308,7 +1329,7 @@ EA_IMMEDIATE                        ; 0 ea_immediate
         MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
         LSR.W   D5,D3               ; do the actual shift 
         CMP.B   #1,D3               ; If dest mode is 001: An
-        BEQ     DST_INVALID         ; Go to invalid message 
+        BEQ     DECODE_ERROR        ; Go to invalid message 
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
 
         JMP     EA_FINISH           ; Opcode is finish
@@ -1350,7 +1371,7 @@ EA_MOVE                             ; 1: ea_move
         MOVE.B  #right6,D5          ; Shift the bits 8-6 to the LSB
         LSR.W   D5,D3               ; Do the actual shift 
         CMP.B   #1,D3               ; If dest mode is 001: An
-        BEQ     DST_INVALID         ; Go to invalid message 
+        BEQ     DECODE_ERROR        ; Go to invalid message 
         JSR     EA_GEN_SRC          ; Get EA print
         
         JMP     EA_FINISH           ; Opcode is finish
@@ -1392,7 +1413,7 @@ EA_MOVEA                            ; 2: ea_movea
         LSR.W   D5,D3               ; Do the actual shift 
         CMP.B   #1,D3               ; If dst mode is 001: An 
         BEQ     MOVEA_DST_VALID     ; dst is valid, so branch 
-        BRA     DST_INVALID         ; Otherwise, go to invalid message 
+        BRA     DECODE_ERROR        ; Otherwise, go to invalid message 
         
 MOVEA_DST_VALID
         JSR     EA_GEN_SRC          ; Get EA print
@@ -1417,7 +1438,7 @@ EA_LEA                              ; 3: ea_lea
         BEQ     LEA_SRC_VALID
         CMP     #7,D3               ; If D3 (src mode) is 111 (W or L)
         BEQ     LEA_SRC_VALID
-        BRA     SRC_INVALID         ; when src mode is not 010 or 111, branch to error message
+        BRA     DECODE_ERROR        ; when src mode is not 010 or 111, branch to error message
         
 LEA_SRC_VALID        
         JSR     EA_GEN_SRC          ; Go to function 
@@ -1431,7 +1452,7 @@ LEA_SRC_VALID
         LSR.W   D5,D3               ; Do the actual shift
         CMP.B   #7,D3               ; Check if D3 is 111
         BEQ     CHANGE_TO_001       ; change the D3 bits to 001 
-        BRA     DST_INVALID         ; Print out an error message if bits 8-6 (dst mode) are not 111
+        BRA     DECODE_ERROR        ; Print out an error message if bits 8-6 (dst mode) are not 111
   
 CHANGE_TO_001
         MOVE.B  #%001,D3            ; set D3 to 001 to ensure the print out A 
@@ -1452,7 +1473,7 @@ EA_DSTONLY                          ; 4: ea_dstonly
         BEQ     EA_CLEAR            ; Then do EA_CLEAR
         CMP.B   #$E, D1             ; When 1110 for second nibble
         BEQ     EA_JSR              ; Then do EA_JSR
-        BRA     DST_INVALID     
+        BRA     DECODE_ERROR     
         
 EA_CLEAR
         MOVE.L  D0,D1
@@ -1477,7 +1498,7 @@ EA_CLEAR
         MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
         LSR.W   D5,D3               ; do the actual shift 
         CMP.B   #1,D3               ; If dest mode is 001: An
-        BEQ     DST_INVALID         ; Go to invalid message 
+        BEQ     DECODE_ERROR        ; Go to invalid message 
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
         JMP     EA_FINISH           ; Opcode is finish
         
@@ -1500,7 +1521,7 @@ EA_JSR  MOVE.B  #$20,(A2)+          ; Add space
         BEQ     JSR_EA_VALID
         CMP     #7,D3               ; If D3 (src mode) is 111: (W or L)
         BEQ     JSR_EA_VALID
-        BRA     EA_INVALID          ; Otherwise, branch to invalid message
+        BRA     DECODE_ERROR        ; Otherwise, branch to invalid message
         
 JSR_EA_VALID
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
@@ -1550,7 +1571,7 @@ EA_OPMODE_012456
         CMP.B   #%110,D2            ; When 6 then Dn is source
         BEQ     Dn_SRC 
         
-        BRA     EA_INVALID
+        BRA     DECODE_ERROR
 
 Dn_DST
         ; Get source and store into decode buffer
@@ -1579,7 +1600,7 @@ Dn_DST
           
 Dn_SRC  
         CMP.B   #11,D6              ; If first nibble is 1011 (indicates CMP opcode)
-        BEQ     EA_INVALID          ; Then branch to error message
+        BEQ     DECODE_ERROR        ; Then branch to error message
      
         ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
@@ -2699,11 +2720,11 @@ EA_BRANCH       ; 9: ea_branch
 FOURTH_NIBBLE_CHECK                 
         CMP.B   #0,D4               ; check if the 4th nibble is 0. 
         
-        MOVE.W  (A5), D5            ; store the 16-bit displacement into D5
+        MOVE.W  (A5),D5            ; store the 16-bit displacement into D5
         
-        MOVE.L  A5, D3              ; Store A5 address into D3
+        MOVE.L  A5,D3              ; Store A5 address into D3
         
-        ADD.W   D3, D5              ; Add the address to D5 to get the displacement. 
+        ADD.W   D3,D5              ; Add the address to D5 to get the displacement. 
         
         MOVE.B  #$24,(A2)+          ; Add $ symbol
         
@@ -2789,7 +2810,7 @@ EA_Absolute_And_Immediate           ; 111: (xxx).W,(xxx).L, or #<data>
         CMP.B   #4,D4               ; If D4 is #<data>  
         BEQ     IMMEDIATE
         
-        BRA     ABSOLUTE_IMMEDIATE_ERROR    
+        BRA     DECODE_ERROR    
 
 ABSOLUTE_WORD
         MOVE.B  #$24,(A2)+          ; Add $ symbol
@@ -2829,12 +2850,12 @@ DO_ITOA_OPMODE
 
 An_CHECK 
         CMP.B   #1,D3               ; If mode is An     
-        BEQ     EA_INVALID          ; Then branch to error message
+        BEQ     DECODE_ERROR        ; Then branch to error message
         RTS   
       
 Dn_CHECK 
         CMP.B   #0,D3               ; If mode is Dn     
-        BEQ     EA_INVALID          ; Then branch to error message
+        BEQ     DECODE_ERROR        ; Then branch to error message
         RTS    
      
 IMMEDIATE_CHECK
@@ -2844,38 +2865,47 @@ IMMEDIATE_CHECK
         
 REGISTER_CHECK
         CMP.B   #4,D4               ; If 100 in register
-        BEQ     EA_INVALID          ; Branch to invalid
+        BEQ     DECODE_ERROR        ; Branch to invalid
         RTS   
               
 EA_WRONG_SIZE 
         LEA     WRONG_SIZE_MESSAGE, A1 
         MOVE.B  #14, D0
         TRAP    #15
-        JMP     OP_FINISH
+        JMP     EA_FINISH
         
 ABSOLUTE_IMMEDIATE_ERROR  
         LEA     ABSOLUTE_WRONGREG, A1 
         MOVE.B  #14, D0
         TRAP    #15
-        JMP     OP_FINISH
+        JMP     EA_FINISH
         
 DST_INVALID
         LEA     DST_INVALID_MSG, A1 
         MOVE.B  #14, D0
         TRAP    #15
-        JMP     OP_FINISH
+        JMP     EA_FINISH
         
 SRC_INVALID 
         LEA     SRC_INVALID_MSG, A1 
         MOVE.B  #14, D0
         TRAP    #15
-        JMP     OP_FINISH
+        JMP     EA_FINISH
         
-EA_INVALID  
-        LEA     EA_INVALID_MSG, A1 
-        MOVE.B  #14, D0
-        TRAP    #15
-        JMP     OP_FINISH
+DECODE_ERROR  
+        MOVE.B  #'D',(A2)+
+        MOVE.B  #'A',(A2)+
+        MOVE.B  #'T',(A2)+
+        MOVE.B  #'A',(A2)+
+        MOVE.B  #' ',(A2)+
+        MOVE.B  #' ',(A2)+
+        MOVE.B  #' ',(A2)+
+        MOVE.B  #' ',(A2)+
+        MOVE.B  #' ',(A2)+
+        MOVE.B  #' ',(A2)+
+        MOVE.B  #'$',(A2)+
+        JSR ITOA_WORD_ERROR
+        JMP     EA_FINISH
          
 DONE    SIMHALT             ; halt simulator
 
@@ -2886,7 +2916,7 @@ decoded_buffer      EQU         $5000
 CR                  EQU         $0D
 LF                  EQU         $0A
 stack               EQU         $0000A000
-lines_p_screen      EQU         20
+lines_p_screen      EQU         30
 right3              EQU         3
 right4              EQU         4
 right6              EQU         6
@@ -2953,6 +2983,7 @@ USER_INST           DC.B        'Please follow the proper input instructions bel
 ENTER_PROMPT        DC.B        'Press enter to continue...',CR,LF,0
 PROMPT_AGAIN        DC.B        'Press Y to continue / N to exit.',CR,LF,0
 EXIT_PROMPT         DC.B        'Program has execution has stopped.',CR,LF,0
+PROMPT_V_END        DC.B        'Enter a valid ending address: ',CR,LF,0
       
 START_IN            DC.B        'Enter a starting address: ',CR,LF,0 
 END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
