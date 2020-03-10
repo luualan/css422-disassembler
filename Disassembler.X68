@@ -449,7 +449,7 @@ code0010                            ; Opcodes MOVE.L and MOVEA.L
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D5          ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #1, D1              ; When 001 in destination mode
+        CMP.B   #1,D1               ; When 001 in destination mode
         BEQ     OP_MOVEA            ; Go to opcode MOVEA
         BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 
@@ -458,7 +458,7 @@ code0011                            ; Opcodes MOVE.W and MOVEA.W
         ANDI.W  #dst_mode,D1        ; Extract dst mode position from instruction word
         MOVE.B  #right6,D5          ; Used to shift 6 times to right
         LSR.W   D5,D1               ; Shift dst mode into LSB position
-        CMP.B   #1, D1              ; When 001 in destination mode
+        CMP.B   #1,D1               ; When 001 in destination mode
         BEQ     OP_MOVEA            ; Go to opcode MOVEA
         BRA     OP_MOVE             ; Otherwise, go to opcode MOVE
 
@@ -627,7 +627,7 @@ OP_0100_TABLE
         JMP     OP_LEA              ; 3 Go to opcode LEA
         JMP     OP_UNSUPPORTED      ; 4 Go to opcode unsupported  
         JMP     OP_LEA              ; 5 Go to opcode LEA
-        JMP     OP_ADDI             ; 6 Go to opcode ADDI
+        JMP     OP_UNSUPPORTED      ; 6 Go to opcode unsupported
         JMP     OP_LEA              ; 7 Go to opcode LEA
         JMP     OP_MOVEM            ; 8 Go to opcode MOVEM
         JMP     OP_LEA              ; 9 Go to opcode LEA
@@ -1324,13 +1324,12 @@ EA_IMMEDIATE                        ; 0 ea_immediate
         ANDI.W  #src_reg,D4         ; get the bits at 2-0 (D4 stores EA reg)
         
         MOVE.L  D0,D3               ; Store the current address into D3 
-        ANDI.W  #src_mode,D3        ; get bits 5-3 (D3 stores EA mode)
-        MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
-        LSR.W   D5,D3               ; do the actual shift 
-        CMP.B   #1,D3               ; If dest mode is 001: An
-        BEQ     EA_ERROR            ; Go to invalid message 
+        ANDI.W  #src_mode,D3        ; Get bits 5-3 (D3 stores EA mode)
+        MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB position
+        LSR.W   D5,D3               ; Do the actual shift 
+        JSR     An_CHECK            ; Check if mode is An
+        JSR     IMMEDIATE_CHECK     ; Check if mode is Immediate
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
-
         JMP     EA_FINISH           ; Opcode is finish
 *------------------------------------------------------------------------------------------------*
 EA_MOVE                             ; 1: ea_move
@@ -1369,10 +1368,9 @@ EA_MOVE                             ; 1: ea_move
         ANDI.W  #dst_mode,D3        ; Get bits 8-6
         MOVE.B  #right6,D5          ; Shift the bits 8-6 to the LSB
         LSR.W   D5,D3               ; Do the actual shift 
-        CMP.B   #1,D3               ; If dest mode is 001: An
-        BEQ     EA_ERROR            ; Go to invalid message 
-        JSR     EA_GEN_SRC          ; Get EA print
-        
+        JSR     An_CHECK            ; Check if dest mode is 001: An
+        JSR     IMMEDIATE_CHECK     ; Check if immediate 
+        JSR     EA_GEN_SRC          ; Get EA print        
         JMP     EA_FINISH           ; Opcode is finish
 *------------------------------------------------------------------------------------------------*          
 EA_MOVEA                            ; 2: ea_movea
@@ -1439,7 +1437,8 @@ EA_LEA                              ; 3: ea_lea
         BEQ     LEA_SRC_VALID
         BRA     EA_ERROR            ; when src mode is not 010 or 111, branch to error message
         
-LEA_SRC_VALID        
+LEA_SRC_VALID
+        JSR     IMMEDIATE_CHECK     ; Check if src is immediate        
         JSR     EA_GEN_SRC          ; Go to function 
  
         MOVE.B  #$2C,(A2)+          ; Add comma after size print
@@ -1496,8 +1495,8 @@ EA_CLEAR
         ANDI.W  #src_mode,D3        ; get bits 5-3 (D3 stores EA mode)
         MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
         LSR.W   D5,D3               ; do the actual shift 
-        CMP.B   #1,D3               ; If dest mode is 001: An
-        BEQ     EA_ERROR            ; Go to invalid message 
+        JSR     An_CHECK            ; Check if dest mode is 001: An
+        JSR     IMMEDIATE_CHECK     ; Check if immediate
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
         JMP     EA_FINISH           ; Opcode is finish
         
@@ -1517,12 +1516,17 @@ EA_JSR  MOVE.B  #$20,(A2)+          ; Add space
         MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
         LSR.W   D5,D3               ; do the actual shift 
         CMP     #2,D3               ; If D3 (src mode) is 010: (An)
-        BEQ     JSR_EA_VALID
+        BEQ     JSR_An_VALID
         CMP     #7,D3               ; If D3 (src mode) is 111: (W or L)
-        BEQ     JSR_EA_VALID
+        BEQ     JSR_ABSOLUTE_CHECK
         BRA     EA_ERROR            ; Otherwise, branch to invalid message
         
-JSR_EA_VALID
+JSR_An_VALID
+        JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
+        JMP     EA_FINISH           ; Opcode is finish
+        
+JSR_ABSOLUTE_CHECK
+        JSR     IMMEDIATE_CHECK     ; Check if immediate
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
         JMP     EA_FINISH           ; Opcode is finish
 *------------------------------------------------------------------------------------------------*
@@ -1622,6 +1626,8 @@ Dn_SRC
         MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
         LSR.W   D5,D3               ; Do the actual shift
         JSR     An_CHECK            ; Check if mode is An
+        JSR     IMMEDIATE_CHECK     ; Check if mode is immediate
+        ; JSR     Dn_CHECK          ; Check if mode is Dn
        
         JSR     EA_GEN_SRC          ; Get EA print
         JMP     EA_FINISH           ; Opcode is finish
@@ -2794,10 +2800,7 @@ EA_An_Indirect_Dec  ; 100: -(An)
         RTS
 
 EA_UNSUPPORTED
-        LEA     EA_TYPE_ERROR,A1
-        MOVE.B  #14,D0
-        TRAP    #15  
-        RTS 
+        BRA     EA_ERROR
         
 EA_Absolute_And_Immediate           ; 111: (xxx).W,(xxx).L, or #<data>
         CMP.B   #0,D4               ; If D4 is (xxx).W
@@ -2855,42 +2858,18 @@ An_CHECK
 Dn_CHECK 
         CMP.B   #0,D3               ; If mode is Dn     
         BEQ     EA_ERROR            ; Then branch to error message
-        RTS    
-     
+        RTS  
+              
 IMMEDIATE_CHECK
         CMP.B   #7,D3
-        BEQ     REGISTER_CHECK
+        BEQ     IMMEDIATE_REGISTER_CHECK
         RTS
         
-REGISTER_CHECK
+IMMEDIATE_REGISTER_CHECK
         CMP.B   #4,D4               ; If 100 in register
         BEQ     EA_ERROR            ; Branch to invalid
         RTS   
-              
-EA_WRONG_SIZE 
-        LEA     WRONG_SIZE_MESSAGE, A1 
-        MOVE.B  #14, D0
-        TRAP    #15
-        JMP     EA_FINISH
-        
-ABSOLUTE_IMMEDIATE_ERROR  
-        LEA     ABSOLUTE_WRONGREG, A1 
-        MOVE.B  #14, D0
-        TRAP    #15
-        JMP     EA_FINISH
-        
-DST_INVALID
-        LEA     DST_INVALID_MSG, A1 
-        MOVE.B  #14, D0
-        TRAP    #15
-        JMP     EA_FINISH
-        
-SRC_INVALID 
-        LEA     SRC_INVALID_MSG, A1 
-        MOVE.B  #14, D0
-        TRAP    #15
-        JMP     EA_FINISH
-        
+                   
 OP_ERROR  
         MOVE.B  #'D',(A2)+
         MOVE.B  #'A',(A2)+
@@ -2928,8 +2907,7 @@ EA_ERROR_LOOP
         MOVE.W  D0,D5
         JSR     ITOA_WORD_ERROR
         JMP     EA_FINISH
-
-           
+        
 DONE    SIMHALT             ; halt simulator
 
 * Put variables and constants here
@@ -2973,7 +2951,6 @@ bit8                EQU         $0100
 ea_type_immediate   EQU     0       ; EA Type = immediate
 ea_type_move        EQU     1       ; EA Type = move
 ea_type_movea       EQU     2       ; EA Type = movea
-ea_type_movea6      EQU     12      ; EA Type = movea * 6
 ea_type_lea         EQU     3       ; EA Type = lea
 ea_type_dstonly     EQU     4       ; EA Type = clr, neg, not, jsr, jmp
 ea_type_ext         EQU     5       ; EA Type = ext, add, adda
@@ -2981,20 +2958,7 @@ ea_type_movem       EQU     6       ; EA Type = movem
 ea_type_shifts      EQU     7       ; EA Type = ASL/ASR/LSL/LSR/ROL/ROR
 ea_type_quick       EQU     8       ; EA Type = addq, subq
 ea_type_branch      EQU     9       ; EA Type = bra, bsr, bcc
-ea_bcc_flag         EQU     0       ; EA Type = branch, flag = bcc
-ea_dbcc_flag        EQU     1       ; EA Type = branch, flag = dbcc
-ea_scc_flag         EQU     2       ; EA Type = branch, flag = scc
-
-WRONG_SIZE_MESSAGE  DC.B    'Wrong size.',CR,LF,0
-ABSOLUTE_WRONGREG   DC.B    'ERROR: Register does not exist for Absolute and immediate',CR,LF,0
-EA_TYPE_ERROR       DC.B    'ERROR: EA type is not supported',CR,LF,0
-DST_INVALID_MSG     DC.B    'ERROR: Destination effective address is invalid',CR,LF,0
-SRC_INVALID_MSG     DC.B    'ERROR: Source effective address is invalid',CR,LF,0
-EA_INVALID_MSG      DC.B    'ERROR: Invalid addressing mode',CR,LF,0
-OPCODE_INVALID      DC.B    'ERROR: Opcode is invalid',CR,LF,0
-ERROR_MESSAGE       DC.B    'ERROR: The input is invalid',CR,LF,0  
-ODD_ERROR_MESSAGE   DC.B    'ERROR: The last digit of the address is odd, which is invalid',CR,LF,0  
-             
+           
 WELCOME             DC.B        'Welcome to the 68k Disassembler of Avery and Alan',CR,LF,CR,LF,0
 
 USER_INST           DC.B        'Please follow the proper input instructions below: ',CR,LF
@@ -3008,6 +2972,8 @@ ENTER_PROMPT        DC.B        'Press enter to continue...',CR,LF,0
 PROMPT_AGAIN        DC.B        'Press Y to continue / N to exit.',CR,LF,0
 EXIT_PROMPT         DC.B        'Program has execution has stopped.',CR,LF,0
 PROMPT_V_END        DC.B        'Enter a valid ending address: ',CR,LF,0
+ERROR_MESSAGE       DC.B        'ERROR: The input is invalid.',CR,LF,0  
+ODD_ERROR_MESSAGE   DC.B        'ERROR: The last digit of the address is odd, which is invalid.',CR,LF,0
       
 START_IN            DC.B        'Enter a starting address: ',CR,LF,0 
 END_IN              DC.B        'Enter an ending address: ',CR,LF,0 
