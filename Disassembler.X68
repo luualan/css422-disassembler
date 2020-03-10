@@ -1735,10 +1735,11 @@ EA_MOVEM        ; 6: ea_movem
         ANDI.W  #src_mode,D3        ; Get bits 5-3
         MOVE.B  #right3,D5          ; Shift the bits 5-3 to the LSB
         LSR.W   D5,D3 
-
+        CMP.B   #0, D3
+        BEQ     EA_ERROR
         CMP.B   #2, D3
-        BEQ     MEM_TO_REG        
-
+        BEQ     MEM_TO_REG 
+               
 *-----------------------------------------------------------------------------------*
 
         MOVE.L  D0, D1
@@ -2630,6 +2631,14 @@ EA_QUICK        ; 8: ea_quick
         BEQ     MOVEQ_EA_CALC
         
 ADDQ_EA_CALC
+        MOVE.L  D0,D1               ; error checking to handle SUBQ.
+        ANDI.W  #second_nibble,D1   ; Get bits 8-6 from D1
+        MOVE.B  #right8,D5          ; Store 6 into D5
+        LSR.W   D5,D1               ; Shift D1 six times to the LSB position
+        ANDI.B  #1,D1               ; Remove the front bit from D1
+        CMP.B   #1, D1
+        BEQ     EA_ERROR
+
         MOVE.L  D0,D1
         ANDI.W  #dst_mode,D1        ; Get bits 8-6 from D1
         MOVE.B  #right6,D5          ; Store 6 into D5
@@ -2677,6 +2686,14 @@ DONT_CHANGE
         JMP     EA_FINISH
 
 MOVEQ_EA_CALC
+        MOVE.L  D0,D1               ; error checking to handle brute force.
+        ANDI.W  #second_nibble,D1   ; Get bits 8-6 from D1
+        MOVE.B  #right8,D5          ; Store 6 into D5
+        LSR.W   D5,D1               ; Shift D1 six times to the LSB position
+        ANDI.B  #1,D1               ; Remove the front bit from D1
+        CMP.B   #1, D1
+        BEQ     EA_ERROR
+
         MOVE.B  #$20,(A2)+          ; print out a space after the MOVEQ
         MOVE.B  #$20,(A2)+          ; print out a space after the MOVEQ
         MOVE.B  #$20,(A2)+          ; Add space
