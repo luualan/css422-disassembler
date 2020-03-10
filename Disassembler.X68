@@ -211,18 +211,17 @@ ITOA_WORD_BRANCH
         LSR.W   D1,D7
         JSR     ITOA_BYTE_CONVERT
         MOVE.W  D5, D7
-        MOVE.W  (A5)+, D3
+        MOVE.W  (A5)+,D3
         JSR     ITOA_BYTE_CONVERT
         JMP     ITOA_DONE
         
 ITOA_WORD_ERROR
         MOVEM.L D0-D1,-(SP) 
-        MOVE.W  D0,D7
+        MOVE.W  D5,D7
         MOVE.B  #right8, D1
         LSR.W   D1,D7
         JSR     ITOA_BYTE_CONVERT
-        MOVE.W  D0, D7
-        MOVE.W  (A5)+, D3
+        MOVE.W  D5,D7
         JSR     ITOA_BYTE_CONVERT
         JMP     ITOA_DONE
         
@@ -803,7 +802,7 @@ RTS_CHECK_THREE
         BRA     OP_UNSUPPORTED      ; Otherwise, go to opcode unsupported
 
 OP_UNSUPPORTED
-     BRA DECODE_ERROR        
+     BRA OP_ERROR       
 *----------------------------------------------------------------------------------------------*
 * param D0 the current instruction in word
 * param D1 the EA type
@@ -1228,7 +1227,7 @@ EA_SIZE_GENERAL
         BEQ     EA_SIZE_W       
         CMP.B   #%10,D2             ; .l
         BEQ     EA_SIZE_L
-        BRA     DECODE_ERROR        ; wrong size
+        BRA     EA_ERROR          ; wrong size
 
 EA_SIZE_MOVE
         CMP.B   #%01,D2             ; .b
@@ -1237,21 +1236,21 @@ EA_SIZE_MOVE
         BEQ     EA_SIZE_W       
         CMP.B   #%10,D2             ; .l
         BEQ     EA_SIZE_L
-        BRA     DECODE_ERROR        ; wrong size
+        BRA     EA_ERROR            ; wrong size
 
 EA_SIZE_MOVEA     
         CMP.B   #%11,D2             ; .w
         BEQ     EA_SIZE_W       
         CMP.B   #%10,D2             ; .l
         BEQ     EA_SIZE_L
-        BRA     DECODE_ERROR        ; wrong size
+        BRA     EA_ERROR            ; wrong size
         
 EA_SIZE_MOVEM     
         CMP.B   #%0000,D2           ; .w
         BEQ     EA_SIZE_W       
         CMP.B   #%0100,D2           ; .l
         BEQ     EA_SIZE_L
-        BRA     DECODE_ERROR        ; wrong size
+        BRA     EA_ERROR            ; wrong size
 
 EA_SIZE_OPMODE_012456               ; Check opmode field for size
         CMP.B   #%000,D2            ; When 0 then .b
@@ -1266,21 +1265,21 @@ EA_SIZE_OPMODE_012456               ; Check opmode field for size
         BEQ     EA_SIZE_L
         CMP.B   #%110,D2            ; When 6 then .l
         BEQ     EA_SIZE_L
-        BRA     DECODE_ERROR        ; wrong size
+        BRA     EA_ERROR            ; wrong size
 
 EA_SIZE_ADDA                        ; Check opmode field for size
         CMP.B   #%011,D2            ; When 3 then .w
         BEQ     EA_SIZE_W       
         CMP.B   #%111,D2            ; When 7 then .l
         BEQ     EA_SIZE_L
-        BRA     DECODE_ERROR        ; wrong size
+        BRA     EA_ERROR            ; wrong size
                 
 EA_SIZE_MEMORY_SHIFTS
         CMP.B   #%00,D2             ; .w
         BEQ     EA_SIZE_W_MEMORY      
         CMP.B   #%01,D2             ; .l
         BEQ     EA_SIZE_L      
-        BRA     DECODE_ERROR        ; wrong size
+        BRA     EA_ERROR            ; wrong size
 
 EA_SIZE_B
         MOVE.B  #'.',(A2)+
@@ -1329,7 +1328,7 @@ EA_IMMEDIATE                        ; 0 ea_immediate
         MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
         LSR.W   D5,D3               ; do the actual shift 
         CMP.B   #1,D3               ; If dest mode is 001: An
-        BEQ     DECODE_ERROR        ; Go to invalid message 
+        BEQ     EA_ERROR            ; Go to invalid message 
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
 
         JMP     EA_FINISH           ; Opcode is finish
@@ -1371,7 +1370,7 @@ EA_MOVE                             ; 1: ea_move
         MOVE.B  #right6,D5          ; Shift the bits 8-6 to the LSB
         LSR.W   D5,D3               ; Do the actual shift 
         CMP.B   #1,D3               ; If dest mode is 001: An
-        BEQ     DECODE_ERROR        ; Go to invalid message 
+        BEQ     EA_ERROR            ; Go to invalid message 
         JSR     EA_GEN_SRC          ; Get EA print
         
         JMP     EA_FINISH           ; Opcode is finish
@@ -1413,7 +1412,7 @@ EA_MOVEA                            ; 2: ea_movea
         LSR.W   D5,D3               ; Do the actual shift 
         CMP.B   #1,D3               ; If dst mode is 001: An 
         BEQ     MOVEA_DST_VALID     ; dst is valid, so branch 
-        BRA     DECODE_ERROR        ; Otherwise, go to invalid message 
+        BRA     EA_ERROR            ; Otherwise, go to invalid message 
         
 MOVEA_DST_VALID
         JSR     EA_GEN_SRC          ; Get EA print
@@ -1438,7 +1437,7 @@ EA_LEA                              ; 3: ea_lea
         BEQ     LEA_SRC_VALID
         CMP     #7,D3               ; If D3 (src mode) is 111 (W or L)
         BEQ     LEA_SRC_VALID
-        BRA     DECODE_ERROR        ; when src mode is not 010 or 111, branch to error message
+        BRA     EA_ERROR            ; when src mode is not 010 or 111, branch to error message
         
 LEA_SRC_VALID        
         JSR     EA_GEN_SRC          ; Go to function 
@@ -1452,7 +1451,7 @@ LEA_SRC_VALID
         LSR.W   D5,D3               ; Do the actual shift
         CMP.B   #7,D3               ; Check if D3 is 111
         BEQ     CHANGE_TO_001       ; change the D3 bits to 001 
-        BRA     DECODE_ERROR        ; Print out an error message if bits 8-6 (dst mode) are not 111
+        BRA     EA_ERROR            ; Print out an error message if bits 8-6 (dst mode) are not 111
   
 CHANGE_TO_001
         MOVE.B  #%001,D3            ; set D3 to 001 to ensure the print out A 
@@ -1473,7 +1472,7 @@ EA_DSTONLY                          ; 4: ea_dstonly
         BEQ     EA_CLEAR            ; Then do EA_CLEAR
         CMP.B   #$E, D1             ; When 1110 for second nibble
         BEQ     EA_JSR              ; Then do EA_JSR
-        BRA     DECODE_ERROR     
+        BRA     EA_ERROR     
         
 EA_CLEAR
         MOVE.L  D0,D1
@@ -1498,7 +1497,7 @@ EA_CLEAR
         MOVE.B  #right3,D5          ; shift the bits 5-3 to the LSB position
         LSR.W   D5,D3               ; do the actual shift 
         CMP.B   #1,D3               ; If dest mode is 001: An
-        BEQ     DECODE_ERROR        ; Go to invalid message 
+        BEQ     EA_ERROR            ; Go to invalid message 
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
         JMP     EA_FINISH           ; Opcode is finish
         
@@ -1521,7 +1520,7 @@ EA_JSR  MOVE.B  #$20,(A2)+          ; Add space
         BEQ     JSR_EA_VALID
         CMP     #7,D3               ; If D3 (src mode) is 111: (W or L)
         BEQ     JSR_EA_VALID
-        BRA     DECODE_ERROR        ; Otherwise, branch to invalid message
+        BRA     EA_ERROR            ; Otherwise, branch to invalid message
         
 JSR_EA_VALID
         JSR     EA_GEN_SRC          ; When a valid dst, get EA dst print
@@ -1571,7 +1570,7 @@ EA_OPMODE_012456
         CMP.B   #%110,D2            ; When 6 then Dn is source
         BEQ     Dn_SRC 
         
-        BRA     DECODE_ERROR
+        BRA     EA_ERROR
 
 Dn_DST
         ; Get source and store into decode buffer
@@ -1600,7 +1599,7 @@ Dn_DST
           
 Dn_SRC  
         CMP.B   #11,D6              ; If first nibble is 1011 (indicates CMP opcode)
-        BEQ     DECODE_ERROR        ; Then branch to error message
+        BEQ     EA_ERROR            ; Then branch to error message
      
         ; Get source and store into decode buffer
         MOVE.L  D0,D4               ; Store the src reg in D4
@@ -2810,7 +2809,7 @@ EA_Absolute_And_Immediate           ; 111: (xxx).W,(xxx).L, or #<data>
         CMP.B   #4,D4               ; If D4 is #<data>  
         BEQ     IMMEDIATE
         
-        BRA     DECODE_ERROR    
+        BRA     EA_ERROR    
 
 ABSOLUTE_WORD
         MOVE.B  #$24,(A2)+          ; Add $ symbol
@@ -2850,12 +2849,12 @@ DO_ITOA_OPMODE
 
 An_CHECK 
         CMP.B   #1,D3               ; If mode is An     
-        BEQ     DECODE_ERROR        ; Then branch to error message
+        BEQ     EA_ERROR            ; Then branch to error message
         RTS   
       
 Dn_CHECK 
         CMP.B   #0,D3               ; If mode is Dn     
-        BEQ     DECODE_ERROR        ; Then branch to error message
+        BEQ     EA_ERROR            ; Then branch to error message
         RTS    
      
 IMMEDIATE_CHECK
@@ -2865,7 +2864,7 @@ IMMEDIATE_CHECK
         
 REGISTER_CHECK
         CMP.B   #4,D4               ; If 100 in register
-        BEQ     DECODE_ERROR        ; Branch to invalid
+        BEQ     EA_ERROR            ; Branch to invalid
         RTS   
               
 EA_WRONG_SIZE 
@@ -2892,7 +2891,7 @@ SRC_INVALID
         TRAP    #15
         JMP     EA_FINISH
         
-DECODE_ERROR  
+OP_ERROR  
         MOVE.B  #'D',(A2)+
         MOVE.B  #'A',(A2)+
         MOVE.B  #'T',(A2)+
@@ -2902,17 +2901,42 @@ DECODE_ERROR
         MOVE.B  #' ',(A2)+
         MOVE.B  #' ',(A2)+
         MOVE.B  #' ',(A2)+
+        MOVE.B  #'$',(A2)+
+        MOVE.W  D0,D5
+        JSR     ITOA_WORD_ERROR
+        JMP     OP_FINISH
+        
+EA_ERROR
+        LEA     error_buffer,A2
+        MOVE.L  #55,D3 
+       
+EA_ERROR_LOOP
+        MOVE.B  #0,(A2)+
+        SUBI    #1,D3
+        BGT     EA_ERROR_LOOP
+        LEA     error_buffer,A2
+        MOVE.B  #'D',(A2)+
+        MOVE.B  #'A',(A2)+
+        MOVE.B  #'T',(A2)+
+        MOVE.B  #'A',(A2)+
+        MOVE.B  #' ',(A2)+
+        MOVE.B  #' ',(A2)+
+        MOVE.B  #' ',(A2)+
+        MOVE.B  #' ',(A2)+
         MOVE.B  #' ',(A2)+
         MOVE.B  #'$',(A2)+
-        JSR ITOA_WORD_ERROR
+        MOVE.W  D0,D5
+        JSR     ITOA_WORD_ERROR
         JMP     EA_FINISH
-         
+
+           
 DONE    SIMHALT             ; halt simulator
 
 * Put variables and constants here
     
 buffer_size         EQU         64 
 decoded_buffer      EQU         $5000  
+error_buffer        EQU         $5009
 CR                  EQU         $0D
 LF                  EQU         $0A
 stack               EQU         $0000A000
