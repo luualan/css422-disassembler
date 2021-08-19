@@ -1,0 +1,164 @@
+00000400 Starting Address
+Assembler used: EASy68K Editor/Assembler v5.16.01
+Created On: 8/19/2021 12:35:13 AM
+
+00000000                             1  *-----------------------------------------------------------
+00000000                             2  * Title      : Disassmbler Test Program
+00000000                             3  * Written by : Munehiro Fukuda
+00000000                             4  * Date       : 3/5/2020
+00000000                             5  *-----------------------------------------------------------
+00000400                             6      ORG     $400
+00000400                             7  START:
+00000400                             8  
+00000400                             9  *-----------------------------------------------------------
+00000400                            10  * Op Code: 25pts
+00000400                            11  *
+00000400                            12  * CPU Instructions..........................................
+00000400                            13  * 0.7pts each * 30 instructions = 21pts
+00000400                            14  *
+00000400                            15  * 0000: SUBI, ADDI
+00000400                            16  * 0001: MOVEA
+00000400                            17  * 0011: MOVE
+00000400                            18  * 0010:
+00000400                            19  * 0100: CLR, NOP, RTS, JSR, MOVEM, LEA
+00000400                            20  * 0101: ADDQ
+00000400                            21  * 0110: BRA, BSR, Bcc
+00000400                            22  * 0111: MOVEQ
+00000400                            23  * 1000: DIVU, OR
+00000400                            24  * 1001: SUB
+00000400                            25  * 1011: CMP
+00000400                            26  * 1100: MULU, MULS, AND
+00000400                            27  * 1101: ADD, ADDA
+00000400                            28  * 1110: ASL, ASR, LSL, LSR, ROL, and ROR
+00000400                            29  *
+00000400                            30  
+00000400  0440 ABCD                 31        SUBI.W    #$ABCD, D0
+00000404  0641 ABCD                 32        ADDI.W    #$ABCD, D1
+00000408  3642                      33        MOVEA.W   D2, A3
+0000040A  3A04                      34        MOVE.W    D4, D5
+0000040C  4246                      35        CLR.W     D6
+0000040E  4E71                      36        NOP
+00000410  4E75                      37        RTS
+00000412  4E97                      38        JSR       (A7)        
+00000414  4891 0001                 39        MOVEM.W   D0, (A1)
+00000418  47D2                      40        LEA       (A2), A3
+0000041A  5E44                      41        ADDQ.W    #$7, D4 
+0000041C  6000 0E16                 42        BRA       $1234       ; 16bit (word) displacement
+00000420  6100 0E12                 43        BSR       $1234       ; 16bit (word) displacement
+00000424  6200 0E0E                 44        BHI       $1234       ; 16bit (word) displacement
+00000428  7AAB                      45        MOVEQ     #$AB, D5
+0000042A  8EC6                      46        DIVU      D6, D7
+0000042C  8240                      47        OR.W      D0, D1
+0000042E  9642                      48        SUB.W     D2, D3
+00000430  BA44                      49        CMP.W     D4, D5
+00000432  CEC6                      50        MULU      D6, D7  
+00000434  C3C0                      51        MULS      D0, D1
+00000436  C642                      52        AND.W     D2, D3
+00000438  DA44                      53        ADD.W     D4, D5
+0000043A  DEC6                      54        ADDA.W    D6, A7
+0000043C  E340                      55        ASL.W     #1, D0
+0000043E  E461                      56        ASR.W     D2, D1
+00000440  E74A                      57        LSL.W     #3, D2
+00000442  E86B                      58        LSR.W     D4, D3
+00000444  EB5C                      59        ROL.W     #5, D4
+00000446  EC7D                      60        ROR.W     D6, D5
+00000448                            61  
+00000448                            62  * Data size distinction.....................................
+00000448                            63  * .B: 2pts
+00000448                            64  * .W: 1pt
+00000448                            65  * .L: 1pt
+00000448  0400 00AB                 66        SUBI.B    #$AB, D0
+0000044C  1401                      67        MOVE.B    D1, D2
+0000044E  4203                      68        CLR.B     D3
+00000450  5C04                      69        ADDQ.B    #$6, D4
+00000452  60AC                      70        BRA       START       ; 8bit (byte) displacement
+00000454  8C05                      71        OR.B      D5, D6
+00000456  9007                      72        SUB.B     D7, D0
+00000458  B401                      73        CMP.B     D1, D2
+0000045A  C803                      74        AND.B     D3, D4
+0000045C  DA04                      75        ADD.B     D4, D5
+0000045E  E904                      76        ASL.B     #4, D4
+00000460  EA25                      77        ASR.B     D5, D5
+00000462                            78  
+00000462  0480 ABCDEF12             79        SUBI.L    #$ABCDEF12, D0
+00000468  2441                      80        MOVEA.L   D1, A2
+0000046A  2803                      81        MOVE.L    D3, D4
+0000046C  4285                      82        CLR.L     D5
+0000046E  4CD0 0040                 83        MOVEM.L   (A0), D6
+00000472  5A87                      84        ADDQ.L    #$5, D7
+00000474  8280                      85        OR.L      D0, D1
+00000476  9682                      86        SUB.L     D2, D3
+00000478  BA84                      87        CMP.L     D4, D5
+0000047A  CE86                      88        AND.L     D6, D7
+0000047C  D280                      89        ADD.L     D0, D1
+0000047E  D7C2                      90        ADDA.L    D2, A3
+00000480  E98C                      91        LSL.L     #4, D4
+00000482  EAAD                      92        LSR.L     D5, D5
+00000484                            93  
+00000484                            94  *-----------------------------------------------------------
+00000484                            95  * Effective Address: 35pts
+00000484                            96  * Data Register Direct (mode 0).......................... 4
+00000484                            97  * Address Register Direct (mode 1)....................... 4
+00000484                            98  * Address Register Indirect (mode 2)..................... 4
+00000484                            99  * Address Register Indirect with Post Increment (mode 3). 5
+00000484                           100  * Address Register Indirect with Pre Decrement (mode 4).. 5
+00000484                           101  * Absolute Word Address (mode 7 subclass 0).............. 4
+00000484                           102  * Absolute Long Address (moe 7 subclass 1)............... 5
+00000484                           103  * Immediate Data (mode 7 subclass 4)..................... 4
+00000484                           104  
+00000484  2208                     105        MOVE.L    A0, D1        ; mode 0 and mode 1
+00000486  2642                     106        MOVEA.L   D2, A3        ; mode 0 and mode 1
+00000488  2A14                     107        MOVE.L    (A4), D5      ; mode 2
+0000048A  2C86                     108        MOVE.L    D6, (A6)      ; mode 2
+0000048C  4CDF 8001                109        MOVEM.L   (A7)+, D0/A7  ; mode 3
+00000490  48E2 4002                110        MOVEM.L   D1/A6, -(A2)  ; mode 4
+00000494  2639 0000ABCD            111        MOVE.L    $ABCD, D3     ; mode 7 subclass 0
+0000049A  E1F9 0000ABCD            112        ASL       $ABCD         ; mode 7 subclass 0 
+000004A0  23C4 ABCDEF12            113        MOVE.L    D4, ($ABCDEF12).L ; mode 7 subclass 1
+000004A6  E0F9 ABCDEF12            114        ASR       ($ABCDEF12).L     ; mode 7 subclass 1
+000004AC  2A3C 12345678            115        MOVE.L    #$12345678, D5    ; mode 7 subclass 4
+000004B2  23FC 12345678 ABCDEF12   116        MOVE.L    #$12345678, ($ABCDEF12).L ; mode 7 subclass 1 and 4
+000004BC                           117  
+000004BC                           118  *-----------------------------------------------------------
+000004BC                           119  * Extra Credits: 2pts
+000004BC                           120  * 0.5pts .. one of ORI, ANDI, EORI, CMPI, NOT, EXT, TRAP, 
+000004BC                           121  *                  STOP, RTE, JMP, SUBQ, EOR, and Bcc
+000004BC                           122  * Need 4 instructions to get 2pts in total
+000004BC                           123  
+000004BC                           124       * ORI.W     #$ABCD, D0
+000004BC                           125       * ANDI.W    #$ABCD, D1
+000004BC                           126       * EORI.W    #$ABCD, D2
+000004BC                           127       * CMPI.W    #$ABCD, D3
+000004BC                           128       * NOT.W        D4
+000004BC                           129       * EXT.W        D5
+000004BC                           130       * TRAP     #15
+000004BC                           131       * STOP      #$AB
+000004BC                           132       * RTE
+000004BC                           133       * JMP      (A6)
+000004BC                           134       * SUBQ.W    #$4, D7
+000004BC                           135       * EOR.W        D0, D1
+000004BC                           136        
+000004BC  6300 0142                137        BLS       $600
+000004C0  6400 013E                138        BCC       $600
+000004C4  6500 013A                139        BCS       $600
+000004C8  6600 0136                140        BNE       $600
+000004CC  6700 0132                141        BEQ       $600
+000004D0  6800 012E                142        BVC       $600
+000004D4  6900 012A                143        BVS       $600
+000004D8  6A00 0126                144        BPL       $600
+000004DC  6B00 0122                145        BMI       $600
+000004E0  6C00 011E                146        BGE       $600
+000004E4  6D00 011A                147        BLT       $600
+000004E8  6E00 0116                148        BGT       $600
+000004EC  6F00 0112                149        BLE       $600
+000004F0                           150  
+000004F0                           151        END   START
+
+No errors detected
+No warnings generated
+
+
+SYMBOL TABLE INFORMATION
+Symbol-name         Value
+-------------------------
+START               400
