@@ -1,7 +1,7 @@
 # CSS422-Project
 Implemented a Disassembler for Easy68k.
 
-How to run the Disassembler:
+# How to run the Disassembler:
 When you run the program called Disassembler.X68 in Easy68k, you'll see this image:
 ![image](https://user-images.githubusercontent.com/59902126/130011252-7645548b-3879-4dcd-9ec3-5e38354836cd.png)
 
