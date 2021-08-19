@@ -29,11 +29,11 @@ choose no, the program will exit.
 
 ## The Disassembler's Capabilities:
 Below is a table of all of the opcodes that our disassembler can handle.
-| ------------------ | ---------- |
-| First 4 bits: 0000 | SUBI, ADDI |
-| First 4 bits: 0001 | MOVEA      |
-| First 4 bits: 0011 | MOVE       |
 
+| First Header  | Second Header |
+| ------------- | ------------- |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
 
 ## Flow Diagram
 ![image](https://user-images.githubusercontent.com/59902126/130013644-1ee76e3b-0d85-4f05-8cc4-327c6134c4bb.png)
