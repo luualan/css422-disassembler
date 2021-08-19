@@ -30,12 +30,7 @@ choose no, the program will exit.
 ## The Disassembler's Capabilities:
 Below is a table of all of the opcodes that our disassembler can handle.
 
-
-| ------------- | ------------- |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
-
-| First 4 bits | Opcode                            |
+| First 4 bits | Opcode Insruction                 |
 | ------------ | --------------------------------- |
 | 0000         | SUBI, ADDI                        |
 | 0001         | MOVEA                             |
@@ -43,14 +38,14 @@ Below is a table of all of the opcodes that our disassembler can handle.
 | 0100         | CLR, NOP, RTS, JSR, MOVEM, LEA    |
 | 0101         | ADDQ                              |
 | 0110         | BLS, BCC, BCS,	BNE, BEQ,	BVC, BVS |                           
-| 0110         | BPL, BMI, BGE, BLT,	BGT, BLE     |
+| 0110         | BPL, BMI, BGE, BLT,	BGT, BLE      |
 | 0111         | MOVEQ                             |
 | 1000         | DIVU, OR                          |
-
-
- 	
- 	    
-
+| 1001         | SUB                               |
+| 1011         | CMP                               |
+| 1100         | MULS, MULU, AND                   |
+| 1101         | ADD, ADDA                         |
+| 1110         | ASL, ASR, LSR, LSL, ROR, ROL      |
 
 ## Flow Diagram
 ![image](https://user-images.githubusercontent.com/59902126/130013644-1ee76e3b-0d85-4f05-8cc4-327c6134c4bb.png)
