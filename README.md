@@ -27,7 +27,7 @@ choose no, the program will exit.
 ## Result
 ![image](https://user-images.githubusercontent.com/59902126/130018596-28cc5827-b197-4c59-85cc-0f67c4385d12.png)
 
-## The Disassembler's Capabilities:
+## The Disassembler's Capabilities
 Below is a table of all of the opcodes that our disassembler can handle.
 
 | First 4 bits | Opcode Instruction                |
