@@ -22,10 +22,10 @@ prompted to either end the program or continue using the keyboard input (y/n) fo
 you choose yes, the program will prompt the user for another starting and ending address. If you
 choose no, the program will exit.
 
-The disassemblers capabilities:
+## The disassemblers capabilities:
 Below is a table of all of the opcodes that our disassembler can handle.
 ![image](https://user-images.githubusercontent.com/59902126/130013331-9d1ba984-0bf9-44f8-82dc-a3193bb62fd6.png)
 
 
 ## Implementation
-![image](https://user-images.githubusercontent.com/59902126/130013456-dace8156-63b7-4d8e-ae65-330af8622b28.png)
+![image](https://user-images.githubusercontent.com/59902126/130013644-1ee76e3b-0d85-4f05-8cc4-327c6134c4bb.png)
