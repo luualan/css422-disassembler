@@ -7,10 +7,10 @@ to the user.
 The first screen that you will see when you run the program:
 ![image](https://user-images.githubusercontent.com/59902126/130018824-2b0f7561-e8b9-45b2-84f0-5ecee2e36afa.png)
 
-When assembling the Disassembler.X68 source code, press execute and then click file -> open 
-data in the Disassembler.S68 to place the desired test_file.S68 into memory. Our program is
+When assembling the disassembler.X68 source code, press execute and then click file -> open 
+data in the disassembler.S68 to place the desired test_file.S68 into memory. Our program is
 ORG’d at $1000 so the test file must be stored between 00000000 and 00000998 so that the
-memory of our existing Disassembler.X68 is not overwritten. Once the test file has been stored,
+memory of our existing disassembler.X68 is not overwritten. Once the test file has been stored,
 click run and enter the address range that is desired to test, not putting zeros in front of the
 desired address for example if you want to test 00000400 - 00000512 enter 400 for the starting
 address and 512 for the ending address. If there are alphabet hex characters in the starting or
