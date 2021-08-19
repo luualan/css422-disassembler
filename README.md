@@ -30,9 +30,22 @@ choose no, the program will exit.
 ## The Disassembler's Capabilities:
 Below is a table of all of the opcodes that our disassembler can handle.
 
+
 | ------------- | ------------- |
 | Content Cell  | Content Cell  |
 | Content Cell  | Content Cell  |
+
+| First 4 bits | Opcode                         |
+| ------------ | ------------------------------ |
+| 0000         | SUBI, ADDI                     |
+| 0001         | MOVEA                          |
+| 0011         | MOVE                           |
+| 0100         | CLR, NOP, RTS, JSR, MOVEM, LEA |
+| 0101         | ADDQ                           |
+| 0001         | MOVEA                          |
+| 0011         | MOVE                           |
+| 0001         | MOVEA                          |
+| 0011         | MOVE                           |
 
 
 
