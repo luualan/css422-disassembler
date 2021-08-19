@@ -8,7 +8,7 @@ The first screen that you will see when you run the program:
 ![image](https://user-images.githubusercontent.com/59902126/130018824-2b0f7561-e8b9-45b2-84f0-5ecee2e36afa.png)
 
 When assembling the disassembler.X68 source code, press execute and then click file -> open 
-data in the disassembler.S68 to place the desired test_file.S68 into memory. Our program is
+data in the disassembler.S68 to place the desired test-file.S68 into memory. Our program is
 ORG’d at $1000 so the test file must be stored between 00000000 and 00000998 so that the
 memory of our existing disassembler.X68 is not overwritten. Once the test file has been stored,
 click run and enter the address range that is desired to test, not putting zeros in front of the
@@ -67,7 +67,7 @@ implementing the next effective address calculation we were each assigned. Event
 completed all our effective address calculations and we moved on to testing the professor’s test
 file.
 
-We tested the file called Test_dsasm.X68, and checked each address line of opcode to be certain
+We tested the file called test-file.X68, and checked each address line of opcode to be certain
 our outputs matched the professor’s disassembler outputs. We had some outputs that didn’t
 match — specifically movem and all the branch types, so we went back to our disassembler code
 and fixed those issues. After much time spent fixing our disassembler code, we got our code to
