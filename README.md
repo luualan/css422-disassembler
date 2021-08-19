@@ -30,7 +30,7 @@ choose no, the program will exit.
 ## The Disassembler's Capabilities:
 Below is a table of all of the opcodes that our disassembler can handle.
 
-| First 4 bits | Opcode Instruction                |
+| First 4 bits | Opcode                            |
 | ------------ | --------------------------------- |
 | 0000         | SUBI, ADDI                        |
 | 0001         | MOVEA                             |
@@ -38,7 +38,7 @@ Below is a table of all of the opcodes that our disassembler can handle.
 | 0100         | CLR, NOP, RTS, JSR, MOVEM, LEA    |
 | 0101         | ADDQ                              |
 | 0110         | BLS, BCC, BCS,	BNE, BEQ,	BVC, BVS |                           
-| 0110         | BPL, BMI, BGE, BLT,	BGT, BLE      |
+| 0110         | BPL, BMI, BGE, BLT,	BGT, BLE     |
 | 0111         | MOVEQ                             |
 | 1000         | DIVU, OR                          |
 | 1001         | SUB                               |
