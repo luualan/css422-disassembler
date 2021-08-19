@@ -29,6 +29,7 @@ choose no, the program will exit.
 
 ## The Disassembler's Capabilities:
 Below is a table of all of the opcodes that our disassembler can handle.
+| ------------------ | ---------- |
 | First 4 bits: 0000 | SUBI, ADDI |
 | First 4 bits: 0001 | MOVEA      |
 | First 4 bits: 0011 | MOVE       |
