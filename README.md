@@ -1,7 +1,6 @@
 # CSS422-Disassembler
 This program is an inverse assembler (disassembler) that's written in Motorola MC68000 Assembly 
-Language. Its purpose is to convert blocks of data to Assembly code and display this 
-to the user.
+Language. Its purpose is to convert blocks of data into valid Assembly instructions and display them to the user.
 
 ## How to run the Disassembler
 The first screen that you will see when you run the program:
