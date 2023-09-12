@@ -12,7 +12,7 @@ data in the disassembler.S68 to place the desired test-file.S68 into memory. Our
 ORG’d at $1000 so the test file must be stored between 00000000 and 00000998 so that the
 memory of our existing disassembler.X68 is not overwritten. Once the test file has been stored,
 click run and enter the address range that is desired to test, not putting zeros in front of the
-desired address for example if you want to test 00000400 - 00000512 enter 400 for the starting
+desired address. For example, if you want to test 00000400 - 00000512 enter 400 for the starting
 address and 512 for the ending address. If there are alphabet hex characters in the starting or
 ending address (A-F) they must be capitalized to be considered valid. If you enter a lowercase
 for (A-F) you will be prompted to re-enter either the starting or ending address accordingly.
